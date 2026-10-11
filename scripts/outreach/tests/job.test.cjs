@@ -7,128 +7,30 @@
 //
 //   node scripts/outreach/tests/job.test.cjs
 //
-// It compiles the real files with sucrase (installed with tailwindcss 3) into
-// a temporary folder, pointing their @/ imports at small stubs.
-const fs = require('fs');
-const os = require('os');
+// It uses harness.cjs: the real files compiled with their @/ imports pointed
+// at small stubs, and a fake database.
 const path = require('path');
 const assert = require('assert');
+const { compile, makeDb } = require('./harness.cjs');
 
-const ROOT = path.resolve(__dirname, '../../..');
-const { transform } = require('sucrase');
-const OUT = fs.mkdtempSync(path.join(os.tmpdir(), 'outreach-job-'));
-
-// --- compile the real files, pointing their imports at stubs ---------------
-const rewrites = {
-  '@/lib/admin/posthog': './stub-posthog',
-  '@/lib/notify': './stub-notify',
-  '@/lib/deals/db': './stub-db',
-  '@/lib/site': './stub-site',
-};
-for (const name of ['job', 'data', 'words']) {
-  let src = fs.readFileSync(`${ROOT}/lib/outreach/${name}.ts`, 'utf8');
-  for (const [from, to] of Object.entries(rewrites)) src = src.split(`'${from}'`).join(`'${to}'`);
-  fs.writeFileSync(path.join(OUT, name + '.js'), transform(src, { transforms: ['typescript', 'imports'] }).code);
-}
-fs.writeFileSync(path.join(OUT, 'stub-posthog.js'), 'exports.hogqlDaily = async () => null;');
-fs.writeFileSync(path.join(OUT, 'stub-site.js'), "exports.SITE_URL = 'https://yepitshalal.com'; exports.INBOX = 'hello@yepitshalal.com';");
-fs.writeFileSync(path.join(OUT, 'stub-db.js'), 'exports.dealsDb = () => global.__db;');
-fs.writeFileSync(
-  path.join(OUT, 'stub-notify.js'),
-  `exports.sendThroughResend = async (email, opts) => {
-     global.__sent.push({ to: email.to[0], subject: email.subject, text: email.text, key: opts.idempotencyKey });
-     return { ok: true, id: 're_' + global.__sent.length };
-   };`
+const OUT = compile(
+  { job: 'lib/outreach/job.ts', data: 'lib/outreach/data.ts', words: 'lib/outreach/words.ts' },
+  {
+    '@/lib/admin/posthog': './stub-posthog',
+    '@/lib/notify': './stub-notify',
+    '@/lib/deals/db': './stub-db',
+    '@/lib/site': './stub-site',
+  },
+  {
+    'stub-posthog': 'exports.hogqlDaily = async () => null;',
+    'stub-site': "exports.SITE_URL = 'https://yepitshalal.com'; exports.INBOX = 'hello@yepitshalal.com';",
+    'stub-db': 'exports.dealsDb = () => global.__db;',
+    'stub-notify': `exports.sendThroughResend = async (email, opts) => {
+       global.__sent.push({ to: email.to[0], subject: email.subject, text: email.text, key: opts.idempotencyKey });
+       return { ok: true, id: 're_' + global.__sent.length };
+     };`,
+  }
 );
-
-// --- a fake PostgREST client over in-memory tables -------------------------
-function parseOr(expr) {
-  const parts = [];
-  let cur = '';
-  let quoted = false;
-  for (const ch of expr) {
-    if (ch === '"') quoted = !quoted;
-    if (ch === ',' && !quoted) {
-      parts.push(cur);
-      cur = '';
-    } else cur += ch;
-  }
-  parts.push(cur);
-  return parts.map((p) => {
-    const [col, op, ...rest] = p.split('.');
-    const v = rest.join('.').replace(/^"|"$/g, '');
-    return (r) => (op === 'eq' ? String(r[col]) === v : op === 'gte' ? r[col] != null && r[col] >= v : false);
-  });
-}
-
-function makeDb(tables, failIf) {
-  return {
-    from(table) {
-      const q = { table, op: 'select', filters: [], keys: [], opts: {}, patch: null, limitN: null, single: false };
-      const add = (key, fn) => {
-        q.keys.push(key);
-        q.filters.push(fn);
-        return b;
-      };
-      const b = {
-        select(cols, opts) {
-          if (q.op === 'select') q.opts = opts || {};
-          return b;
-        },
-        insert(row) {
-          q.op = 'insert';
-          q.patch = row;
-          return b;
-        },
-        update(patch) {
-          q.op = 'update';
-          q.patch = patch;
-          return b;
-        },
-        eq: (c, v) => add(`eq:${c}`, (r) => r[c] === v),
-        is: (c, v) => add(`is:${c}`, (r) => (r[c] ?? null) === v),
-        gte: (c, v) => add(`gte:${c}`, (r) => r[c] != null && r[c] >= v),
-        lte: (c, v) => add(`lte:${c}`, (r) => r[c] != null && r[c] <= v),
-        in: (c, vs) => add(`in:${c}`, (r) => vs.includes(r[c])),
-        not: (c, op, v) => add(`not:${c}`, (r) => !(op === 'is' ? (r[c] ?? null) === v : false)),
-        or: (expr) => {
-          const any = parseOr(expr);
-          return add('or', (r) => any.some((f) => f(r)));
-        },
-        order: () => b,
-        limit(n) {
-          q.limitN = n;
-          return b;
-        },
-        maybeSingle() {
-          q.single = true;
-          return b;
-        },
-        then(res, rej) {
-          return Promise.resolve().then(() => run(q)).then(res, rej);
-        },
-      };
-      return b;
-    },
-  };
-  function run(q) {
-    const err = failIf(q);
-    if (err) return { data: null, count: null, error: { message: err } };
-    const all = tables[q.table] ?? (tables[q.table] = []);
-    if (q.op === 'insert') {
-      all.push({ id: 'new' + all.length, ...q.patch });
-      return { data: null, error: null };
-    }
-    const rows = all.filter((r) => q.filters.every((f) => f(r)));
-    if (q.op === 'update') {
-      rows.forEach((r) => Object.assign(r, q.patch));
-      return { data: null, error: null };
-    }
-    if (q.opts.head) return { data: null, count: rows.length, error: null };
-    const data = q.limitN != null ? rows.slice(0, q.limitN) : rows;
-    return { data: q.single ? data[0] ?? null : data, error: null };
-  }
-}
 
 // --- fixtures --------------------------------------------------------------
 const NOW = new Date().toISOString();

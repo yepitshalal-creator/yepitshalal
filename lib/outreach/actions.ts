@@ -79,26 +79,19 @@ export async function sayYes(token: string, _prev: YesState, formData: FormData)
 
   // Owner facts go straight onto the page, but never over something already
   // there: a price or menu link set earlier stays until someone changes it.
+  // The yes is saved first, with what it puts on the page, so a failed save
+  // leaves the page as it was, and taking the yes back knows what to remove.
   const now = new Date().toISOString();
-  const applied: Record<string, boolean> = {};
   const places = contact.restaurant_id
-    ? db.from('restaurants').select('id').eq('id', contact.restaurant_id)
-    : db.from('restaurants').select('id').eq('brand_id', contact.brand_id as string);
+    ? db.from('restaurants').select('id, price_range, menu_url').eq('id', contact.restaurant_id)
+    : db.from('restaurants').select('id, price_range, menu_url').eq('brand_id', contact.brand_id as string);
   const { data: placeRows } = await places;
-  const ids = (placeRows ?? []).map((r) => r.id as string);
-  if (ids.length && priceRange) {
-    const { data } = await db
-      .from('restaurants')
-      .update({ price_range: priceRange, price_range_source: 'owner', price_range_at: now })
-      .in('id', ids)
-      .is('price_range', null)
-      .select('id');
-    applied.price_range = Boolean(data?.length);
-  }
-  if (ids.length && menuUrl) {
-    const { data } = await db.from('restaurants').update({ menu_url: menuUrl }).in('id', ids).is('menu_url', null).select('id');
-    applied.menu_url = Boolean(data?.length);
-  }
+  const rows = (placeRows ?? []) as { id: string; price_range: number | null; menu_url: string | null }[];
+  const ids = rows.map((r) => r.id);
+  const applied = {
+    price_range: Boolean(priceRange) && rows.some((r) => r.price_range == null),
+    menu_url: Boolean(menuUrl) && rows.some((r) => r.menu_url == null),
+  };
 
   const { error } = await db.from('content_permissions').insert({
     contact_id: contact.id,
@@ -113,6 +106,17 @@ export async function sayYes(token: string, _prev: YesState, formData: FormData)
     extras: { price_range: priceRange, menu_url: menuUrl, hours, applied },
   });
   if (error) return { error: 'Something went wrong saving that. Try again in a minute.' };
+
+  if (applied.price_range) {
+    await db
+      .from('restaurants')
+      .update({ price_range: priceRange, price_range_source: 'owner', price_range_at: now })
+      .in('id', ids)
+      .is('price_range', null);
+  }
+  if (applied.menu_url) {
+    await db.from('restaurants').update({ menu_url: menuUrl }).in('id', ids).is('menu_url', null);
+  }
 
   await db
     .from('outreach_contacts')
