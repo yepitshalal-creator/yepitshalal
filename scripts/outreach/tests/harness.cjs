@@ -41,13 +41,32 @@ function parseOr(expr) {
   });
 }
 
+// Ids for inserted rows: unique even after deletes.
+let made = 0;
+
 function makeDb(tables, failIf) {
   return {
     // Storage buckets are tables named storage:<bucket>, each a list of paths.
     storage: {
       from(bucket) {
         const table = `storage:${bucket}`;
+        const fail = (op) => {
+          const err = failIf({ table, op, filters: [], keys: [], opts: {} });
+          return err ? (typeof err === 'string' ? { message: err } : err) : null;
+        };
         return {
+          async download(p) {
+            const error = fail('download');
+            if (error) return { data: null, error };
+            return (tables[table] ?? []).includes(p) ? { data: { path: p }, error: null } : { data: null, error: { message: 'not found' } };
+          },
+          async upload(p) {
+            const error = fail('upload');
+            if (error) return { data: null, error };
+            tables[table] = [...(tables[table] ?? []).filter((x) => x !== p), p];
+            return { data: { path: p }, error: null };
+          },
+          getPublicUrl: (p) => ({ data: { publicUrl: `https://example.supabase.co/storage/v1/object/public/${bucket}/${p}` } }),
           async remove(paths) {
             const err = failIf({ table, op: 'remove', filters: [], keys: [], opts: {} });
             if (err) return { data: null, error: typeof err === 'string' ? { message: err } : err };
@@ -114,6 +133,10 @@ function makeDb(tables, failIf) {
           q.single = true;
           return b;
         },
+        single() {
+          q.single = true;
+          return b;
+        },
         then(res, rej) {
           return Promise.resolve().then(() => run(q)).then(res, rej);
         },
@@ -127,8 +150,9 @@ function makeDb(tables, failIf) {
     if (err) return { data: null, count: null, error: typeof err === 'string' ? { message: err } : err };
     const all = tables[q.table] ?? (tables[q.table] = []);
     if (q.op === 'insert') {
-      all.push({ id: 'new' + all.length, ...q.patch });
-      return { data: null, error: null };
+      const row = { id: `new${++made}`, created_at: new Date().toISOString(), ...q.patch };
+      all.push(row);
+      return { data: q.returning ? (q.single ? row : [row]) : null, error: null };
     }
     const rows = all.filter((r) => q.filters.every((f) => f(r)));
     if (q.op === 'delete') {

@@ -47,6 +47,11 @@ function isOwnPhoto(p: { storage_path: string; is_logo: boolean | null }) {
  * thumbnail sizes were made in the owner's browser; this only copies them
  * into the public bucket, where the site already looks for "thumb/<path>".
  * Credited to the place, as the permission promises.
+ *
+ * All or nothing: the upload is marked published with the ids of every photo
+ * row it made, because that is how taking a yes back finds them. If any page
+ * or that record fails, every row it made comes off again, each page gets
+ * back the lead photo it had, and it throws.
  */
 export async function publishOwnerPhoto(db: SupabaseClient, upload: OwnerUpload): Promise<string[]> {
   if (upload.kind !== 'photo' || !upload.paths.card || !upload.paths.thumb) throw new Error('Only a photo can go on a page.');
@@ -72,29 +77,47 @@ export async function publishOwnerPhoto(db: SupabaseClient, upload: OwnerUpload)
   const places = await placesOf(db, upload);
   if (!places.length) throw new Error('That place is no longer on the site.');
   const ids: string[] = [];
-  for (const place of places) {
-    const { data: existing } = await db
-      .from('restaurant_photos')
-      .select('id, storage_path, is_logo, is_primary')
-      .eq('restaurant_id', place.id);
-    // Their own photo leads, unless the page already leads with one of theirs.
-    const leadsWithOwn = (existing ?? []).some((p) => p.is_primary && isOwnPhoto(p));
-    if (!leadsWithOwn) await db.from('restaurant_photos').update({ is_primary: false }).eq('restaurant_id', place.id);
-    const site = host(place.website_url);
-    const { data: row, error } = await db
-      .from('restaurant_photos')
-      .insert({
-        restaurant_id: place.id,
-        storage_path: url,
-        type: 'food',
-        is_primary: !leadsWithOwn,
-        source_site: site ?? place.name,
-        source_url: site ? place.website_url : `${SITE_URL}/restaurant/${place.slug}`,
-      })
-      .select('id')
-      .single();
-    if (error) throw new Error(error.message);
-    ids.push(row.id);
+  // Lead photos this took the lead from, to give back if it fails.
+  const demoted: string[] = [];
+  try {
+    for (const place of places) {
+      const { data: existing, error: readError } = await db
+        .from('restaurant_photos')
+        .select('id, storage_path, is_logo, is_primary')
+        .eq('restaurant_id', place.id);
+      if (readError) throw new Error(readError.message);
+      // Their own photo leads, unless the page already leads with one of theirs.
+      const leadsWithOwn = (existing ?? []).some((p) => p.is_primary && isOwnPhoto(p));
+      if (!leadsWithOwn) {
+        demoted.push(...(existing ?? []).filter((p) => p.is_primary).map((p) => p.id as string));
+        await db.from('restaurant_photos').update({ is_primary: false }).eq('restaurant_id', place.id);
+      }
+      const site = host(place.website_url);
+      const { data: row, error } = await db
+        .from('restaurant_photos')
+        .insert({
+          restaurant_id: place.id,
+          storage_path: url,
+          type: 'food',
+          is_primary: !leadsWithOwn,
+          source_site: site ?? place.name,
+          source_url: site ? place.website_url : `${SITE_URL}/restaurant/${place.slug}`,
+        })
+        .select('id')
+        .single();
+      if (error) throw new Error(error.message);
+      ids.push(row.id);
+    }
+    const { error: recordError } = await db
+      .from('owner_uploads')
+      .update({ status: 'published', photo_ids: ids, reviewed_at: new Date().toISOString() })
+      .eq('id', upload.id);
+    if (recordError) throw new Error(`Could not record it (${recordError.message}).`);
+  } catch (e) {
+    // Half on is worse than not on: no page keeps a photo with no record of it.
+    if (ids.length) await db.from('restaurant_photos').delete().in('id', ids);
+    if (demoted.length) await db.from('restaurant_photos').update({ is_primary: true }).in('id', demoted);
+    throw new Error(`${(e as Error).message} It is not on their page. Try again.`);
   }
   return ids;
 }

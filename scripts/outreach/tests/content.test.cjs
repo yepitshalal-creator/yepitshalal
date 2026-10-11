@@ -17,7 +17,7 @@ const OUT = compile(
     'stub-db': 'exports.dealsDb = () => global.__db;',
   }
 );
-const { removeOwnerContent } = require(path.join(OUT, 'content.js'));
+const { publishOwnerPhoto, removeOwnerContent } = require(path.join(OUT, 'content.js'));
 
 const PUBLIC = 'https://example.supabase.co/storage/v1/object/public/restaurant-photos/';
 function fixtures() {
@@ -119,4 +119,83 @@ const done = (off, t) => {
     [ok, done],
     [ok, done],
   ]);
+
+  // Publishing one photo from a chain's head office to both its branches.
+  const chain = () => ({
+    restaurants: [
+      { id: 'r1', name: 'Branch One', slug: 'branch-one', brand_id: 'b1', is_searchable: true, website_url: 'https://chain.example.com' },
+      { id: 'r2', name: 'Branch Two', slug: 'branch-two', brand_id: 'b1', is_searchable: true, website_url: 'https://chain.example.com' },
+    ],
+    restaurant_photos: [
+      { id: 'lead1', restaurant_id: 'r1', storage_path: PUBLIC + 'representative/a.jpg', is_logo: false, is_primary: true, created_at: '2026-09-01' },
+      { id: 'lead2', restaurant_id: 'r2', storage_path: PUBLIC + 'representative/b.jpg', is_logo: false, is_primary: true, created_at: '2026-09-01' },
+    ],
+    owner_uploads: [
+      { id: 'u3', permission_id: 'p3', restaurant_id: null, brand_id: 'b1', kind: 'photo', paths: { card: 'p3/u3/card.webp', thumb: 'p3/u3/thumb.webp' }, status: 'waiting', photo_ids: [] },
+    ],
+    'storage:owner-uploads': ['p3/u3/card.webp', 'p3/u3/thumb.webp'],
+    'storage:restaurant-photos': ['representative/a.jpg', 'representative/b.jpg'],
+  });
+  const leads = (t) => t.restaurant_photos.filter((p) => p.is_primary).map((p) => p.id).sort();
+  async function publish(name, failIf, verify) {
+    const t = chain();
+    global.__db = makeDb(t, failIf);
+    let ids = null;
+    let thrown = null;
+    try {
+      ids = await publishOwnerPhoto(global.__db, t.owner_uploads[0]);
+    } catch (e) {
+      thrown = e;
+    }
+    try {
+      verify(t, ids, thrown);
+      console.log('PASS', name);
+    } catch (e) {
+      console.log('FAIL', name, '\n  ', e.message, thrown ? `\n   threw: ${thrown.message}` : '');
+      process.exitCode = 1;
+    }
+    return t;
+  }
+
+  const published = await publish('a chain photo goes on both branches and is recorded', ok, (t, ids, thrown) => {
+    assert.strictEqual(thrown, null);
+    assert.strictEqual(ids.length, 2);
+    assert.deepStrictEqual(leads(t), ids.slice().sort(), 'their photo leads on both pages');
+    assert.strictEqual(t.owner_uploads[0].status, 'published');
+    assert.deepStrictEqual(t.owner_uploads[0].photo_ids, ids);
+  });
+  // And taking the yes back later finds both rows through that record.
+  global.__db = makeDb(published, ok);
+  try {
+    assert.strictEqual(await removeOwnerContent(global.__db, 'p3'), true);
+    assert.deepStrictEqual(published.restaurant_photos.map((p) => p.id).sort(), ['lead1', 'lead2']);
+    assert.deepStrictEqual(leads(published), ['lead1', 'lead2']);
+    console.log('PASS taking the yes back takes it off both branches and gives the leads back');
+  } catch (e) {
+    console.log('FAIL taking the yes back takes it off both branches\n  ', e.message);
+    process.exitCode = 1;
+  }
+
+  await publish(
+    'the second branch fails: nothing stays up, both pages get their lead back',
+    (q) => (q.table === 'restaurant_photos' && q.op === 'insert' && q.patch.restaurant_id === 'r2' ? 'boom' : null),
+    (t, ids, thrown) => {
+      assert.ok(thrown, 'it says it failed');
+      assert.match(thrown.message, /not on their page/);
+      assert.deepStrictEqual(t.restaurant_photos.map((p) => p.id).sort(), ['lead1', 'lead2']);
+      assert.deepStrictEqual(leads(t), ['lead1', 'lead2']);
+      assert.strictEqual(t.owner_uploads[0].status, 'waiting');
+    }
+  );
+
+  await publish(
+    'the record would not save: nothing stays up that a take-back could not find',
+    (q) => (q.table === 'owner_uploads' && q.op === 'update' ? 'boom' : null),
+    (t, ids, thrown) => {
+      assert.ok(thrown, 'it says it failed');
+      assert.deepStrictEqual(t.restaurant_photos.map((p) => p.id).sort(), ['lead1', 'lead2']);
+      assert.deepStrictEqual(leads(t), ['lead1', 'lead2']);
+      assert.strictEqual(t.owner_uploads[0].status, 'waiting');
+    }
+  );
 })();

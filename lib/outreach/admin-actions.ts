@@ -205,11 +205,8 @@ export async function publishUpload(id: string) {
   if (u.status !== 'waiting' && u.status !== 'kept') throw new Error('Only a photo waiting for a look can be published.');
   const { data: permission } = await db.from('content_permissions').select('withdrawn_at').eq('id', u.permission_id).maybeSingle();
   if (!permission || permission.withdrawn_at) throw new Error('They took their yes back. This cannot go on the site.');
-  const photoIds = await publishOwnerPhoto(db, u);
-  await db
-    .from('owner_uploads')
-    .update({ status: 'published', photo_ids: photoIds, reviewed_at: new Date().toISOString() })
-    .eq('id', id);
+  // Marks it published with its photo ids too, or takes it all off again and throws.
+  await publishOwnerPhoto(db, u);
   revalidateAdminPath(PATH);
   revalidateAdminPath('/restaurant/[slug]', 'page');
 }

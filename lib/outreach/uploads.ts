@@ -119,8 +119,9 @@ export async function finishUpload(token: string, id: string): Promise<{ ok: boo
   const present = new Set((files ?? []).map((f) => f.name));
   if (!names.every((n) => n && present.has(n))) return { ok: false };
 
-  await db.from('owner_uploads').update({ status: 'waiting' }).eq('id', id).eq('status', 'uploading');
-  return { ok: true };
+  // Only "sent" once it is in the queue for a look, or nobody would ever see it.
+  const { error } = await db.from('owner_uploads').update({ status: 'waiting' }).eq('id', id).eq('status', 'uploading');
+  return { ok: !error };
 }
 
 /** Once per batch, so a dozen photos make one email, not twelve. */
