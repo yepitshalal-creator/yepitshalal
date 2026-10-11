@@ -60,8 +60,20 @@ export async function startUpload(
   if ((mine ?? []).filter((u) => u.kind === kind).length >= LIMITS[kind].max) {
     return { error: `That is the most ${kind}s we can take here. Reply to our email with any more.` };
   }
-  const { data: sizes } = await db.from('owner_uploads').select('bytes').not('status', 'in', '(rejected,removed)').limit(20000);
-  const used = (sizes ?? []).reduce((n, r) => n + Number(r.bytes), 0);
+  // Every page: the API answers at most 1,000 rows a request, and a short
+  // sum here would let uploads past the free storage limit.
+  let used = 0;
+  for (let from = 0; ; from += 1000) {
+    const { data: sizes, error: sizeError } = await db
+      .from('owner_uploads')
+      .select('bytes')
+      .not('status', 'in', '(rejected,removed)')
+      .order('id')
+      .range(from, from + 999);
+    if (sizeError) return { error: 'Something went wrong. Try again in a minute.' };
+    used += (sizes ?? []).reduce((n, r) => n + Number(r.bytes), 0);
+    if ((sizes ?? []).length < 1000) break;
+  }
   if (used + bytes > ALL_OWNER_UPLOADS_BYTES) return { error: 'We cannot take files here right now. Reply to our email with them instead.' };
 
   const id = crypto.randomUUID();

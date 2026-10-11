@@ -2,9 +2,10 @@ import { dealsDb } from '@/lib/deals/db';
 import type { DealState } from './rules';
 
 /**
- * The numbers behind /admin/deals. Read with the service role. Fine at the
- * size Deals starts at (a few restaurants); when the ledger runs to tens of
- * thousands of rows these sums belong in a database view.
+ * The numbers behind /admin/deals. Read with the service role, every page of
+ * the ledger and of the last 30 days' claims. Fine at the size Deals starts
+ * at; when the ledger runs to tens of thousands of rows these sums belong in
+ * a database view.
  */
 
 export interface LedgerRow {
@@ -57,13 +58,39 @@ export function londonMonthStart(): Date {
 
 const isFeeBack = (l: LedgerRow) => l.kind === 'adjustment' && !!l.claim_id;
 
+/**
+ * Every row a query returns, a page at a time. The API answers at most 1,000
+ * rows a request whatever the limit says, so one read would quietly drop the
+ * rest and the totals would be short. `page` must ask for a stable order.
+ */
+async function everyRow<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>
+): Promise<{ data: T[]; error: unknown }> {
+  const SIZE = 1000;
+  const out: T[] = [];
+  for (let from = 0; from < 200 * SIZE; from += SIZE) {
+    const { data, error } = await page(from, from + SIZE - 1);
+    if (error) return { data: out, error };
+    out.push(...(data ?? []));
+    if ((data ?? []).length < SIZE) break;
+  }
+  return { data: out, error: null };
+}
+
 export async function dealsOverview(): Promise<DealsOverview> {
   const db = dealsDb();
   const since30 = new Date(Date.now() - 30 * 86_400_000).toISOString();
   const [ledgerRes, dealsRes, claimsRes, reportsRes] = await Promise.all([
-    db.from('deal_ledger').select('*').order('id', { ascending: false }).limit(5000),
+    everyRow<LedgerRow>((from, to) => db.from('deal_ledger').select('*').order('id', { ascending: false }).range(from, to)),
     db.from('deals').select('restaurant_id, status, ended_at').order('created_at', { ascending: false }),
-    db.from('deal_claims').select('restaurant_id, status, fee_kind, reported_at').gte('created_at', since30),
+    everyRow<{ restaurant_id: string; status: string; fee_kind: string | null; reported_at: string | null }>((from, to) =>
+      db
+        .from('deal_claims')
+        .select('restaurant_id, status, fee_kind, reported_at')
+        .gte('created_at', since30)
+        .order('id')
+        .range(from, to)
+    ),
     db
       .from('deal_claims')
       .select('code, restaurant_id, reported_at, report_note')
@@ -81,7 +108,7 @@ export async function dealsOverview(): Promise<DealsOverview> {
   };
   if (ledgerRes.error || dealsRes.error) return empty;
 
-  const ledger = (ledgerRes.data ?? []) as LedgerRow[];
+  const ledger = ledgerRes.data;
   const monthStart = londonMonthStart().getTime();
   const fees = (rows: LedgerRow[]) =>
     -rows.filter((l) => l.kind === 'fee').reduce((a, l) => a + l.amount_pence, 0) -
