@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateAdminPath } from '../admin/cache';
 import { requireAdmin } from '@/lib/require-admin';
 import { dealsDb } from '@/lib/deals/db';
 import { ownerError } from './messages';
@@ -13,11 +13,11 @@ export type AdminDealState = { status: 'idle' } | { status: 'saved'; message: st
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function refresh(restaurantId: string) {
-  revalidatePath('/admin', 'layout');
+  revalidateAdminPath('/admin', 'layout');
   const { data: r } = await dealsDb().from('restaurants').select('slug').eq('id', restaurantId).maybeSingle();
   if (r) {
-    revalidatePath(`/restaurant/${r.slug}`);
-    revalidatePath(`/manage/${r.slug}/deals`);
+    revalidateAdminPath(`/restaurant/${r.slug}`);
+    revalidateAdminPath(`/manage/${r.slug}/deals`);
   }
 }
 

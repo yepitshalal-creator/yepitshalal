@@ -1,10 +1,12 @@
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/require-admin';
+import { adminCached } from '@/lib/admin/cache';
 import { AdminPage, Panel, Tag } from '@/components/admin/ui';
 import { InfoIcon } from '@/components/icons';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Catalogue coverage' };
+export const metadata = { title: 'Coverage' };
 
 interface Counts {
   total: number;
@@ -71,20 +73,30 @@ function LabelCells({ r }: { r: Counts }) {
 
 const HEAD = 'px-3 py-2.5 font-medium';
 
+// Three views over the whole catalogue, kept ten minutes.
+const loadCoverage = adminCached(
+  async (month: string) => {
+    const supabase = createAdminSupabase();
+    const [districts, boroughs, votes] = await Promise.all([
+      supabase.from('catalogue_coverage').select('*'),
+      supabase.from('catalogue_borough_coverage').select('*').order('listed', { ascending: false }),
+      supabase.from('area_votes').select('borough').eq('month', month),
+    ]);
+    return { districtData: districts.data, boroughData: boroughs.data, voteData: votes.data };
+  },
+  'coverage-v1',
+  600
+);
+
 export default async function AdminCoveragePage() {
   // The layout checks too, but a layout is not always re-run when moving
   // between admin pages.
   await requireAdmin();
-  const supabase = createAdminSupabase();
   const monthStart = new Date();
   monthStart.setUTCDate(1);
   const month = monthStart.toISOString().slice(0, 10);
 
-  const [{ data: districtData }, { data: boroughData }, { data: voteData }] = await Promise.all([
-    supabase.from('catalogue_coverage').select('*'),
-    supabase.from('catalogue_borough_coverage').select('*').order('listed', { ascending: false }),
-    supabase.from('area_votes').select('borough').eq('month', month),
-  ]);
+  const { districtData, boroughData, voteData } = await loadCoverage(month);
 
   // What supporters asked for this month. Votes are one per person and can be
   // changed until the month ends, so this is a live standing, not a result.
@@ -123,7 +135,8 @@ export default async function AdminCoveragePage() {
 
   return (
     <AdminPage
-      title="Catalogue coverage"
+      tabs={<SectionTabs section="restaurants" current="/admin/coverage" />}
+      title="Coverage"
       width="lg"
       description={`${(totals.listed + totals.not_checked).toLocaleString()} places in search (${totals.listed.toLocaleString()} with evidence), out of ${totals.total.toLocaleString()} records. Use it to see where the gaps are before looking for more places.`}
     >

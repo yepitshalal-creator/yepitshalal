@@ -202,6 +202,7 @@ export function ActionCard({
   label,
   clear,
   Icon,
+  urgent,
 }: {
   href: string;
   count: number;
@@ -209,6 +210,8 @@ export function ActionCard({
   /** What to say when the count is zero. */
   clear: string;
   Icon: React.ComponentType<{ className?: string }>;
+  /** A short warning in amber, such as "2 late". */
+  urgent?: string | null;
 }) {
   const busy = count > 0;
   return (
@@ -240,6 +243,9 @@ export function ActionCard({
         <span className={clsx('mt-1.5 block text-sm leading-snug', busy ? 'text-white/85' : 'text-muted')}>
           {busy ? label : clear}
         </span>
+        {busy && urgent && (
+          <span className="mt-2 inline-flex rounded-full bg-halal-partialSoft px-2 py-0.5 text-xs font-semibold text-halal-partialInk">{urgent}</span>
+        )}
       </span>
     </Link>
   );

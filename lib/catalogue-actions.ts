@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateAdminPath } from './admin/cache';
 import { createAdminSupabase } from './supabase/admin';
 import { requireAdmin } from './require-admin';
 
@@ -41,8 +41,8 @@ export async function mergeDuplicate(candidateId: string, keepId: string, dropId
     .update({ status: 'merged', reviewed_by: user.id, reviewed_at: new Date().toISOString() })
     .eq('id', candidateId);
 
-  revalidatePath('/admin/duplicates');
-  revalidatePath('/admin/coverage');
+  revalidateAdminPath('/admin/duplicates');
+  revalidateAdminPath('/admin/coverage');
 }
 
 /** These are two different places. Recording it stops them being re-queued. */
@@ -53,7 +53,7 @@ export async function markDistinct(candidateId: string) {
     .from('catalogue_dedupe_candidates')
     .update({ status: 'distinct', reviewed_by: user.id, reviewed_at: new Date().toISOString() })
     .eq('id', candidateId);
-  revalidatePath('/admin/duplicates');
+  revalidateAdminPath('/admin/duplicates');
 }
 
 /** Lifecycle: closed, temporarily shut, or needs a second look. */
@@ -69,6 +69,6 @@ export async function setCatalogueStatus(restaurantId: string, formData: FormDat
     .update({ catalogue_status: status, last_checked_at: new Date().toISOString() })
     .eq('id', restaurantId);
 
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
-  revalidatePath('/admin/coverage');
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath('/admin/coverage');
 }

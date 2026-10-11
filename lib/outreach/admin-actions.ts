@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateAdminPath } from '@/lib/admin/cache';
 import { requireAdmin } from '@/lib/require-admin';
 import {
   CONTACT_COLUMNS,
@@ -112,7 +112,7 @@ export async function addContact(_prev: AddState, formData: FormData): Promise<A
     if (error.code === '23514') return { error: 'The database refused it: this one cannot be emailed under our rules.' };
     return { error: error.message };
   }
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
   return { ok: channel === 'email' ? 'Added. It goes out with the next send, if sending is on.' : 'Added.' };
 }
 
@@ -130,20 +130,20 @@ export async function markReplied(id: string) {
     .update({ status: 'replied', replied_at: now, updated_at: now })
     .eq('id', id)
     .in('status', ['new', 'ready', 'sent', 'followed_up']);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 /** They said no, or asked us to stop, by email or on the phone. For good. */
 export async function markStop(id: string, how: 'said_no' | 'asked_by_email' | 'asked_by_phone') {
   await requireAdmin();
   await stopContact(outreachDb(), await contact(id), how);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 export async function markTpsChecked(id: string) {
   await requireAdmin();
   await outreachDb().from('outreach_contacts').update({ tps_checked_at: new Date().toISOString() }).eq('id', id);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 /** Back in the queue: only an email contact that has not been sent anything yet. */
@@ -153,19 +153,19 @@ export async function markReady(id: string) {
   if (c.channel !== 'email' || c.sent_at) throw new Error('Only an unsent email contact can be queued.');
   if (await isStopped(outreachDb(), c)) throw new Error('They are on the stop list.');
   await outreachDb().from('outreach_contacts').update({ status: 'ready', updated_at: new Date().toISOString() }).eq('id', id);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 export async function markRemoved(permissionId: string) {
   await requireAdmin();
   await outreachDb().from('content_permissions').update({ removed_at: new Date().toISOString() }).eq('id', permissionId);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 export async function setSending(on: boolean) {
   await requireAdmin();
   await outreachDb().from('outreach_settings').update({ sending_on: on, updated_at: new Date().toISOString() }).eq('id', true);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 export async function setDailyLimit(formData: FormData) {
@@ -173,7 +173,7 @@ export async function setDailyLimit(formData: FormData) {
   const n = Math.round(Number(formData.get('daily_limit')));
   if (!Number.isFinite(n) || n < 0 || n > 50) throw new Error('Pick a number from 0 to 50.');
   await outreachDb().from('outreach_settings').update({ daily_limit: n, updated_at: new Date().toISOString() }).eq('id', true);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 export async function clearPause() {
@@ -183,7 +183,7 @@ export async function clearPause() {
     .from('outreach_settings')
     .update({ paused_reason: null, paused_at: null, resumed_at: now, updated_at: now })
     .eq('id', true);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 async function upload(id: string): Promise<OwnerUpload> {
@@ -205,15 +205,15 @@ export async function publishUpload(id: string) {
     .from('owner_uploads')
     .update({ status: 'published', photo_ids: photoIds, reviewed_at: new Date().toISOString() })
     .eq('id', id);
-  revalidatePath(PATH);
-  revalidatePath('/restaurant/[slug]', 'page');
+  revalidateAdminPath(PATH);
+  revalidateAdminPath('/restaurant/[slug]', 'page');
 }
 
 /** Kept for our social media, not put on the page. Videos always land here. */
 export async function keepUpload(id: string) {
   await requireAdmin();
   await outreachDb().from('owner_uploads').update({ status: 'kept', reviewed_at: new Date().toISOString() }).eq('id', id).eq('status', 'waiting');
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }
 
 /** Not usable: deleted from storage straight away. */
@@ -224,5 +224,5 @@ export async function rejectUpload(id: string) {
   if (u.status === 'published') throw new Error('It is on their page. Take it off from the restaurant page first.');
   await db.storage.from(OWNER_BUCKET).remove(Object.values(u.paths));
   await db.from('owner_uploads').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', id);
-  revalidatePath(PATH);
+  revalidateAdminPath(PATH);
 }

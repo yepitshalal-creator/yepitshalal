@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
+import { HideOnPaths } from '@/components/HideOnPaths';
 import { BottomNav } from '@/components/BottomNav';
 import { SITE_URL } from '@/lib/site';
 import { MotionRoot } from '@/components/motion/MotionRoot';
@@ -124,7 +125,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <MotionRoot>
-          <SiteHeader />
+          {/* Admin draws its own sidebar and top bar (app/admin/layout.tsx). */}
+          <HideOnPaths prefixes={['/admin']}>
+            <SiteHeader />
+          </HideOnPaths>
           {/* The tab bar is fixed over the page on a phone, and on an iPhone it
               sits above the home indicator, so the page has to end above both. */}
           <main id="main" className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">

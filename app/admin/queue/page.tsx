@@ -3,8 +3,10 @@ import { createAdminSupabase } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/require-admin';
 import { ArrowRightIcon } from '@/components/icons';
 import { AdminPage, Panel, List, Row, Tag, QueueStatusTag } from '@/components/admin/ui';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Check requests' };
 
 interface QueueRequest {
   id: string;
@@ -54,7 +56,8 @@ export default async function AdminQueuePage() {
 
   return (
     <AdminPage
-      title="Verification queue"
+      tabs={<SectionTabs section="checks" current="/admin/queue" />}
+      title="Check requests"
       description={`${all.length} open request${all.length === 1 ? '' : 's'}, priority first, then oldest.`}
       width="lg"
     >

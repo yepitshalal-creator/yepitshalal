@@ -19,6 +19,7 @@ import {
   setSending,
 } from '@/lib/outreach/admin-actions';
 import { AddContactForm } from '@/components/admin/outreach/AddContactForm';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 import { AdminPage, Panel, List, Row, Tag, FIELD, BUTTON, BUTTON_SECONDARY } from '@/components/admin/ui';
 
 export const dynamic = 'force-dynamic';
@@ -87,7 +88,7 @@ export default async function AdminOutreachPage({ searchParams }: { searchParams
 
   if (settingsError || !settings) {
     return (
-      <AdminPage title="Outreach">
+      <AdminPage title="Outreach" tabs={<SectionTabs section="partners" current="/admin/outreach" />}>
         <Panel>
           <p className="px-5 py-8 text-sm text-muted">
             Outreach is not set up in the database yet. It needs migration 0054_outreach.
@@ -122,6 +123,7 @@ export default async function AdminOutreachPage({ searchParams }: { searchParams
     <AdminPage
       title="Outreach"
       width="lg"
+      tabs={<SectionTabs section="partners" current="/admin/outreach" />}
       description="Asking places if we may use their photos, videos, menu and logo. Email only goes to chain head offices and limited companies whose own website says so. Everyone else gets a call or their contact form."
     >
       <div className="space-y-5">

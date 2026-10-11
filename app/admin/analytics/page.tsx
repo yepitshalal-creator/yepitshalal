@@ -22,6 +22,7 @@ import {
   type Vitals,
   recordingAnswers,
 } from '@/lib/admin/posthog';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Analytics' };
@@ -101,7 +102,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
 
   if (!posthogConfigured) {
     return (
-      <AdminPage title="Analytics" width="xl" description="Who visits, what they look at, and how fast it loads.">
+      <AdminPage tabs={<SectionTabs section="analytics" current="/admin/analytics" />} title="Analytics" width="xl" description="Who visits, what they look at, and how fast it loads.">
         <ConnectPostHog />
       </AdminPage>
     );
@@ -124,6 +125,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
 
   return (
     <AdminPage
+      tabs={<SectionTabs section="analytics" current="/admin/analytics" />}
       title="Analytics"
       width="xl"
       description="Who visits, what they look at, and how fast it loads. From PostHog, refreshed every 5 minutes."

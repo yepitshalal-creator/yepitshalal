@@ -1,7 +1,8 @@
 'use server';
 
+import { revalidateAdminPath } from './cache';
 import { createHash } from 'node:crypto';
-import { revalidatePath } from 'next/cache';
+
 import { requireAdmin } from '@/lib/require-admin';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { sendThroughResend } from '@/lib/notify';
@@ -17,7 +18,7 @@ export type ReplyState =
   | { status: 'error'; message: string };
 
 function refresh() {
-  revalidatePath('/admin', 'layout');
+  revalidateAdminPath('/admin', 'layout');
 }
 
 async function markState(key: string, patch: { read_at?: string | null; archived_at?: string | null }) {

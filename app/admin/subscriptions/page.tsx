@@ -1,56 +1,7 @@
-import { createAdminSupabase } from '@/lib/supabase/admin';
-import { requireAdmin } from '@/lib/require-admin';
-import { AdminPage, Panel, List, Row, SubscriptionStatusTag } from '@/components/admin/ui';
+import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
-
-export const metadata = { title: 'Subscriptions' };
-
-interface SubscriptionRow {
-  id: string;
-  status: string;
-  plan: string | null;
-  current_period_end: string | null;
-  users: { email: string } | null;
-}
-
-export default async function AdminSubscriptionsPage() {
-  // The layout checks too, but a layout is not always re-run when moving
-  // between admin pages.
-  await requireAdmin();
-  const supabase = createAdminSupabase();
-  const { data: subscriptions } = await supabase
-    .from('subscriptions')
-    .select('id, status, plan, current_period_end, users(email)')
-    .order('current_period_end', { ascending: false });
-
-  const rows = (subscriptions ?? []) as unknown as SubscriptionRow[];
-  const active = rows.filter((s) => s.status === 'active');
-
-  return (
-    <AdminPage
-      title="Supporters"
-      description={`${active.length} active member${active.length === 1 ? '' : 's'} of ${rows.length} total.`}
-    >
-      <Panel>
-        <List empty="No subscriptions yet.">
-          {rows.map((s) => (
-            <Row key={s.id}>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-ink">
-                  {s.users?.email ?? 'Unknown user'}
-                </p>
-                <p className="truncate text-xs text-muted">
-                  {s.plan === 'annual' ? 'Annual' : s.plan === 'monthly' ? 'Monthly' : 'None'}
-                  {s.current_period_end &&
-                    ` · until ${new Date(s.current_period_end).toLocaleDateString('en-GB')}`}
-                </p>
-              </div>
-              <SubscriptionStatusTag status={s.status} />
-            </Row>
-          ))}
-        </List>
-      </Panel>
-    </AdminPage>
-  );
+// Supporters live on the Money page now, beside deal credit and paid checks.
+// This address stays so old links still land somewhere.
+export default function AdminSubscriptionsPage() {
+  redirect('/admin/money');
 }

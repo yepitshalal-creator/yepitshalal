@@ -107,7 +107,7 @@ export function reportError(error: unknown) {
   if (started) posthog.captureException(error);
 }
 
-// The visitor's answer to "Can we record your visit?": 'pending' until they
+// The visitor's answer to the recording question ("Help us make the site better?"): 'pending' until they
 // answer, and null where PostHog does not run (local and preview builds), so
 // nothing asks a question that nothing would act on. With Do Not Track or
 // Global Privacy Control on, PostHog reports 'denied'.

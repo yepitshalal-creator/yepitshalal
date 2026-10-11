@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateAdminPath } from './admin/cache';
 import { redirect } from 'next/navigation';
 import { createAdminSupabase } from './supabase/admin';
 import { requireAdmin } from './require-admin';
@@ -29,8 +29,8 @@ type Status = 'pending' | 'approved' | 'rejected';
 type FounderNotice = 'restore-taken' | 'no-listing' | 'failed';
 
 function refresh() {
-  revalidatePath('/admin/founders');
-  revalidatePath('/founders');
+  revalidateAdminPath('/admin/founders');
+  revalidateAdminPath('/founders');
 }
 
 function back(notice: FounderNotice): never {

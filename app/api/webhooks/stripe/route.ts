@@ -135,6 +135,13 @@ export async function POST(request: Request) {
   async function upsertSubscription(userId: string, subscription: Stripe.Subscription) {
     const item = subscription.items.data[0];
     const plan = item?.price.recurring?.interval === 'year' ? 'annual' : 'monthly';
+    // An event's body follows the webhook endpoint's own API version, not the
+    // one lib/stripe.ts asks for. From Stripe's 2025-03-31 version the period
+    // end moved from the subscription onto each item, so read either: a
+    // missing date must not throw and leave the supporter unrecorded.
+    type WithPeriod = { current_period_end?: number | null };
+    const periodEnd =
+      (subscription as unknown as WithPeriod).current_period_end ?? (item as unknown as WithPeriod | undefined)?.current_period_end ?? null;
     const status =
       subscription.status === 'active'
         ? 'active'
@@ -151,7 +158,7 @@ export async function POST(request: Request) {
         stripe_subscription_id: subscription.id,
         status,
         plan,
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
         // Stripe knows when this started; the upsert must not reset it to now()
         // every time the subscription renews.
         created_at: new Date(subscription.created * 1000).toISOString(),

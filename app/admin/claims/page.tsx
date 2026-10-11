@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/require-admin';
 import { reviewOwnershipClaim } from '@/lib/reel-actions';
 import { AdminPage, Panel, List, Row, Tag } from '@/components/admin/ui';
 import { ArrowUpRightIcon } from '@/components/icons';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Ownership claims' };
@@ -49,6 +50,7 @@ export default async function AdminClaimsPage() {
 
   return (
     <AdminPage
+      tabs={<SectionTabs section="partners" current="/admin/claims" />}
       title="Ownership claims"
       width="lg"
       description="Approving one hands that account edit rights over a live listing and the ability to publish reels. Check the person actually runs the restaurant before approving."

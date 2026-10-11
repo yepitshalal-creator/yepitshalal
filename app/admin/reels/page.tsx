@@ -5,9 +5,10 @@ import { requireAdmin } from '@/lib/require-admin';
 import { approveReel, rejectReel } from '@/lib/reel-actions';
 import { AdminPage, Panel, List, Row, Tag, FIELD } from '@/components/admin/ui';
 import { ArrowUpRightIcon, SparkleIcon } from '@/components/icons';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Reel moderation' };
+export const metadata = { title: 'Reels' };
 
 interface PendingReel {
   id: string;
@@ -45,7 +46,8 @@ export default async function AdminReelsPage() {
 
   return (
     <AdminPage
-      title="Reel moderation"
+      tabs={<SectionTabs section="partners" current="/admin/reels" />}
+      title="Reels"
       width="lg"
       description={
         <>

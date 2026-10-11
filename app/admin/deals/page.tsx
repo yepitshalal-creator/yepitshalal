@@ -4,9 +4,10 @@ import { dealsOverview } from '@/lib/deals/admin-data';
 import { ledgerKind, signed, stateTag, when } from '@/lib/deals/admin-labels';
 import { money, moneyExact } from '@/lib/deals/rules';
 import { AdminPage, List, Panel, Row, Tag } from '@/components/admin/ui';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Deals', robots: { index: false } };
+export const metadata = { title: 'Deals and credit', robots: { index: false } };
 
 // Every restaurant running a deal, the credit we hold for them, and what came
 // in. All money moves through the deal_ledger table (0052), which nothing can
@@ -19,7 +20,7 @@ export default async function DealsAdminPage() {
 
   if (!o.ready) {
     return (
-      <AdminPage title="Deals" width="xl" description="Restaurant deals, credit and fees.">
+      <AdminPage tabs={<SectionTabs section="deals" current="/admin/deals" />} title="Deals and credit" width="xl" description="Restaurant deals, credit and fees.">
         <Panel>
           <p className="px-5 py-8 text-center text-sm text-muted">
             Deals are not switched on yet. The database change for them (0052) has not been added to the live site.
@@ -35,7 +36,8 @@ export default async function DealsAdminPage() {
 
   return (
     <AdminPage
-      title="Deals"
+      tabs={<SectionTabs section="deals" current="/admin/deals" />}
+      title="Deals and credit"
       width="xl"
       description="Restaurant deals, the credit we hold for them, and the fees. A deal never changes a halal label or where a place shows in search."
     >

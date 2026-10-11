@@ -17,6 +17,7 @@ import {
 import type { HalalClassification, TriState } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Check request' };
 
 function TriSelect({
   name,

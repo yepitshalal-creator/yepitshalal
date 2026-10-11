@@ -1,24 +1,18 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateAdminPath } from './admin/cache';
 import { createAdminSupabase } from './supabase/admin';
 import { requireAdmin } from './require-admin';
-
-const METHOD_LABEL: Record<string, string> = {
-  visit: 'Visited in person',
-  phone: 'Spoke to the restaurant',
-  documents: 'Saw certificates or supplier documents',
-  certifier_register: "Found on the certifier's register",
-};
+import { saveCheck } from './admin/save-check';
 
 /**
- * Publish the outcome of a verification.
+ * Publish the outcome of a verification request.
  *
- * A check we actually carried out becomes a strong evidence record, and the
- * public label is derived from evidence by refresh_halal_status(). This never
- * writes a classification directly. "Unable to verify" records the attempt and
- * leaves everything public untouched: failing to confirm is not a finding that
- * a place is not halal.
+ * The check itself is written by saveCheck (lib/admin/save-check.ts), the
+ * same code a check recorded from a restaurant's admin page uses: a check we
+ * carried out becomes a strong evidence record and the public label follows
+ * from evidence. "Unable to verify" records the attempt and changes nothing
+ * public.
  */
 export async function publishVerification(requestId: string, formData: FormData) {
   const adminUser = await requireAdmin();
@@ -31,102 +25,25 @@ export async function publishVerification(requestId: string, formData: FormData)
     .single();
   if (!request) throw new Error('Verification request not found.');
 
-  const classification = String(formData.get('classification'));
-  const method = String(formData.get('method') ?? '');
-  const publicSummary = String(formData.get('public_summary') ?? '').trim().slice(0, 280);
-  const sourceUrl = String(formData.get('source_url') ?? '').trim() || null;
-  const notes = String(formData.get('notes') ?? '');
-  const verified = classification === 'fully_halal' || classification === 'halal_options';
-  if (verified && (!METHOD_LABEL[method] || !publicSummary)) {
-    throw new Error('Say how you checked and what you found before publishing a result.');
-  }
-
-  function tri(name: string): boolean | null {
-    const v = formData.get(name);
-    if (v === 'yes') return true;
-    if (v === 'no') return false;
-    return null;
-  }
-
-  const now = new Date().toISOString();
-  const certificationBody = String(formData.get('certification_body') ?? '').trim() || null;
-  const facts = {
-    restaurant_id: request.restaurant_id,
-    all_meat_halal: tri('all_meat_halal'),
-    serves_non_halal_meat: tri('serves_non_halal_meat'),
-    serves_pork: tri('serves_pork'),
-    serves_alcohol: tri('serves_alcohol'),
-    has_certification: tri('has_certification'),
-    certification_body: certificationBody,
-    verification_notes: notes || null,
-    verified_at: now,
-    last_verified_at: now,
-    next_review_due_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    last_outcome: verified ? 'verified' : 'unable_to_verify',
-  };
-
-  if (verified) {
-    await supabase.from('restaurant_halal_facts').upsert(facts, { onConflict: 'restaurant_id' });
-
-    // A newer check replaces an older one rather than stacking beside it.
-    await supabase
-      .from('restaurant_halal_evidence')
-      .update({ is_current: false })
-      .eq('restaurant_id', request.restaurant_id)
-      .in('kind', ['yepitshalal_check', 'certification'])
-      .eq('is_current', true);
-
-    const evidence: Record<string, string | null>[] = [
-      {
-        restaurant_id: request.restaurant_id,
-        kind: 'yepitshalal_check',
-        claim: classification,
-        strength: 'strong',
-        source_name: 'YepItsHalal',
-        source_url: null,
-        excerpt: publicSummary,
-        notes: METHOD_LABEL[method],
-        checked_at: now,
-        checked_by: `admin:${adminUser.id}`,
-      },
-    ];
-    // Certification is only recorded as confirmed when it was confirmed with
-    // the certifier, not when a restaurant showed us a logo.
-    if (facts.has_certification === true && certificationBody && method === 'certifier_register') {
-      evidence.push({
-        restaurant_id: request.restaurant_id,
-        kind: 'certification',
-        claim: classification,
-        strength: 'strong',
-        source_name: certificationBody,
-        source_url: sourceUrl,
-        excerpt: `Listed on ${certificationBody}'s register of certified outlets.`,
-        notes: null,
-        checked_at: now,
-        checked_by: `admin:${adminUser.id}`,
-      });
-    }
-    await supabase.from('restaurant_halal_evidence').insert(evidence);
-  }
-
-  await supabase.from('verification_history').insert({
-    restaurant_id: request.restaurant_id,
-    verification_request_id: request.id,
-    classification_result: classification,
-    facts_snapshot: { ...facts, method, public_summary: publicSummary, source_url: sourceUrl },
+  const { outcome, verified } = await saveCheck({
+    restaurantId: request.restaurant_id,
+    requestId: request.id,
+    formData,
+    adminId: adminUser.id,
+    allowNotHalal: false,
   });
 
   await supabase
     .from('verification_requests')
     .update({
       status: verified ? 'completed' : 'unable_to_verify',
-      outcome_classification: classification,
-      completed_at: now,
+      outcome_classification: outcome,
+      completed_at: new Date().toISOString(),
     })
     .eq('id', requestId);
 
-  revalidatePath('/admin/queue');
-  revalidatePath(`/admin/queue/${requestId}`);
+  revalidateAdminPath('/admin/queue');
+  revalidateAdminPath(`/admin/queue/${requestId}`);
 }
 
 /** Records a photo that was just uploaded through a signed URL. */
@@ -154,14 +71,14 @@ export async function addRestaurantPhoto(restaurantId: string, storagePath: stri
       .eq('restaurant_id', restaurantId)
       .ilike('storage_path', '%images.unsplash.com%');
   }
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
 }
 
 export async function deleteRestaurant(restaurantId: string) {
   await requireAdmin();
   const supabase = createAdminSupabase();
   await supabase.from('restaurants').delete().eq('id', restaurantId);
-  revalidatePath('/admin/restaurants');
+  revalidateAdminPath('/admin/restaurants');
 }
 
 export async function updateRestaurant(restaurantId: string, formData: FormData) {
@@ -178,8 +95,8 @@ export async function updateRestaurant(restaurantId: string, formData: FormData)
       menu_url: String(formData.get('menu_url') ?? '') || null,
     })
     .eq('id', restaurantId);
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
-  revalidatePath(`/restaurant`);
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath(`/restaurant`);
 }
 
 // Price a head, only ever as the owner told us (lib/price.ts). "Not known"
@@ -199,8 +116,8 @@ export async function setPriceRange(restaurantId: string, formData: FormData) {
     })
     .eq('id', restaurantId);
   if (error) throw new Error(error.message);
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
-  revalidatePath(`/restaurant`);
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath(`/restaurant`);
 }
 
 export async function addVideo(restaurantId: string, formData: FormData) {
@@ -219,14 +136,14 @@ export async function addVideo(restaurantId: string, formData: FormData) {
     embed_url: embedUrl,
     caption: String(formData.get('caption') ?? '') || null,
   });
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
 }
 
 export async function deletePhoto(restaurantId: string, photoId: string) {
   await requireAdmin();
   const supabase = createAdminSupabase();
   await supabase.from('restaurant_photos').delete().eq('id', photoId);
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
 }
 
 export async function setPrimaryPhoto(restaurantId: string, photoId: string) {
@@ -234,7 +151,7 @@ export async function setPrimaryPhoto(restaurantId: string, photoId: string) {
   const supabase = createAdminSupabase();
   await supabase.from('restaurant_photos').update({ is_primary: false }).eq('restaurant_id', restaurantId);
   await supabase.from('restaurant_photos').update({ is_primary: true }).eq('id', photoId);
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
 }
 
 export async function createOffer(formData: FormData) {
@@ -250,12 +167,12 @@ export async function createOffer(formData: FormData) {
     voucher_code: String(formData.get('voucher_code') ?? '') || null,
     ends_at: String(formData.get('ends_at') ?? '') || null,
   });
-  revalidatePath('/admin/offers');
+  revalidateAdminPath('/admin/offers');
 }
 
 export async function deleteOffer(offerId: string) {
   await requireAdmin();
   const supabase = createAdminSupabase();
   await supabase.from('offers').delete().eq('id', offerId);
-  revalidatePath('/admin/offers');
+  revalidateAdminPath('/admin/offers');
 }

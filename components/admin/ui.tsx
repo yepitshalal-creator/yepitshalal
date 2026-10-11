@@ -20,26 +20,33 @@ export function AdminPage({
   title,
   description,
   action,
+  tabs,
   width = 'md',
   children,
 }: {
   title: string;
   description?: React.ReactNode;
   action?: React.ReactNode;
-  /** `xl` is the dashboard's width: room for charts side by side. */
+  /** A section's tabs (components/admin/SectionTabs), shown above the title. */
+  tabs?: React.ReactNode;
+  /** `xl` is the dashboard's width: room for charts and tables side by side.
+   *  Widened 2026-10-10 when admin got its own sidebar and the full window. */
   width?: 'sm' | 'md' | 'lg' | 'xl';
   children: React.ReactNode;
 }) {
   return (
     <div
       className={clsx(
-        'mx-auto px-4 py-8 sm:px-6 sm:py-10',
-        width === 'sm' && 'max-w-xl',
-        width === 'md' && 'max-w-2xl',
-        width === 'lg' && 'max-w-3xl',
-        width === 'xl' && 'max-w-6xl lg:px-8'
+        // Left aligned beside the sidebar, so a title sits in the same place on
+        // every page whatever its width.
+        'px-4 py-8 sm:px-6 sm:py-10 lg:px-8',
+        width === 'sm' && 'max-w-2xl',
+        width === 'md' && 'max-w-4xl',
+        width === 'lg' && 'max-w-5xl',
+        width === 'xl' && 'max-w-7xl'
       )}
     >
+      {tabs}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-semibold text-ink">{title}</h1>

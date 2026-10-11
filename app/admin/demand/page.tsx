@@ -2,6 +2,7 @@ import { createAdminSupabase } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/require-admin';
 import { AdminPage, Panel, Tag } from '@/components/admin/ui';
 import { InfoIcon } from '@/components/icons';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Where to go next' };
@@ -116,6 +117,7 @@ export default async function AdminDemandPage() {
 
   return (
     <AdminPage
+      tabs={<SectionTabs section="analytics" current="/admin/demand" />}
       title="Where to go next"
       width="lg"
       description={`${rows.length.toLocaleString('en-GB')} people waiting. ${ranked.length} distinct places picked from the list, ${freeText.length} typed by hand, ${noPlace} who did not say.`}

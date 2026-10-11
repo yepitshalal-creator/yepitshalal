@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/require-admin';
 import { AdminPage, Panel, List, Row, Tag } from '@/components/admin/ui';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Submissions', robots: { index: false } };
+export const metadata = { title: 'New restaurants', robots: { index: false } };
 
 const STATUS_TONE = { pending: 'warn', approved: 'good', duplicate: 'accent', rejected: 'neutral' } as const;
 const STATUS_LABEL = { pending: 'Pending', approved: 'Approved', duplicate: 'Merged', rejected: 'Rejected' } as const;
@@ -27,7 +28,8 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
 
   return (
     <AdminPage
-      title="Submissions"
+      tabs={<SectionTabs section="restaurants" current="/admin/submissions" />}
+      title="New restaurants"
       description="Restaurants sent in through Add a restaurant. Nothing here is public until it is approved."
       width="lg"
     >

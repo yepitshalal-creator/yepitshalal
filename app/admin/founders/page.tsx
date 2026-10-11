@@ -11,6 +11,7 @@ import {
 import { AdminPage, BUTTON_SECONDARY, FIELD, List, Panel, Row, Tag } from '@/components/admin/ui';
 import { ConfirmSubmitButton } from '@/components/admin/ConfirmSubmitButton';
 import { FOUNDERS_CAP } from '@/lib/founders';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Founders', robots: { index: false } };
@@ -89,6 +90,7 @@ export default async function FoundersAdminPage({ searchParams }: { searchParams
 
   return (
     <AdminPage
+      tabs={<SectionTabs section="partners" current="/admin/founders" />}
       title="Founders"
       width="lg"
       description={

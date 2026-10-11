@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/require-admin';
+import { adminCached } from '@/lib/admin/cache';
 import { AdminPage, Panel, Tag } from '@/components/admin/ui';
 import { ArrowUpRightIcon, InfoIcon, PhoneIcon } from '@/components/icons';
 import { formatUkPhone, splitPhones } from '@/lib/phone';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'What to check next' };
@@ -51,10 +53,10 @@ function businessKey(r: Row): string {
   return (r.brands?.name ?? r.name).toLowerCase().replace(/[^a-z0-9]+/g, '');
 }
 
-export default async function AdminVerifyPage() {
-  // The layout checks too, but a layout is not always re-run when moving
-  // between admin pages.
-  await requireAdmin();
+// The call sheet reads every searchable listing, twelve pages of a thousand,
+// so the finished list is kept for ten minutes rather than rebuilt on every
+// visit. Recording a check clears it (revalidateAdminPath).
+async function buildWorklist() {
   const supabase = createAdminSupabase();
 
   const rows: Row[] = [];
@@ -110,9 +112,20 @@ export default async function AdminVerifyPage() {
 
   const covered = worklist.reduce((n, g) => n + g.rows.length, 0);
   const singles = [...groups.values()].filter((g) => g.rows.length < 3).reduce((n, g) => n + g.rows.length, 0);
+  return { worklist, covered, singles };
+}
+
+const loadWorklist = adminCached(buildWorklist, 'verify-worklist-v1', 600);
+
+export default async function AdminVerifyPage() {
+  // The layout checks too, but a layout is not always re-run when moving
+  // between admin pages.
+  await requireAdmin();
+  const { worklist, covered, singles } = await loadWorklist();
 
   return (
     <AdminPage
+      tabs={<SectionTabs section="checks" current="/admin/verify" />}
       title="What to check next"
       width="lg"
       description={`Ordered by how many listings one conversation would settle. These 40 businesses cover ${covered.toLocaleString('en-GB')} of them; the remaining ${singles.toLocaleString('en-GB')} are one-offs, best left to their owners through the claim flow.`}

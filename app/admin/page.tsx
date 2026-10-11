@@ -15,10 +15,12 @@ import { LineChart } from '@/components/admin/charts/LineChart';
 import { StackedColumns } from '@/components/admin/charts/StackedColumns';
 import { SERIES } from '@/components/admin/charts/theme';
 import { MessageRow } from '@/components/admin/inbox/parts';
-import { InboxIcon, PlusIcon, SealCheckIcon, UserIcon } from '@/components/icons';
+import { CheckIcon, InboxIcon, ListIcon, PlayIcon, PlusIcon, SealCheckIcon, StarIcon, TicketIcon, UserIcon } from '@/components/icons';
 import { INBOX_LABEL, loadInbox } from '@/lib/admin/inbox';
-import { catalogue, messagesByDay, waitingCounts } from '@/lib/admin/stats';
-import { posthogConfigured, topPages, totals, trafficByDay } from '@/lib/admin/posthog';
+import { catalogue, messagesByDay, moneyGlance, waitingCounts } from '@/lib/admin/stats';
+import { journey, posthogConfigured, topPages, totals, trafficByDay } from '@/lib/admin/posthog';
+import { setupOpenCount } from '@/lib/admin/setup';
+import { GearIcon, ArrowRightIcon } from '@/components/icons';
 
 export const dynamic = 'force-dynamic';
 // The layout's "%s | Admin" template only reaches pages below it, not this one.
@@ -29,6 +31,24 @@ function greeting(now: Date) {
   if (hour < 12) return 'Good morning';
   if (hour < 18) return 'Good afternoon';
   return 'Good evening';
+}
+
+/** Pence as pounds: £0, £2.99, £1,250. */
+function gbp(pence: number) {
+  return `£${(pence / 100).toLocaleString('en-GB', { minimumFractionDigits: pence % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
+}
+
+/** A number with a line under it, for money and catalogue figures. */
+function Figure({ label, value, note, href }: { label: string; value: string; note?: string; href: string }) {
+  return (
+    <Link href={href} className="flex min-w-0 flex-col justify-between gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm transition hover:border-ink/25">
+      <p className="text-sm font-medium text-muted">{label}</p>
+      <div>
+        <p className="text-[28px] font-semibold leading-none tabular-nums text-ink">{value}</p>
+        {note && <p className="mt-1.5 text-xs text-subtle">{note}</p>}
+      </div>
+    </Link>
+  );
 }
 
 const LABEL_COLOURS = {
@@ -43,7 +63,7 @@ export default async function AdminOverview() {
   // between admin pages, and this page reads people's messages.
   await requireAdmin();
   const now = new Date();
-  const [waiting, inbox, messages, cat, traffic, week, pages] = await Promise.all([
+  const [waiting, inbox, messages, cat, traffic, week, pages, setupLeft, trip, cash] = await Promise.all([
     waitingCounts(),
     loadInbox(),
     messagesByDay(30),
@@ -51,13 +71,36 @@ export default async function AdminOverview() {
     trafficByDay(30),
     totals(7),
     topPages(7, 6),
+    setupOpenCount().catch(() => 0),
+    journey(7),
+    moneyGlance(),
   ]);
 
-  // The messages tile compares the last 7 days with the 7 before, from the
-  // same 30 days the chart draws.
-  const dayTotals = messages.counts.map((c) => c.hello + c.info + c.help);
-  const msgWeek = dayTotals.slice(-7).reduce((a, b) => a + b, 0);
-  const msgPrevWeek = dayTotals.slice(-14, -7).reduce((a, b) => a + b, 0);
+  // Everything that can wait on a person. The ones with something waiting
+  // are cards; the rest are one line, so the numbers below stay in view.
+  const jobs = [
+    { href: '/admin/inbox', short: 'Inbox', count: waiting.messages, label: 'messages to answer', clear: 'No messages to answer', Icon: InboxIcon },
+    {
+      href: '/admin/queue',
+      short: 'Check requests',
+      count: waiting.checks,
+      label: 'halal check requests',
+      clear: 'No check requests',
+      Icon: SealCheckIcon,
+      urgent: waiting.overdue > 0 ? `${waiting.overdue} paid ${waiting.overdue === 1 ? 'check is' : 'checks are'} late` : null,
+    },
+    { href: '/admin/submissions', short: 'New restaurants', count: waiting.submissions, label: 'new restaurants to review', clear: 'No new restaurants', Icon: PlusIcon },
+    { href: '/admin/duplicates', short: 'Duplicates', count: waiting.duplicates, label: 'possible duplicates', clear: 'No duplicates', Icon: ListIcon },
+    { href: '/admin/claims', short: 'Ownership claims', count: waiting.claims, label: 'ownership claims', clear: 'No ownership claims', Icon: UserIcon },
+    { href: '/admin/founders', short: 'Founders', count: waiting.founders, label: 'Founder sign-ups to look at', clear: 'No Founder sign-ups', Icon: StarIcon },
+    { href: '/admin/reels', short: 'Reels', count: waiting.reels, label: 'reels to watch', clear: 'No reels waiting', Icon: PlayIcon },
+    { href: '/admin/deals', short: 'Deals', count: waiting.deals, label: 'deals stopped by reports', clear: 'No deals stopped', Icon: TicketIcon },
+  ];
+  const busy = jobs.filter((j) => j.count > 0);
+  const calm = jobs.filter((j) => j.count === 0);
+  const jobsWaiting = busy.reduce((n, j) => n + j.count, 0);
+  const taps = trip ? trip.now.directions + trip.now.calls + trip.now.websites : null;
+  const tapsBefore = trip ? trip.before.directions + trip.before.calls + trip.before.websites : null;
 
   const labels = cat.labels;
   const listed = labels.fullyHalal + labels.halalOptions + labels.unverified + labels.worthAsking;
@@ -76,19 +119,57 @@ export default async function AdminOverview() {
       width="xl"
       description={`${date}. What is waiting for you, then how the site is doing.`}
     >
+      {setupLeft > 0 && (
+        <Link
+          href="/admin/setup"
+          className="mb-4 flex items-center gap-3 rounded-2xl border border-halal-partial/25 bg-halal-partialSoft px-4 py-3 text-sm text-halal-partialInk transition hover:border-halal-partial/50"
+        >
+          <GearIcon className="h-5 w-5 shrink-0" />
+          <span className="min-w-0 flex-1">
+            <span className="font-semibold">{setupLeft} setup {setupLeft === 1 ? 'job' : 'jobs'} left</span> before every part of
+            the site is switched on, such as sign-in emails and payments.
+          </span>
+          <ArrowRightIcon className="h-4 w-4 shrink-0" />
+        </Link>
+      )}
+
       <section aria-labelledby="waiting">
-        <h2 id="waiting" className="sr-only">
-          Waiting for you
-        </h2>
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          <ActionCard href="/admin/inbox" count={waiting.messages} label="messages to answer" clear="No messages to answer" Icon={InboxIcon} />
-          <ActionCard href="/admin/submissions" count={waiting.submissions} label="restaurants to review" clear="No restaurants to review" Icon={PlusIcon} />
-          <ActionCard href="/admin/queue" count={waiting.checks} label="checks in the queue" clear="No checks waiting" Icon={SealCheckIcon} />
-          <ActionCard href="/admin/claims" count={waiting.claims} label="ownership claims" clear="No ownership claims" Icon={UserIcon} />
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 id="waiting" className="font-display text-lg font-semibold text-ink">
+            Needs you
+          </h2>
+          <p className="text-sm text-muted">
+            {jobsWaiting === 0 ? 'All clear' : `${jobsWaiting.toLocaleString('en-GB')} ${jobsWaiting === 1 ? 'thing' : 'things'} waiting`}
+          </p>
         </div>
+        {busy.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            {busy.map(({ short: _short, ...j }) => (
+              <ActionCard key={j.href} {...j} />
+            ))}
+          </div>
+        ) : (
+          <p className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-sm text-ink shadow-sm">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-halal-fullSoft text-halal-fullInk">
+              <CheckIcon className="h-[18px] w-[18px]" />
+            </span>
+            Nothing is waiting on you.
+          </p>
+        )}
+        {busy.length > 0 && calm.length > 0 && (
+          <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-2 text-sm text-muted">
+            <CheckIcon className="h-4 w-4 text-halal-fullInk" />
+            <span className="mr-1">Nothing waiting in</span>
+            {calm.map((j) => (
+              <Link key={j.href} href={j.href} className="rounded-full border border-line bg-white px-2.5 py-0.5 text-xs font-semibold text-ink/75 hover:border-ink/30">
+                {j.short}
+              </Link>
+            ))}
+          </p>
+        )}
       </section>
 
-      <h2 className="mb-3 mt-10 font-display text-lg font-semibold text-ink">The last 7 days</h2>
+      <h2 className="mb-3 mt-10 font-display text-lg font-semibold text-ink">This week</h2>
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatTile
           label="Visitors"
@@ -99,14 +180,6 @@ export default async function AdminOverview() {
           hint="Connect PostHog to see this"
         />
         <StatTile
-          label="Pages viewed"
-          value={week?.pageviews ?? null}
-          previous={week?.previous.pageviews}
-          versus="on the week before"
-          trend={traffic?.slice(-14).map((d) => d.pageviews)}
-          hint="Connect PostHog to see this"
-        />
-        <StatTile
           label="Searches"
           value={week?.searches ?? null}
           previous={week?.previous.searches}
@@ -114,12 +187,48 @@ export default async function AdminOverview() {
           hint="Connect PostHog to see this"
         />
         <StatTile
-          label="Messages in"
-          value={msgWeek}
-          previous={msgPrevWeek}
+          label="Restaurant pages opened"
+          value={trip?.now.placePages ?? null}
+          previous={trip?.before.placePages}
           versus="on the week before"
-          trend={dayTotals.slice(-14)}
+          hint="Connect PostHog to see this"
         />
+        <StatTile
+          label="Taps to go and eat"
+          value={taps}
+          previous={tapsBefore}
+          versus="on the week before"
+          hint="Directions, call or website"
+        />
+      </div>
+      {trip && (
+        <p className="mt-2 text-xs text-subtle">
+          Taps to go and eat: {trip.now.directions.toLocaleString('en-GB')} directions, {trip.now.calls.toLocaleString('en-GB')} calls and{' '}
+          {trip.now.websites.toLocaleString('en-GB')} website or menu.
+        </p>
+      )}
+
+      <h2 className="mb-3 mt-10 font-display text-lg font-semibold text-ink">Money and the catalogue</h2>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <Figure
+          label="Supporters"
+          value={cash.supporters.toLocaleString('en-GB')}
+          note={`About ${gbp(cash.supportPerMonth)} a month`}
+          href="/admin/money"
+        />
+        <Figure
+          label="Deal fees this month"
+          value={gbp(cash.dealFeesThisMonth)}
+          note={`${gbp(cash.dealCreditHeld)} of credit held for restaurants`}
+          href="/admin/deals"
+        />
+        <Figure
+          label="Places with a halal label"
+          value={(labels.fullyHalal + labels.halalOptions + labels.unverified).toLocaleString('en-GB')}
+          note={`${labels.fullyHalal.toLocaleString('en-GB')} Fully Halal, ${labels.halalOptions.toLocaleString('en-GB')} Halal Options`}
+          href="/admin/restaurants"
+        />
+        <Figure label="Checked by us" value={cat.checkedByUs.toLocaleString('en-GB')} note="By phone, visit or certificate" href="/admin/verify" />
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-5">
@@ -210,7 +319,7 @@ export default async function AdminOverview() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Card title="The catalogue" note="Listed restaurants, by the label a visitor sees">
+        <Card title="The catalogue" note="Everything search shows, by the label a visitor sees">
           <p className="text-[28px] font-semibold leading-none text-ink">
             {listed.toLocaleString('en-GB')} <span className="text-base font-normal text-muted">places</span>
           </p>
@@ -245,7 +354,7 @@ export default async function AdminOverview() {
             <ul className="grid grid-cols-3 gap-3">
               {(
                 [
-                  ['Supporters', cat.supporters, '/admin/subscriptions'],
+                  ['Supporters', cat.supporters, '/admin/money'],
                   ['Waiting for their area', cat.whereNext, '/admin/demand'],
                   ['Language requests', cat.languageRequests, '/admin/demand'],
                 ] as const

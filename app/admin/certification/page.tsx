@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/require-admin';
+import { adminCached } from '@/lib/admin/cache';
 import { AdminPage, Panel, Tag } from '@/components/admin/ui';
 import { ArrowUpRightIcon, InfoIcon } from '@/components/icons';
+import { SectionTabs } from '@/components/admin/SectionTabs';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Certification claims' };
+export const metadata = { title: 'Certificate claims' };
 
 // Every place that says it is certified, grouped by who says it.
 //
@@ -58,16 +60,25 @@ function hostOf(url: string | null): string | null {
   }
 }
 
+// Every current certificate claim with its listing, kept ten minutes.
+const loadClaims = adminCached(
+  async () => {
+    const { data } = await createAdminSupabase()
+      .from('restaurant_halal_evidence')
+      .select('excerpt, source_url, restaurants(id, name, slug, website_url, halal_classification, is_searchable)')
+      .eq('is_current', true)
+      .eq('kind', 'certification_claim');
+    return data;
+  },
+  'certification-claims-v1',
+  600
+);
+
 export default async function AdminCertificationPage() {
   // The layout checks too, but a layout is not always re-run when moving
   // between admin pages.
   await requireAdmin();
-  const supabase = createAdminSupabase();
-  const { data } = await supabase
-    .from('restaurant_halal_evidence')
-    .select('excerpt, source_url, restaurants(id, name, slug, website_url, halal_classification, is_searchable)')
-    .eq('is_current', true)
-    .eq('kind', 'certification_claim');
+  const data = await loadClaims();
 
   const claims = ((data ?? []) as unknown as ClaimRow[]).filter((c) => c.restaurants?.is_searchable);
 
@@ -103,7 +114,8 @@ export default async function AdminCertificationPage() {
 
   return (
     <AdminPage
-      title="Certification claims"
+      tabs={<SectionTabs section="checks" current="/admin/certification" />}
+      title="Certificate claims"
       width="lg"
       description={`${listings} listings across ${ordered.length} businesses say they are certified, and every one of them is still labelled Unverified. Confirm a claim and it becomes Fully Halal.`}
     >

@@ -165,6 +165,43 @@ export async function totals(days: RangeDays): Promise<Totals | null> {
   };
 }
 
+export interface Journey {
+  searches: number;
+  placePages: number;
+  directions: number;
+  calls: number;
+  websites: number;
+}
+
+/** From a search to going to eat: searches, then place pages opened, then
+ *  taps on Directions, Call and Website or Menu. The taps come from PostHog's
+ *  own click capture (autocapture), read from the link that was pressed, so
+ *  the site sends nothing extra. Directions counts anywhere on the site; Call
+ *  and Website count on a place page, where those buttons are. This period
+ *  and the one before, in one query. */
+export async function journey(days: RangeDays): Promise<{ now: Journey; before: Journey } | null> {
+  const recent = `timestamp >= now() - interval ${days} day`;
+  const earlier = `timestamp < now() - interval ${days} day`;
+  const onPlace = `properties.$pathname like '/restaurant/%'`;
+  const parts = [
+    `event in ('location_search_submitted', 'current_location_search_requested')`,
+    `event = '$pageview' and ${onPlace}`,
+    `event = '$autocapture' and elements_chain like '%href="https://www.google.com/maps/dir/%'`,
+    `event = '$autocapture' and ${onPlace} and elements_chain like '%href="tel:%'`,
+    `event = '$autocapture' and ${onPlace} and (elements_chain like '%text="Website"%' or elements_chain like '%text="Menu"%')`,
+  ];
+  const rows = await hogql(`
+    select ${[...parts.map((p) => `countIf(${p} and ${recent})`), ...parts.map((p) => `countIf(${p} and ${earlier})`)].join(', ')}
+    from events
+    where timestamp >= now() - interval ${days * 2} day
+      and event in ('$pageview', '$autocapture', 'location_search_submitted', 'current_location_search_requested')
+  `);
+  if (!rows?.[0]) return null;
+  const r = rows[0].map(num);
+  const pick = (o: number): Journey => ({ searches: r[o], placePages: r[o + 1], directions: r[o + 2], calls: r[o + 3], websites: r[o + 4] });
+  return { now: pick(0), before: pick(5) };
+}
+
 export interface Ranked {
   label: string;
   value: number;

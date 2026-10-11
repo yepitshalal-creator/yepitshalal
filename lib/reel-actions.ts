@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateAdminPath } from './admin/cache';
 import { createAdminSupabase } from './supabase/admin';
 import { createServerSupabase } from './supabase/server';
 import { requireAdmin } from './require-admin';
@@ -24,11 +24,11 @@ async function revalidateFor(restaurantId: string) {
     .eq('id', restaurantId)
     .maybeSingle();
   if (data?.slug) {
-    revalidatePath(`/restaurant/${data.slug}`);
-    revalidatePath(`/manage/${data.slug}`);
+    revalidateAdminPath(`/restaurant/${data.slug}`);
+    revalidateAdminPath(`/manage/${data.slug}`);
   }
-  revalidatePath('/discover');
-  revalidatePath('/admin/reels');
+  revalidateAdminPath('/discover');
+  revalidateAdminPath('/admin/reels');
 }
 
 /**
@@ -224,7 +224,7 @@ export async function assignRestaurantOwner(restaurantId: string, formData: Form
 
   if (!email) {
     await admin.from('restaurants').update({ owner_id: null }).eq('id', restaurantId);
-    revalidatePath(`/admin/restaurants/${restaurantId}`);
+    revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
     return;
   }
 
@@ -239,7 +239,7 @@ export async function assignRestaurantOwner(restaurantId: string, formData: Form
 
   await admin.from('restaurants').update({ owner_id: user.id }).eq('id', restaurantId);
   await admin.from('users').update({ role: 'restaurant_owner' }).eq('id', user.id).eq('role', 'consumer');
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
 }
 
 export async function reviewOwnershipClaim(claimId: string, approve: boolean) {
@@ -271,7 +271,7 @@ export async function reviewOwnershipClaim(claimId: string, approve: boolean) {
       .eq('role', 'consumer');
   }
 
-  revalidatePath('/admin/claims');
+  revalidateAdminPath('/admin/claims');
 }
 
 /**
@@ -303,7 +303,7 @@ export async function setPartnership(restaurantId: string, formData: FormData) {
     { onConflict: 'restaurant_id' }
   );
 
-  revalidatePath(`/admin/restaurants/${restaurantId}`);
+  revalidateAdminPath(`/admin/restaurants/${restaurantId}`);
 }
 
 /** A signed-in user asking to manage a listing. Admin approval grants it. */
@@ -331,8 +331,8 @@ export async function submitOwnershipClaim(restaurantId: string, formData: FormD
     .select('slug, name')
     .eq('id', restaurantId)
     .maybeSingle();
-  if (r?.slug) revalidatePath(`/restaurant/${r.slug}`);
-  revalidatePath('/admin/claims');
+  if (r?.slug) revalidateAdminPath(`/restaurant/${r.slug}`);
+  revalidateAdminPath('/admin/claims');
 
   // Somebody asking to run a listing is business, so info@.
   await notifyInbox({

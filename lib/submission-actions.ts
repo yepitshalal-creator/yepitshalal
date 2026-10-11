@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateAdminPath } from './admin/cache';
 import { redirect } from 'next/navigation';
 import { createAdminSupabase } from './supabase/admin';
 import { requireAdmin } from './require-admin';
@@ -160,7 +160,7 @@ export async function approveSubmission(id: string) {
     .update({ status: 'approved', reviewed_by: admin.id, reviewed_at: new Date().toISOString(), restaurant_id: restaurant.id })
     .eq('id', id);
 
-  revalidatePath('/admin/submissions');
+  revalidateAdminPath('/admin/submissions');
   redirect(`/admin/submissions/${id}`);
 }
 
@@ -200,7 +200,7 @@ export async function mergeSubmission(id: string, restaurantId: string) {
     .update({ status: 'duplicate', reviewed_by: admin.id, reviewed_at: new Date().toISOString(), restaurant_id: restaurantId })
     .eq('id', id);
 
-  revalidatePath('/admin/submissions');
+  revalidateAdminPath('/admin/submissions');
   redirect(`/admin/submissions/${id}`);
 }
 
@@ -217,6 +217,6 @@ export async function rejectSubmission(id: string, formData: FormData) {
       review_note: String(formData.get('note') ?? '').slice(0, 500) || null,
     })
     .eq('id', id);
-  revalidatePath('/admin/submissions');
+  revalidateAdminPath('/admin/submissions');
   redirect(`/admin/submissions/${id}`);
 }
