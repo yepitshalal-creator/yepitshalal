@@ -50,7 +50,7 @@ export function BottomNav() {
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={clsx(
-                  'flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[11px] font-medium transition-colors focus-visible:[outline-offset:-4px]',
+                  'flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[11px] font-medium transition-colors active:bg-white/[0.06] focus-visible:[outline-offset:-4px] [&>svg]:transition-transform [&>svg]:duration-150 active:[&>svg]:scale-90',
                   active ? 'text-accent-onDark' : 'text-white/75 hover:text-white'
                 )}
               >

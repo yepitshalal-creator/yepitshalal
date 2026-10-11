@@ -147,18 +147,18 @@ export default async function AreaPage({ params }: { params: { borough: string }
                   <li key={r.id}>
                     <Link
                       href={`/restaurant/${r.slug}`}
-                      className="group flex items-center gap-3 px-4 py-3 transition hover:bg-black/[0.02]"
+                      className="group flex items-center gap-3 px-4 py-3 transition hover:bg-black/[0.02] active:bg-black/[0.05]"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-display text-[15px] font-semibold text-ink">{title(r)}</p>
-                        <p className="truncate text-[13px] text-muted">
+                        <p className="line-clamp-2 break-words font-display text-[15px] font-semibold leading-snug text-ink">{title(r)}</p>
+                        <p className="line-clamp-2 break-words text-[13px] text-muted">
                           {[where, r.cuisine_label].filter(Boolean).join(' · ')}
                         </p>
                         <div className="mt-1 flex min-w-0 items-center gap-2">
                           <span className="shrink-0">
                             <HalalBadge classification={r.halal_classification} size="sm" />
                           </span>
-                          {r.halal_summary && <span className="truncate text-xs text-muted">{r.halal_summary}</span>}
+                          {r.halal_summary && <span className="min-w-0 break-words text-xs text-muted">{r.halal_summary}</span>}
                         </div>
                       </div>
                       <ArrowRightIcon className="h-4 w-4 shrink-0 text-subtle transition group-hover:translate-x-0.5 group-hover:text-ink" />

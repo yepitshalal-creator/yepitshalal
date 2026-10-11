@@ -174,12 +174,15 @@ export default async function HomePage() {
 
               <div className="mt-4 sm:mt-7">
                 <h2 className="text-xs font-semibold text-white/70">Popular areas</h2>
-                <ul className="-mx-5 mt-2.5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 lg:justify-start">
+                {/* Wrapped, never a sideways row: on a phone the row hid
+                    Tooting and Wembley past the edge (Shabir, 2026-10-11:
+                    "the top part popular areas buttons is cut off"). */}
+                <ul className="mt-2.5 flex flex-wrap justify-center gap-2 lg:justify-start">
                   {POPULAR_AREAS.map((area) => (
-                    <li key={area.label} className="shrink-0">
+                    <li key={area.label}>
                       <Link
                         href={`/search?lat=${area.lat}&lng=${area.lng}&mode=searched_location&label=${encodeURIComponent(area.label)}`}
-                        className="inline-flex min-h-[40px] items-center rounded-full bg-forest-deep/35 px-3.5 text-sm font-medium text-white ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/20"
+                        className="inline-flex min-h-[40px] items-center whitespace-nowrap rounded-full bg-forest-deep/35 px-3.5 text-sm font-medium text-white ring-1 ring-white/25 backdrop-blur-sm transition duration-200 ease-out hover:bg-white/20 active:scale-[0.97] max-[359px]:px-3 max-[359px]:text-[13px]"
                       >
                         {area.label}
                       </Link>

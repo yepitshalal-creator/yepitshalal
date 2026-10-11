@@ -6,6 +6,7 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { HideOnPaths } from '@/components/HideOnPaths';
 import { BottomNav } from '@/components/BottomNav';
+import { NavPending } from '@/components/NavPending';
 import { SITE_URL } from '@/lib/site';
 import { MotionRoot } from '@/components/motion/MotionRoot';
 import { PostHogInit } from '@/components/PostHogInit';
@@ -136,6 +137,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <SiteFooter />
           <BottomNav />
+          {/* The next page's shape, grey, from the tap until it arrives. */}
+          <NavPending />
         </MotionRoot>
         <Analytics />
         <PostHogInit />

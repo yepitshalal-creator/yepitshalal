@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Image from 'next/image';
 import clsx from 'clsx';
 import { ForkKnifeIcon } from './icons';
@@ -42,6 +42,18 @@ export function CoverImage({
   // session. One retry costs nothing and recovers most of them.
   const [attempt, setAttempt] = useState(0);
   const failed = attempt > 1;
+  // A picture still on its way when the card appears fades in once it has
+  // arrived, rather than snapping on (.image-enter in globals.css). Decided in
+  // the browser after mount, so the server's HTML never hides a picture: one
+  // marked priority, or one the browser already has, shows at once.
+  const [waiting, setWaiting] = useState(false);
+  const [arrived, setArrived] = useState(false);
+  const watch = useCallback(
+    (img: HTMLImageElement | null) => {
+      if (img && !priority && !img.complete) setWaiting(true);
+    },
+    [priority]
+  );
   const logo = isBusinessLogo(src);
   const ours = isOwnStorage(src);
   const unsplash = isUnsplash(src);
@@ -72,8 +84,14 @@ export function CoverImage({
       sizes={sizes}
       priority={priority}
       unoptimized={ours || unsplash}
+      ref={watch}
+      onLoad={() => setArrived(true)}
       onError={() => setAttempt((n) => n + 1)}
-      className={clsx(logo ? 'bg-white object-contain p-2' : 'object-cover', className)}
+      className={clsx(
+        logo ? 'bg-white object-contain p-2' : 'object-cover',
+        waiting && (arrived ? 'image-enter' : 'opacity-0'),
+        className
+      )}
     />
   );
 }

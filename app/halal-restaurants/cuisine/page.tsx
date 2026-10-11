@@ -51,10 +51,10 @@ export default async function CuisineIndexPage() {
             <li key={c.slug} className="border-t border-line">
               <Link
                 href={`/halal-restaurants/cuisine/${c.slug}`}
-                className="group -mx-3 flex min-h-[60px] items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white"
+                className="group -mx-3 flex min-h-[60px] items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white active:bg-sand"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-display text-[16px] font-semibold text-ink">Halal {c.cuisine}</span>
+                  <span className="block break-words font-display text-[16px] font-semibold text-ink">Halal {c.cuisine}</span>
                   <span className="mt-0.5 block text-[13px] tabular-nums text-muted">
                     {c.listed} with evidence
                     {c.fully_halal > 0 && <>, {c.fully_halal} Fully Halal</>}

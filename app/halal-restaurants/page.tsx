@@ -54,10 +54,10 @@ export default async function LondonAreasPage() {
             <li key={a.slug} className="border-t border-line">
               <Link
                 href={`/halal-restaurants/${a.slug}`}
-                className="group -mx-3 flex min-h-[60px] items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white"
+                className="group -mx-3 flex min-h-[60px] items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white active:bg-sand"
               >
                 <span className="min-w-0">
-                  <span className="block truncate font-display text-[16px] font-semibold text-ink">{a.borough}</span>
+                  <span className="block break-words font-display text-[16px] font-semibold text-ink">{a.borough}</span>
                   <span className="block text-xs tabular-nums text-muted">
                     {a.listed} places, {a.fully_halal} Fully Halal
                   </span>

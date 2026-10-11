@@ -147,10 +147,10 @@ export default async function ChainPage({ params }: { params: { brand: string } 
           <ul className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
             {byStatus.get(s)!.map((b) => (
               <li key={b.id}>
-                <Link href={`/is-it-halal/${b.slug}`} className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-sand-soft">
+                <Link href={`/is-it-halal/${b.slug}`} className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-sand-soft active:bg-sand">
                   <span className="min-w-0">
-                    <span className="block truncate font-medium text-ink">{b.branch_label ?? tidyAddress(b.address)}</span>
-                    <span className="block truncate text-xs text-muted">
+                    <span className="line-clamp-2 break-words font-medium text-ink">{b.branch_label ?? tidyAddress(b.address)}</span>
+                    <span className="block break-words text-xs text-muted">
                       {[b.borough, b.postcode].filter(Boolean).join(' · ')}
                     </span>
                   </span>

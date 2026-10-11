@@ -185,6 +185,50 @@
   }
 }
 
+/* ── Moving between pages ────────────────────────────────────────────────
+   A page that arrives fades in (app/template.tsx), and a picture fades in as
+   it finishes loading rather than snapping on (components/CoverImage.tsx).
+   Opacity only, on the `out` curve. `backwards` holds the first frame until
+   the animation starts and lets go of it when it ends, so nothing is left
+   holding a layer, a stacking context or a frame for fixed elements. Reduced
+   motion makes both instant through the rule above. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.page-enter {
+  animation: fade-in 260ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.image-enter {
+  animation: fade-in 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* The grey shape of the next page (components/NavPending.tsx). It waits a
+   beat before fading in, so a page that arrives at once never flashes grey. */
+.nav-pending {
+  animation: fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1) 120ms backwards;
+}
+
+/* The header lifts off the page once it has something under it: a soft
+   shadow fades in over the first 48px of scroll. Driven by the scroll itself,
+   with no script listening; a browser without scroll timelines keeps the flat
+   header it always had. */
+@supports (animation-timeline: scroll()) {
+  @keyframes header-lift {
+    to {
+      box-shadow: 0 8px 24px -12px rgba(4, 24, 30, 0.55);
+    }
+  }
+  .header-lift {
+    animation: header-lift linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 48px;
+  }
+}
+
 /* ── The homepage's first screen ─────────────────────────────────────────
    The hero is exactly one screen tall, so its bottom edge is the bottom of
    the window, which is where "London only, for now" lives (Shabir, 2026-09-23:

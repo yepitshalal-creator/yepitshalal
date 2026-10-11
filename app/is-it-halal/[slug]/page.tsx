@@ -262,9 +262,9 @@ export default async function IsItHalalPage({ params }: { params: { slug: string
             <div>
               <dt className="text-xs font-medium uppercase tracking-wide text-subtle">Website</dt>
               <dd className="mt-0.5">
-                <a href={r.website_url} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 ${LINK}`}>
-                  <GlobeIcon className="h-4 w-4" />
-                  {r.website_url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                <a href={r.website_url} target="_blank" rel="noopener noreferrer" className={`inline-flex max-w-full items-start gap-1.5 ${LINK}`}>
+                  <GlobeIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{r.website_url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</span>
                   <span className="sr-only">(opens in a new tab)</span>
                 </a>
               </dd>
@@ -307,10 +307,10 @@ export default async function IsItHalalPage({ params }: { params: { slug: string
           <ul className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
             {otherBranches.slice(0, 8).map((b) => (
               <li key={b.id}>
-                <Link href={`/is-it-halal/${b.slug}`} className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-sand-soft">
+                <Link href={`/is-it-halal/${b.slug}`} className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-sand-soft active:bg-sand">
                   <span className="min-w-0">
-                    <span className="block truncate font-medium text-ink">{b.branch_label ?? tidyAddress(b.address)}</span>
-                    <span className="block truncate text-xs text-muted">{b.borough}</span>
+                    <span className="line-clamp-2 break-words font-medium text-ink">{b.branch_label ?? tidyAddress(b.address)}</span>
+                    <span className="block break-words text-xs text-muted">{b.borough}</span>
                   </span>
                   <HalalBadge classification={b.status} size="sm" />
                 </Link>

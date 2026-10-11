@@ -24,7 +24,7 @@ const OWNERS_BUTTON =
 
 export function SiteHeader() {
   return (
-    <header className="ground-dark sticky top-0 z-30 border-b border-white/10 bg-forest-deep text-white">
+    <header className="ground-dark header-lift sticky top-0 z-30 border-b border-white/10 bg-forest-deep text-white">
       <div className="flex h-14 w-full items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
         {/* Nothing in this row shrinks below its own width: the wordmark is a
             picture, and a squeezed link let it run under the Beta chip ("YEP

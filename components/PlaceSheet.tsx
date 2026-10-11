@@ -298,7 +298,7 @@ export function PlaceSheet({
             ))}
             {detail?.website_url && (
               <DetailRow Icon={GlobeIcon} href={detail.website_url} external>
-                <span className="truncate">{detail.website_url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</span>
+                <span className="min-w-0 [overflow-wrap:anywhere]">{detail.website_url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</span>
               </DetailRow>
             )}
           </ul>

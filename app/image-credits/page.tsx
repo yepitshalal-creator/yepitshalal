@@ -116,7 +116,7 @@ export default function ImageCreditsPage() {
                       <a href={img.page} target="_blank" rel="noopener noreferrer" className="line-clamp-2 font-semibold text-ink hover:underline">
                         {img.title}
                       </a>
-                      <p className="truncate">{img.author ? `By ${img.author}` : 'Author not recorded'}</p>
+                      <p className="line-clamp-2 break-words">{img.author ? `By ${img.author}` : 'Author not recorded'}</p>
                       <p>
                         {img.licenceUrl ? (
                           <a href={img.licenceUrl} target="_blank" rel="noopener noreferrer" className="text-accent-ink hover:underline">

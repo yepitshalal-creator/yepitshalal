@@ -15,8 +15,10 @@ import type { CuisineSummary } from '@/lib/cuisines';
 // how many places we list for it. The counts come from the catalogue; nothing
 // here is rounded up or made up.
 //
-// A row you swipe on a phone, a grid from 768px. Pictures load lazily: this
-// is below the first screen.
+// Two across on a phone, five across from 640px. It was a row you swiped on a
+// phone, which hid half the food past the edge of the screen (2026-10-11):
+// nothing on a phone is cut off now. Pictures load lazily: this is below the
+// first screen.
 
 function tileSources(src: string): { src: string; srcSet?: string } {
   if (isUnsplash(src)) {
@@ -49,7 +51,7 @@ export function CuisineRail({ cuisines }: { cuisines: CuisineSummary[] }) {
               Now, what do you fancy?
             </h2>
             <p className="mt-2.5 max-w-lg text-pretty text-[15px] leading-relaxed text-muted sm:text-[17px]">
-              Start with the food. Every place under it carries the same four labels.
+              Start with the food. Every place under it uses the same three labels.
             </p>
           </div>
           <Link
@@ -61,19 +63,19 @@ export function CuisineRail({ cuisines }: { cuisines: CuisineSummary[] }) {
           </Link>
         </Reveal>
 
-        <ul className="no-scrollbar rail-fade -mx-5 mt-6 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-5 md:gap-4 md:overflow-visible md:px-0 md:pb-0 md:[mask-image:none] md:[-webkit-mask-image:none]">
+        <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
           {tiles.map((t) => (
-            <li key={t.slug} className="w-[40vw] max-w-[210px] shrink-0 snap-start md:w-auto md:max-w-none">
+            <li key={t.slug}>
               <Link
                 href={`/halal-restaurants/cuisine/${t.slug}`}
-                className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-forest shadow-[0_10px_24px_-18px_rgba(11,47,58,0.55)] transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_18px_34px_-18px_rgba(11,47,58,0.6)]"
+                className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-forest shadow-[0_10px_24px_-18px_rgba(11,47,58,0.55)] transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_18px_34px_-18px_rgba(11,47,58,0.6)] active:scale-[0.98] sm:aspect-[4/5]"
               >
                 {t.image && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={t.image.src}
                     srcSet={t.image.srcSet}
-                    sizes="(min-width: 768px) 34vw, 70vw"
+                    sizes="(min-width: 640px) 20vw, 50vw"
                     width={480}
                     height={600}
                     alt=""
@@ -84,7 +86,7 @@ export function CuisineRail({ cuisines }: { cuisines: CuisineSummary[] }) {
                 )}
                 <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
                 <span className="absolute inset-x-3 bottom-3 sm:inset-x-3.5">
-                  <span className="block font-display text-[17px] font-semibold leading-tight text-white">
+                  <span className="block font-display text-[16px] font-semibold leading-tight text-white sm:text-[15px] md:text-[17px]">
                     <span className="sr-only">Halal </span>
                     {t.cuisine}
                   </span>

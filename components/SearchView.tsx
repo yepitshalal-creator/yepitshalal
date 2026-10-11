@@ -442,7 +442,7 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
               autocapture keeps attributes. */}
           <Link
             href="/"
-            className={`${MASK_CLASS} flex min-h-[46px] min-w-0 flex-1 items-center gap-2.5 rounded-full bg-white px-3.5 text-left shadow-[0_1px_2px_rgba(15,37,43,0.04),0_6px_16px_-10px_rgba(15,37,43,0.18)] transition active:scale-[0.99] hover:shadow-[0_2px_4px_rgba(15,37,43,0.05),0_10px_22px_-12px_rgba(15,37,43,0.24)] sm:flex-none sm:pr-4`}
+            className={`${MASK_CLASS} flex min-h-[46px] min-w-0 flex-1 items-center gap-2.5 rounded-full bg-white px-3.5 text-left max-[359px]:gap-2 max-[359px]:px-3 shadow-[0_1px_2px_rgba(15,37,43,0.04),0_6px_16px_-10px_rgba(15,37,43,0.18)] transition active:scale-[0.99] hover:shadow-[0_2px_4px_rgba(15,37,43,0.05),0_10px_22px_-12px_rgba(15,37,43,0.24)] sm:flex-none sm:pr-4`}
           >
             <MapPinIcon className="h-4 w-4 shrink-0 text-accent-ink" aria-hidden="true" />
             <span className="min-w-0 flex-1">
@@ -467,7 +467,13 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
                   mobileView === v ? 'bg-ink text-white' : 'text-ink/55 hover:text-ink'
                 )}
               >
-                {v === 'list' ? <ListIcon className="h-4 w-4" aria-hidden="true" /> : <MapIcon className="h-4 w-4" aria-hidden="true" />}
+                {/* Under 360px the words alone, so the place's name beside
+                    them has room ("Whitechapel" was cut at 320px). */}
+                {v === 'list' ? (
+                  <ListIcon className="h-4 w-4 max-[359px]:hidden" aria-hidden="true" />
+                ) : (
+                  <MapIcon className="h-4 w-4 max-[359px]:hidden" aria-hidden="true" />
+                )}
                 {v}
               </button>
             ))}

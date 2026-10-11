@@ -129,7 +129,7 @@ export function NearestPrayerSpace({
           <ul className="mt-3 divide-y divide-line">
             {rest.map((s) => (
               <li key={s.id} className="flex items-baseline justify-between gap-3 py-2 text-sm">
-                <span className="min-w-0 truncate text-ink/80">{s.name}</span>
+                <span className="min-w-0 break-words text-ink/80">{s.name}</span>
                 <span className="shrink-0 text-muted">about {walkingMinutes(s.distance_meters)} min</span>
               </li>
             ))}

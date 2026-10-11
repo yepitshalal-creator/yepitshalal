@@ -168,12 +168,12 @@ function TileCard({
 
       <div className="px-3.5 pb-3.5 pt-3 sm:px-4">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="min-w-0 truncate font-display text-[18px] font-semibold leading-tight text-ink sm:text-[19px]">
+          <h3 className="line-clamp-2 min-w-0 break-words font-display text-[18px] font-semibold leading-tight text-ink sm:text-[19px]">
             {card.title}
           </h3>
           {restaurant.checked_by_us && <CheckedByUsBadge size="sm" className="mt-0.5 shrink-0" />}
         </div>
-        <p className="mt-1 truncate text-[13px] leading-snug text-muted">
+        <p className="mt-1 line-clamp-2 break-words text-[13px] leading-snug text-muted">
           <Facts restaurant={restaurant} card={card} />
         </p>
         {card.reason && (
@@ -230,7 +230,7 @@ function RowCard({
       <div className="flex min-w-0 flex-1 flex-col">
         <h3 className="line-clamp-2 font-display text-[17px] font-semibold leading-[1.2] text-ink sm:text-[19px]">{card.title}</h3>
 
-        <p className="mt-1 truncate text-[13px] leading-snug text-muted">
+        <p className="mt-1 line-clamp-2 break-words text-[13px] leading-snug text-muted">
           <Facts restaurant={restaurant} card={card} />
         </p>
 
