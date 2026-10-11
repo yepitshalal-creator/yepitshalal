@@ -30,6 +30,8 @@ export interface PlacePreview {
   /** The single most direct one, for a one-line "because". */
   lead_evidence: { kind: string; excerpt: string | null; source_name: string } | null;
   opening_hours: OpeningHour[];
+  /** The listing's own photo, as search returns it; null for none. */
+  photo_path: string | null;
   /** Set when the listing photo came from the restaurant's own website. */
   photo_source_site: string | null;
   photo_source_url: string | null;
@@ -75,10 +77,9 @@ export async function getPlacePreview(slug: string): Promise<PlacePreview | null
       .eq('is_current', true),
     supabase
       .from('restaurant_photos')
-      .select('source_site, source_url')
+      .select('storage_path, source_site, source_url')
       .eq('restaurant_id', place.id)
       .eq('is_primary', true)
-      .not('source_site', 'is', null)
       .limit(1)
       .maybeSingle(),
   ]);
@@ -104,6 +105,7 @@ export async function getPlacePreview(slug: string): Promise<PlacePreview | null
       ? { kind: positive[0].kind, excerpt: positive[0].excerpt, source_name: positive[0].source_name }
       : null,
     opening_hours: (hours ?? []) as OpeningHour[],
+    photo_path: photo?.storage_path ?? null,
     photo_source_site: photo?.source_site ?? null,
     photo_source_url: photo?.source_url ?? null,
   };

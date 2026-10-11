@@ -180,7 +180,7 @@ function TileCard({
           <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-subtle">{card.reason.replace(/\.$/, '')}.</p>
         )}
         {restaurant.hygiene_rating != null && (
-          <div className="mt-2">
+          <div className="mt-1.5">
             <HygieneBadge rating={restaurant.hygiene_rating} />
           </div>
         )}

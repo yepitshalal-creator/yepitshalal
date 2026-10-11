@@ -270,17 +270,18 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
             {tidyAddress(restaurant.address)}
           </span>
         </p>
-        {/* Small facts as pills: open now, the kitchen's hygiene rating, and
-            somewhere to pray when someone has told us. Unknown is left off. */}
+        {/* Small facts: open now and somewhere to pray as pills, when someone
+            has told us, and the kitchen's hygiene rating as quiet grey words
+            after them. Unknown is left off. */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {hasGenuineCheck && <CheckedByUsBadge />}
           {!closed && <OpenStatusBadge hours={restaurant.openingHours} />}
-          <HygieneBadge rating={restaurant.hygiene?.rating} size="md" />
           {(restaurant.prayerFacility === 'prayer_room' || restaurant.prayerFacility === 'space') && (
             <span className="inline-flex items-center whitespace-nowrap rounded-full bg-black/[0.055] px-2.5 py-1 text-xs font-semibold text-ink/75">
               {restaurant.prayerFacility === 'prayer_room' ? 'Prayer room' : 'Space to pray'}
             </span>
           )}
+          <HygieneBadge rating={restaurant.hygiene?.rating} size="md" className="px-0.5" />
         </div>
       </header>
 

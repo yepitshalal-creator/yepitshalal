@@ -9,6 +9,7 @@ import { circleBounds, circlePolygon } from '@/lib/geo';
 import { HALAL_DOT_COLOR, HALAL_PIN_LABEL } from './halalColors';
 import { statusOf } from '@/lib/types';
 import { UNRECORDED_CLASS } from '@/lib/analytics/scrub';
+import type { MapPlace } from '@/lib/mapPlaceShape';
 
 // The only thing this component knows is "MapLibre + a style URL." Swapping
 // tile providers later is a change to NEXT_PUBLIC_MAP_STYLE_URL, nothing here.
@@ -45,6 +46,13 @@ interface RestaurantMapProps {
    * only way to reach those places is to list them.
    */
   onSelectCluster?: (restaurants: SearchResultRestaurant[]) => void;
+  /**
+   * Every other place on the site, drawn as small quiet dots behind the pins
+   * so the map around a search is never empty. Not the results: those are the
+   * pins, and the list.
+   */
+  nearby?: MapPlace[];
+  onSelectNearby?: (place: MapPlace) => void;
 }
 
 type ClusterProps = { restaurant?: SearchResultRestaurant };
@@ -53,6 +61,13 @@ type ClusterProps = { restaurant?: SearchResultRestaurant };
 // never competes with a pin for a tap.
 const COVERAGE_SRC = 'search-coverage';
 const CENTER_SRC = 'search-center';
+// Drawn by the map itself rather than as DOM pins: two thousand of them cost
+// nothing this way. Under the pins and the searched point. Mouse and touch
+// only; the list beside the map is the way to every result by keyboard.
+const NEARBY_SRC = 'nearby-places';
+const NEARBY_HIT = `${NEARBY_SRC}-hit`;
+// One empty list, so a map given no dots does not redraw them every render.
+const NO_PLACES: MapPlace[] = [];
 
 function addCoverageLayers(map: MapLibreMap) {
 
@@ -69,6 +84,41 @@ function addCoverageLayers(map: MapLibreMap) {
       type: 'line',
       source: COVERAGE_SRC,
       paint: { 'line-color': '#276F0A', 'line-width': 2, 'line-opacity': 0.7 },
+    });
+  }
+
+  if (!map.getSource(NEARBY_SRC)) {
+    map.addSource(NEARBY_SRC, { type: 'geojson', data: emptyCollection() });
+    // Small and edged in white: there, but quieter than any pin. At 4px and
+    // 60% they vanished into the street map, so they are a touch bigger and
+    // firmer than that, still well under a pin.
+    map.addLayer({
+      id: `${NEARBY_SRC}-dot`,
+      type: 'circle',
+      source: NEARBY_SRC,
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3, 13, 4.75, 16, 6.5],
+        'circle-color': [
+          'match',
+          ['get', 's'],
+          'fully_halal',
+          HALAL_DOT_COLOR.fully_halal,
+          'halal_options',
+          HALAL_DOT_COLOR.halal_options,
+          HALAL_DOT_COLOR.unverified,
+        ],
+        'circle-opacity': 0.85,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-opacity': 0.9,
+      },
+    });
+    // An invisible ring round each dot, so a finger can find a 4px dot.
+    map.addLayer({
+      id: NEARBY_HIT,
+      type: 'circle',
+      source: NEARBY_SRC,
+      paint: { 'circle-radius': 14, 'circle-color': '#000000', 'circle-opacity': 0 },
     });
   }
 
@@ -107,6 +157,8 @@ export function RestaurantMap({
   resizeSignal = 0,
   coverageRadiusMeters,
   onSelectCluster,
+  nearby = NO_PLACES,
+  onSelectNearby,
 }: RestaurantMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [basemapFailed, setBasemapFailed] = useState(false);
@@ -119,6 +171,10 @@ export function RestaurantMap({
   const onSelectPrayerSpaceRef = useRef(onSelectPrayerSpace);
   const restaurantsRef = useRef(restaurants);
   const selectedIdRef = useRef(selectedId);
+  const nearbyRef = useRef(nearby);
+  const onSelectNearbyRef = useRef(onSelectNearby);
+  nearbyRef.current = nearby;
+  onSelectNearbyRef.current = onSelectNearby;
   onSelectRef.current = onSelect;
   onSelectClusterRef.current = onSelectCluster;
   onSelectPrayerSpaceRef.current = onSelectPrayerSpace;
@@ -165,7 +221,19 @@ export function RestaurantMap({
       // are written to be safe to run repeatedly.
       map.on('styledata', () => {
         applyCoverage(map!, coverageRef.current);
+        syncNearby(map!, nearbyRef.current);
         rerender();
+      });
+      map.on('click', NEARBY_HIT, (e) => {
+        const slug = e.features?.[0]?.properties?.slug;
+        const place = nearbyRef.current.find((p) => p.slug === slug);
+        if (place) onSelectNearbyRef.current?.(place);
+      });
+      map.on('mouseenter', NEARBY_HIT, () => {
+        map!.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', NEARBY_HIT, () => {
+        map!.getCanvas().style.cursor = '';
       });
       map.on('load', rerender);
 
@@ -183,7 +251,7 @@ export function RestaurantMap({
         const id = (e as unknown as { sourceId?: string }).sourceId;
         const loaded = (e as unknown as { isSourceLoaded?: boolean }).isSourceLoaded;
         // Our own coverage layers load fine whether or not the basemap does.
-        if (!id || id === COVERAGE_SRC || id === CENTER_SRC || !loaded) return;
+        if (!id || id === COVERAGE_SRC || id === CENTER_SRC || id === NEARBY_SRC || !loaded) return;
         basemapArrived = true;
         setBasemapFailed(false);
       });
@@ -288,6 +356,11 @@ export function RestaurantMap({
     if (!map) return;
     renderMarkers(map, restaurants, selectedId, onSelectRef, markersRef, onSelectClusterRef);
   }, [restaurants, selectedId]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map) syncNearby(map, nearby);
+  }, [nearby]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -405,6 +478,22 @@ function syncCoverage(
     properties: {},
     geometry: { type: 'Point', coordinates: [center.lng, center.lat] },
   });
+}
+
+/** Push the quiet dots into their layer. Safe before the style is ready: 'styledata' calls it again. */
+function syncNearby(map: MapLibreMap, places: MapPlace[]) {
+  try {
+    setData(map, NEARBY_SRC, {
+      type: 'FeatureCollection',
+      features: places.map((p) => ({
+        type: 'Feature',
+        properties: { slug: p.slug, s: p.classification },
+        geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+      })),
+    });
+  } catch {
+    // Style not applied yet.
+  }
 }
 
 function renderMarkers(

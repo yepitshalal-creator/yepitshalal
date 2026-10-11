@@ -33,6 +33,8 @@ import { formatMetres, walkingMinutes } from '@/lib/prayerSpaces';
 import { HYGIENE_FILTERS } from '@/lib/hygiene/display';
 import { PRICE_RANGES } from '@/lib/price';
 import { MASK_CLASS } from '@/lib/analytics/scrub';
+import { fromRow, type MapPlace, type MapPlaceRow } from '@/lib/mapPlaceShape';
+import { distanceMeters } from '@/lib/geo';
 
 const RestaurantMap = dynamic(() => import('./RestaurantMap').then((m) => m.RestaurantMap), {
   ssr: false,
@@ -62,6 +64,7 @@ const CLASSIFICATION_FILTERS: {
 
 // Places listed at a time. The map pins the same ones, so it never shows a
 // crowd the list has not reached; each "Show more" adds the next lot to both.
+// Every other place is only a small quiet dot behind them (nearby, below).
 const PAGE = 30;
 
 /**
@@ -166,6 +169,9 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
   const [showPrayer, setShowPrayer] = useState(false);
   const [prayerSpaces, setPrayerSpaces] = useState<MapPrayerSpace[]>([]);
   const [prayerPick, setPrayerPick] = useState<MapPrayerSpace | null>(null);
+  // Every place on the site, for the quiet dots round the pins (lib/mapPlaces).
+  // Fetched once, a moment after the page is up, and kept at the edge for an hour.
+  const [mapPlaces, setMapPlaces] = useState<MapPlace[] | null>(null);
   // Set when the radius was widened automatically, so the page can say so.
   const [expandedFrom, setExpandedFrom] = useState<number | null>(null);
   const userChoseRadius = useRef(false);
@@ -269,6 +275,20 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
     };
   }, [showPrayer, lat, lng, coverageMeters]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const t = setTimeout(() => {
+      fetch('/api/map-places')
+        .then((res) => (res.ok ? res.json() : { places: [] }))
+        .then((json: { places?: MapPlaceRow[] }) => !cancelled && setMapPlaces((json.places ?? []).map(fromRow)))
+        .catch(() => !cancelled && setMapPlaces([]));
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, []);
+
   // A map that was display:none while MapLibre initialised has a zero-height
   // canvas; it has to re-measure the moment the mobile toggle reveals it.
   const [resizeSignal, setResizeSignal] = useState(0);
@@ -304,6 +324,52 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
   const radiusLabel = formatRadiusMiles(coverageMeters);
   const skeletonCount = Math.min(Math.max(results.length, 3), 6);
   const shown = useMemo(() => results.slice(0, visible), [results, visible]);
+
+  // The quiet dots: every other place on the site, so the map round a search
+  // is never bare (Shabir, 2026-10-11). A label filter applies to them too. A
+  // name, hygiene, open now or price filter hides them, because the dots
+  // cannot be checked against those, and a filtered map must show only what
+  // matches.
+  const dotsFiltered = Boolean(query) || minHygiene !== null || openNow || prices.length > 0;
+  const nearby = useMemo(() => {
+    if (!mapPlaces || dotsFiltered) return [];
+    const pinned = new Set(shown.map((r) => r.slug));
+    return mapPlaces.filter(
+      (p) => !pinned.has(p.slug) && (classifications.length === 0 || classifications.includes(p.classification))
+    );
+  }, [mapPlaces, dotsFiltered, shown, classifications]);
+
+  /** A dot opens the same sheet as a pin, filled in from the place's own page data. */
+  function openDot(p: MapPlace) {
+    setCluster(null);
+    setPrayerPick(null);
+    setSelected({
+      // The dots carry no id (lib/mapPlaceShape.ts). The slug is unique too,
+      // and the sheet only uses this to know a new place was opened.
+      id: p.slug,
+      name: p.name,
+      slug: p.slug,
+      address: '',
+      lat: p.lat,
+      lng: p.lng,
+      halal_classification: p.classification,
+      halal_status: p.classification,
+      distance_meters: distanceMeters({ lat, lng }, p),
+      primary_photo_path: null,
+      cuisines: null,
+      effective_radius_meters: coverageMeters,
+      is_yep_plus: false,
+      brand_name: null,
+      branch_label: p.branchLabel,
+      halal_evidence_strength: null,
+      halal_summary: null,
+      cuisine_label: p.cuisineLabel,
+      opening_hours: null,
+      total_count: 0,
+      postcode: null,
+      checked_by_us: p.checkedByUs,
+    });
+  }
   const moreToShow = results.length > visible ? Math.min(PAGE, results.length - visible) : 0;
   const showMore = () => setVisible((v) => v + PAGE);
 
@@ -801,6 +867,8 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
               setCluster(null);
               setPrayerPick(space);
             }}
+            nearby={nearby}
+            onSelectNearby={openDot}
           />
 
           {/* One small pill, not a panel: the map is the content, and the key is
@@ -853,6 +921,14 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
                     {f.label}
                   </li>
                 ))}
+                {nearby.length > 0 && (
+                  <li className="mt-1 flex items-center gap-1.5 border-t border-line pt-1.5">
+                    <span aria-hidden="true" className="flex h-4 w-4 shrink-0 items-center justify-center">
+                      <span className="h-2 w-2 rounded-full bg-halal-full/60 ring-1 ring-white" />
+                    </span>
+                    Small dots: more places with halal signs
+                  </li>
+                )}
               </ul>
             )}
           </div>

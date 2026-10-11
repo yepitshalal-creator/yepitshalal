@@ -71,3 +71,11 @@ export function circleBounds(
     [east, north],
   ];
 }
+
+/** Great-circle distance in metres, the same sphere PostGIS geography measures on. */
+export function distanceMeters(a: LatLng, b: LatLng): number {
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
+}

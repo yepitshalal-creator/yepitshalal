@@ -17,9 +17,11 @@ export function HygienePanel({ hygiene }: { hygiene: HygieneRecord | null }) {
 
       {rating !== null ? (
         <div className="mt-3 flex items-center gap-3.5">
+          {/* A soft grey circle, not a dark one: it is a second fact about the
+              place, never louder than the halal label (2026-10-11). */}
           <span
             aria-hidden="true"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ink font-display text-2xl font-semibold text-white tabular-nums"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/[0.05] font-display text-lg font-semibold text-ink/75 tabular-nums"
           >
             {rating}
           </span>

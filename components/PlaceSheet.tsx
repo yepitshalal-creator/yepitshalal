@@ -113,7 +113,12 @@ export function PlaceSheet({
 
   const title = displayName(restaurant);
   const status = statusOf(restaurant);
-  const cover = coverFor(restaurant, (url) => !isStockPhoto(url));
+  // A small dot on the map arrives without its photo or reason line (see
+  // SearchView's openDot); both come with the details below. Until they do,
+  // the picture is left blank rather than showing an example that then swaps.
+  const photoPath = restaurant.primary_photo_path ?? detail?.photo_path ?? null;
+  const waitingForPhoto = !photoPath && !detail && !failed;
+  const cover = coverFor({ ...restaurant, primary_photo_path: photoPath }, (url) => !isStockPhoto(url));
   const miles = restaurant.distance_meters / 1609.34;
   const distance = miles < 0.1 ? 'On your doorstep' : `${miles.toFixed(1)} mi away`;
   const cuisine = restaurant.cuisines?.slice(0, 2).join(' · ') || restaurant.cuisine_label || null;
@@ -123,7 +128,8 @@ export function PlaceSheet({
   const phones = splitPhones(detail?.phone);
   // Same words as the card: the label, and under it why this place is on a
   // halal site when nobody has checked it. See lib/whyListed.
-  const reason = restaurant.halal_summary ?? (status === 'unknown' ? whyListed(restaurant).full : null);
+  const reason =
+    restaurant.halal_summary ?? detail?.halal_summary ?? (status === 'unknown' ? whyListed(restaurant).full : null);
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lng}`;
 
   useEffect(() => {
@@ -183,9 +189,11 @@ export function PlaceSheet({
 
         <div className="relative shrink-0">
           <div className="relative h-32 w-full overflow-hidden bg-halal-unverifiedSoft sm:h-36">
-            <CoverImage src={cover.src} alt={cover.own ? title : ''} sizes="(max-width: 640px) 100vw, 360px" />
+            {!waitingForPhoto && (
+              <CoverImage src={cover.src} alt={cover.own ? title : ''} sizes="(max-width: 640px) 100vw, 360px" />
+            )}
             <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/65 to-transparent" />
-            {!cover.own ? (
+            {waitingForPhoto ? null : !cover.own ? (
               <span className="absolute bottom-2 left-3 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
                 Example dish, not this restaurant
               </span>
