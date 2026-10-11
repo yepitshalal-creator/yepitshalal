@@ -227,13 +227,17 @@ export function RestaurantMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center.lat, center.lng, coverageRadiusMeters]);
 
-  // Fit to the searched area. resizeSignal is part of the key because a map
-  // revealed from display:none has only just learned its true size.
+  // Fit to what the map is showing: the places listed so far and the point the
+  // search was made from, so showing more widens the view to take them in. With
+  // nothing to show it frames the searched area instead. resizeSignal is part
+  // of the key because a map revealed from display:none has only just learned
+  // its true size.
+  const pinsKey = `${restaurants.length}:${restaurants[0]?.id}:${restaurants[restaurants.length - 1]?.id}`;
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    const key = `${center.lat},${center.lng},${coverageRadiusMeters},${resizeSignal}`;
+    const key = `${center.lat},${center.lng},${coverageRadiusMeters},${resizeSignal},${pinsKey}`;
     if (key === lastFitRef.current) return;
 
     // A map still inside a display:none column measures zero and would fit to
@@ -255,13 +259,13 @@ export function RestaurantMap({
     // legend sits over its top-left corner, so even padding would tuck the ring
     // under both. Desktop has neither problem.
     const narrow = window.innerWidth < 640;
-    map.fitBounds(circleBounds(center, coverageRadiusMeters), {
+    map.fitBounds(viewBounds(center, coverageRadiusMeters, restaurants), {
       padding: narrow ? { top: 56, bottom: 92, left: 24, right: 24 } : 56,
       duration: map.loaded() && !reduceMotion ? 500 : 0,
       maxZoom: 16,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [center.lat, center.lng, coverageRadiusMeters, resizeSignal]);
+  }, [center.lat, center.lng, coverageRadiusMeters, resizeSignal, pinsKey]);
 
   // MapLibre measures its container once, at construction. On mobile the map
   // starts inside a display:none column, so it comes up with a zero-height
@@ -341,12 +345,32 @@ export function RestaurantMap({
     <div className={`${UNRECORDED_CLASS} relative h-full w-full`}>
       <div ref={containerRef} className="h-full w-full" />
       {basemapFailed && (
-        <p className="pointer-events-none absolute inset-x-3 bottom-8 z-10 mx-auto w-fit rounded-full bg-ink/85 px-3.5 py-1.5 text-center text-xs font-medium text-white shadow-lg backdrop-blur">
+        <p className="pointer-events-none absolute inset-x-3 bottom-20 z-10 mx-auto w-fit rounded-full bg-ink/85 px-3.5 py-1.5 text-center text-xs font-medium text-white shadow-lg backdrop-blur">
           Map background didn&apos;t load. The pins are still in the right places.
         </p>
       )}
     </div>
   );
+}
+
+/** The places on the map and the point searched from, or the searched circle when there are none. */
+function viewBounds(
+  center: { lat: number; lng: number },
+  coverageRadiusMeters: number,
+  restaurants: SearchResultRestaurant[]
+): [[number, number], [number, number]] {
+  if (restaurants.length === 0) return circleBounds(center, coverageRadiusMeters);
+  let [west, south, east, north] = [center.lng, center.lat, center.lng, center.lat];
+  for (const r of restaurants) {
+    west = Math.min(west, r.lng);
+    east = Math.max(east, r.lng);
+    south = Math.min(south, r.lat);
+    north = Math.max(north, r.lat);
+  }
+  return [
+    [west, south],
+    [east, north],
+  ];
 }
 
 /**

@@ -62,8 +62,9 @@ const CLASSIFICATION_FILTERS: {
   { value: 'unknown', label: 'Worth asking', Mark: HalalNotCheckedMark, tone: 'text-subtle' },
 ];
 
+// Places listed at a time. The map pins the same ones, so it never shows a
+// crowd the list has not reached; each "Show more" adds the next lot to both.
 const PAGE = 30;
-
 
 /**
  * Evidence first or Nearest, and Popular once enough places nearby have earned
@@ -307,6 +308,8 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
   // Of the places in range, how many have halal evidence. Same query as the count.
   const withEvidenceHere = tierCounts.find((t) => t.meters === coverageMeters)?.withEvidence ?? null;
   const shown = useMemo(() => results.slice(0, visible), [results, visible]);
+  const moreToShow = results.length > visible ? Math.min(PAGE, results.length - visible) : 0;
+  const showMore = () => setVisible((v) => v + PAGE);
 
   const countLine = loading
     ? 'Searching…'
@@ -757,13 +760,13 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
 
           {!loading && shown.map((r, i) => <RestaurantCard key={r.id} restaurant={r} priority={i < 2} layout="tile" />)}
 
-          {!loading && results.length > visible && (
+          {!loading && moreToShow > 0 && (
             <button
               type="button"
-              onClick={() => setVisible((v) => v + PAGE)}
+              onClick={showMore}
               className="mt-1 inline-flex min-h-[44px] items-center justify-center rounded-full border border-line bg-white px-5 text-sm font-semibold text-ink transition hover:border-ink/30 active:scale-[0.99]"
             >
-              Show {Math.min(PAGE, results.length - visible)} more of {totalCount}
+              Show {moreToShow} more of {totalCount}
             </button>
           )}
           {!loading && totalCount > results.length && results.length <= visible && (
@@ -784,7 +787,7 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
         >
           <RestaurantMap
             center={{ lat, lng }}
-            restaurants={results}
+            restaurants={shown}
             selectedId={selected?.id ?? null}
             onSelect={(r) => {
               setCluster(null);
@@ -814,7 +817,13 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
               className="flex min-h-[36px] max-w-full items-center gap-2 rounded-full bg-white/95 px-3 text-xs font-semibold text-ink shadow-md ring-1 ring-black/5 backdrop-blur transition active:scale-[0.98]"
             >
               <span aria-hidden="true" className="h-3 w-3 shrink-0 rounded-full border-2 border-halal-full bg-halal-full/15" />
-              <span className="truncate">{loading ? 'Searching…' : `${totalCount} within ${radiusLabel}`}</span>
+              <span className="truncate">
+                {loading
+                  ? 'Searching…'
+                  : shown.length < totalCount
+                    ? `${shown.length} of ${totalCount} within ${radiusLabel}`
+                    : `${totalCount} within ${radiusLabel}`}
+              </span>
               <span className="shrink-0 font-medium text-subtle">{legendOpen ? 'Hide' : 'Key'}</span>
             </button>
             <button
@@ -851,6 +860,21 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
               </ul>
             )}
           </div>
+
+          {/* On a phone the list and its button are hidden behind the map, so
+              the map offers the next places itself. */}
+          {!loading && moreToShow > 0 && !selected && !cluster && !prayerPick && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-3">
+              <button
+                type="button"
+                onClick={showMore}
+                className="pointer-events-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-ink px-5 text-sm font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:bg-accent-ink active:scale-[0.98]"
+              >
+                <MapPinIcon className="h-4 w-4" aria-hidden="true" />
+                Show {moreToShow} more on the map
+              </button>
+            </div>
+          )}
 
           {selected && <PlaceSheet restaurant={selected} onClose={() => setSelected(null)} />}
           {prayerPick && !selected && (

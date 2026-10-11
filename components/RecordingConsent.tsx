@@ -16,13 +16,14 @@ import {
 const NOT_ASKED = ['/admin', '/account', '/manage', '/auth', '/privacy', '/yes', '/stop'];
 
 // Since 2026-10-10 yes is the bright button on top and no the plain one under
-// it. Both stay the same size and easy to read: UK privacy law (the ICO) says
-// saying no must be as easy as saying yes, so no is never shrunk, dimmed or
-// pushed out of sight.
+// it. Since 2026-10-11 no is text with no box around it, so it reads as the
+// second choice (Shabir: "not really 50/50"). It keeps the same size, tap area
+// and full brightness: UK privacy law (the ICO) says saying no must be as easy
+// as saying yes, so no is never shrunk, dimmed or pushed out of sight.
 const BASE =
-  'inline-flex min-h-[44px] items-center justify-center rounded-full px-4 text-sm font-semibold transition active:scale-[0.98]';
-const YES = `${BASE} bg-accent text-forest-deep shadow-sm hover:brightness-105`;
-const NO = `${BASE} text-white ring-1 ring-white/30 hover:bg-white/10`;
+  'inline-flex min-h-[44px] items-center justify-center rounded-full px-4 text-sm transition active:scale-[0.98]';
+const YES = `${BASE} bg-accent font-semibold text-forest-deep shadow-sm hover:brightness-105`;
+const NO = `${BASE} font-medium text-white hover:bg-white/10`;
 
 // The site's one question: may PostHog record this visit. It shows until it
 // is answered and never where PostHog does not run. It is not in the server's
