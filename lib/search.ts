@@ -29,6 +29,26 @@ import {
 /** Every radius the selector offers, smallest first. */
 export const TIER_MILES: number[] = [...RADIUS_OPTIONS_MILES].sort((a, b) => a - b);
 
+// Postgres's code for "canceling statement due to statement timeout".
+const STATEMENT_TIMEOUT = '57014';
+
+/**
+ * Runs a search call, and once more if the database gave up on it for taking
+ * longer than the 3 seconds a visitor's query is allowed.
+ *
+ * Warm, a search takes 20 to 90 ms. The first one on a new database
+ * connection takes 130 to 730 ms, because that connection has to load PostGIS
+ * and read the search functions in first, and PostgREST opens its connections
+ * in bursts, several at once. On the free tier's small shared CPU, a burst of
+ * those beside a borough list can push one past 3 seconds (2026-10-11 at
+ * 00:53 and 00:55, see the vault's Search and discovery UX note). What was
+ * loaded stays loaded after the cancel, so the second try is usually quick.
+ */
+async function retryOnTimeout<R extends { error: { code?: string } | null }>(run: () => PromiseLike<R>): Promise<R> {
+  const first = await run();
+  return first.error?.code === STATEMENT_TIMEOUT ? run() : first;
+}
+
 export interface SearchParams {
   lat: number;
   lng: number;
@@ -75,30 +95,35 @@ export async function runSearch(params: SearchParams): Promise<SearchResponse> {
 
   const narrowed = Object.keys(filters).length > 0;
   const [{ data, error }, { data: counts }, activity, { data: unfiltered }] = await Promise.all([
-    supabase.rpc('search_restaurants', {
-      p_lat: params.lat,
-      p_lng: params.lng,
-      p_radius_meters: requested,
-      p_mode: params.mode,
-      p_classification: classification,
-      p_cuisine_ids: null,
-      p_query: query,
-      p_limit: 500,
-      p_offset: 0,
-      p_sort: params.sort === 'evidence' ? 'evidence' : 'distance',
-      p_include_candidates: true,
-      ...filters,
-    }),
-    supabase.rpc('search_radius_counts', {
-      p_lat: params.lat,
-      p_lng: params.lng,
-      p_radii: TIER_MILES.map(milesToMeters),
-      p_classification: classification,
-      p_cuisine_ids: null,
-      p_query: query,
-      p_include_candidates: true,
-      ...filters,
-    }),
+    retryOnTimeout(() =>
+      supabase.rpc('search_restaurants', {
+        p_lat: params.lat,
+        p_lng: params.lng,
+        p_radius_meters: requested,
+        p_mode: params.mode,
+        p_classification: classification,
+        p_cuisine_ids: null,
+        p_query: query,
+        p_limit: 500,
+        p_offset: 0,
+        p_sort: params.sort === 'evidence' ? 'evidence' : 'distance',
+        p_include_candidates: true,
+        ...filters,
+      })
+    ),
+    // Retried too: without counts, every radius would read as 0 places.
+    retryOnTimeout(() =>
+      supabase.rpc('search_radius_counts', {
+        p_lat: params.lat,
+        p_lng: params.lng,
+        p_radii: TIER_MILES.map(milesToMeters),
+        p_classification: classification,
+        p_cuisine_ids: null,
+        p_query: query,
+        p_include_candidates: true,
+        ...filters,
+      })
+    ),
     placeActivityQuick(),
     // The same search without those three filters, at this radius only, so
     // the page can say how many places they hid.

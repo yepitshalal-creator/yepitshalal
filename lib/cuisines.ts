@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 import type { AreaListing } from './areas';
 
@@ -46,10 +47,25 @@ export function cuisineSlug(cuisine: string): string {
  * four entries helps nobody choosing dinner and reads as filler to a search
  * engine, which is the same rule the borough pages follow.
  */
+// Kept for an hour, like the borough list in lib/areas.ts and for the same
+// reason: 225 ms of database time a call on average, for an answer that only
+// changes when a place is listed. A failure is thrown so it is never kept.
+const fetchCuisines = unstable_cache(
+  async () => {
+    const { data, error } = await publicClient().rpc('listing_cuisines');
+    if (error || !data) throw new Error(error?.message ?? 'listing_cuisines returned nothing');
+    return data as Omit<CuisineSummary, 'slug'>[];
+  },
+  ['listing-cuisines-v1'],
+  { revalidate: 3600 }
+);
+
 export const getCuisines = cache(async function getCuisines(): Promise<CuisineSummary[]> {
-  const { data, error } = await publicClient().rpc('listing_cuisines');
-  if (error || !data) return [];
-  return (data as Omit<CuisineSummary, 'slug'>[]).map((c) => ({ ...c, slug: cuisineSlug(c.cuisine) }));
+  try {
+    return (await fetchCuisines()).map((c) => ({ ...c, slug: cuisineSlug(c.cuisine) }));
+  } catch {
+    return [];
+  }
 });
 
 export const getCuisineBySlug = cache(async function getCuisineBySlug(slug: string) {

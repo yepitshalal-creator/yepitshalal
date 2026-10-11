@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 import type { EvidenceStrength, HalalClassification } from './types';
 
@@ -52,10 +53,32 @@ export function boroughSlug(borough: string): string {
   return borough.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+// listing_boroughs finds where each borough's "search this area" link should
+// land by counting, for every listed place, the listed places within half a
+// mile. That is 250 ms warm and up to 3 seconds at a busy moment, and until
+// 2026-10-11 it ran on every page that lists boroughs, each of the 11,800
+// "Is it halal?" pages included: the database's biggest single cost, about 5
+// hours of its time between 2026-09-03 and 2026-10-11. The answer only changes
+// when a place is listed or unlisted, so it is kept for an hour, as long as
+// the area pages keep themselves.
+//
+// A failure is thrown, not returned, so an empty list is never kept.
+const fetchAreas = unstable_cache(
+  async () => {
+    const { data, error } = await publicClient().rpc('listing_boroughs');
+    if (error || !data) throw new Error(error?.message ?? 'listing_boroughs returned nothing');
+    return data as Omit<AreaSummary, 'slug'>[];
+  },
+  ['listing-boroughs-v1'],
+  { revalidate: 3600 }
+);
+
 export const getAreas = cache(async function getAreas(): Promise<AreaSummary[]> {
-  const { data, error } = await publicClient().rpc('listing_boroughs');
-  if (error || !data) return [];
-  return (data as Omit<AreaSummary, 'slug'>[]).map((a) => ({ ...a, slug: boroughSlug(a.borough) }));
+  try {
+    return (await fetchAreas()).map((a) => ({ ...a, slug: boroughSlug(a.borough) }));
+  } catch {
+    return [];
+  }
 });
 
 /** Boroughs with enough listed places to deserve a page. */
