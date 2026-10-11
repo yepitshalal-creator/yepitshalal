@@ -133,7 +133,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
             <div className="space-y-4 px-5 py-4">
               <p className="text-sm leading-relaxed text-muted">
                 Approving creates a listing labelled Unverified, with this submission shown as its
-                evidence. It cannot show as Fully Halal or Halal Options until stronger evidence is
+                evidence. It cannot show as Fully Halal or Halal food available until stronger evidence is
                 added, such as the restaurant&apos;s own published statement or a check by us.
               </p>
               <form action={approveSubmission.bind(null, s.id)}>

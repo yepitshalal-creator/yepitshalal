@@ -4,7 +4,13 @@ import { cleanRestaurantName } from './restaurantName';
 import type { EvidenceStrength, HalalClassification, HalalStatus } from './types';
 
 // The "Is it halal?" pages: one for every place in search, one for every chain
-// with two or more branches in search, and an index of chains.
+// with two or more branches we know of, and an index of chains.
+//
+// Since 2026-10-11 search holds only places with halal evidence (is_listed).
+// Shabir took the rest, once shown as Worth asking, off search, the map and
+// Google that day. A chain still counts those branches in its answer, as "no
+// halal information", so it is never called halal from the few branches with
+// evidence; their pages are gone, so they are counted, not linked.
 //
 // Shabir, 2026-09-24: "for every restaurant page we have i want you to have
 // dedicated SEO pages just so that when people search if a place is halal or
@@ -45,7 +51,7 @@ export function summaryFor(summary: string | null, evidence: { source_name: stri
   return summary;
 }
 
-/** What a visitor is told: a label from evidence, Worth asking, or nothing. */
+/** A label from evidence, 'unknown' for a place in the catalogue with none, or nothing. */
 export function statusFor(r: { isListed: boolean; isSearchable: boolean; halal_classification: HalalClassification }): HalalStatus | null {
   if (r.isListed) return r.halal_classification;
   if (r.isSearchable) return 'unknown';
@@ -131,7 +137,7 @@ export const getChain = cache(async function getChain(slug: string): Promise<Cha
   const { data: brand } = await client.from('brands').select('id, name, slug, website_url').eq('slug', slug).maybeSingle();
   if (!brand) return null;
   const branches = await getBranches(brand.id);
-  if (branches.length < MIN_CHAIN_BRANCHES) return null;
+  if (branches.length < MIN_CHAIN_BRANCHES || !branches.some((b) => b.status !== 'unknown')) return null;
 
   // The chain's own words: a statement quoted from the chain's website on any
   // of its branches. The most repeated one, which is the one it makes for all.
@@ -171,7 +177,7 @@ export interface ChainSummary {
   counts: Record<HalalStatus, number>;
 }
 
-/** Every chain with enough branches in search for a page of its own. */
+/** Every chain with enough branches for a page of its own, and at least one with evidence. */
 export const getChainIndex = cache(async function getChainIndex(): Promise<ChainSummary[]> {
   const client = publicClient();
   const rows: { brand_id: string; halal_classification: HalalClassification; halal_evidence_strength: EvidenceStrength | null; is_listed: boolean; is_searchable: boolean }[] = [];
@@ -192,7 +198,9 @@ export const getChainIndex = cache(async function getChainIndex(): Promise<Chain
     counts[statusFor({ isListed: r.is_listed, isSearchable: r.is_searchable, halal_classification: r.halal_classification }) ?? 'unknown'] += 1;
     byBrand.set(r.brand_id, counts);
   }
-  const ids = [...byBrand.entries()].filter(([, c]) => Object.values(c).reduce((a, b) => a + b, 0) >= MIN_CHAIN_BRANCHES).map(([id]) => id);
+  const ids = [...byBrand.entries()]
+    .filter(([, c]) => Object.values(c).reduce((a, b) => a + b, 0) >= MIN_CHAIN_BRANCHES && c.unknown < Object.values(c).reduce((a, b) => a + b, 0))
+    .map(([id]) => id);
   if (!ids.length) return [];
   const { data: brands } = await client.from('brands').select('id, name, slug').in('id', ids);
   return ((brands ?? []) as { id: string; name: string; slug: string | null }[])
@@ -205,18 +213,18 @@ export const getChainIndex = cache(async function getChainIndex(): Promise<Chain
 });
 
 /** Every place in search, for the sitemap: one question page each. */
-export async function getSearchableSlugs(): Promise<{ slug: string; isListed: boolean; updated: string | null }[]> {
+export async function getListedSlugs(): Promise<{ slug: string; updated: string | null }[]> {
   const client = publicClient();
-  const rows: { slug: string; isListed: boolean; updated: string | null }[] = [];
+  const rows: { slug: string; updated: string | null }[] = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await client
       .from('restaurants')
-      .select('slug, is_listed, halal_checked_at')
-      .eq('is_searchable', true)
+      .select('slug, halal_checked_at')
+      .eq('is_listed', true)
       .order('slug')
       .range(from, from + 999);
     if (error || !data) break;
-    rows.push(...data.map((r) => ({ slug: r.slug as string, isListed: Boolean(r.is_listed), updated: (r.halal_checked_at as string | null) ?? null })));
+    rows.push(...data.map((r) => ({ slug: r.slug as string, updated: (r.halal_checked_at as string | null) ?? null })));
     if (data.length < 1000) break;
   }
   return rows;
@@ -224,34 +232,35 @@ export async function getSearchableSlugs(): Promise<{ slug: string; isListed: bo
 
 /**
  * The answer about a chain, from its branches' labels and nothing else. A chain
- * is only called halal where every branch in search carries that label; when
+ * is only called halal where every branch we know of carries that label; when
  * the branches differ, the answer says so and counts them.
  */
 export function chainAnswer(name: string, branches: Branch[]): { verdict: string; detail: string; sentence: string } {
   const n = branches.length;
   const count = (s: HalalStatus) => branches.filter((b) => b.status === s).length;
   const all = (s: HalalStatus) => count(s) === n;
-  const where = `the ${n} ${name} branches in London we list`;
+  const where = `the ${n} ${name} branches in London we know of`;
   const answer = (verdict: string, detail: string) => ({ verdict, detail, sentence: `${verdict}. ${detail}` });
   if (all('fully_halal')) {
     return answer('Yes', `At all ${where}, there is strong evidence that all the meat served is halal. Confirm it with the branch when you order.`);
   }
   if (all('halal_options')) {
-    return answer('Partly', `At all ${where}, halal food is served alongside food that is not halal. Ask for the halal items when you order.`);
+    return answer('Partly', `At all ${where}, halal food is available, but not everything on the menu is halal. Ask which items are halal when you order.`);
   }
   if (all('unverified')) {
-    return answer('Not confirmed', `There are signs that ${where} serve halal food, but nobody has verified it. Unverified never means not halal: ask the branch.`);
+    return answer('Not confirmed', `There are signs ${where} are halal, but we haven't checked. Ask the branch before you order. Unverified never means not halal.`);
   }
   if (all('unknown')) {
-    return answer('Worth asking', `Nobody has checked any of ${where}, and we have found nothing ${name} or anyone else has said about its meat. Ask the branch before you order.`);
+    return answer('Not known', `We have no halal information for any of ${where}. Ask the branch before you order.`);
   }
   const parts = [
     count('fully_halal') && `${count('fully_halal')} Fully Halal`,
-    count('halal_options') && `${count('halal_options')} with halal options`,
+    count('halal_options') && `${count('halal_options')} with halal food available`,
     count('unverified') && `${count('unverified')} unverified`,
-    count('unknown') && `${count('unknown')} nobody has checked yet`,
+    count('unknown') && `${count('unknown')} we have no halal information for`,
   ].filter(Boolean) as string[];
   const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0];
   // What varies is what we know, which is not the same as what they serve.
-  return answer('Varies by branch', `What we know differs from branch to branch. Of ${where}: ${list}. Each branch's page shows its own evidence.`);
+  const pages = count('unknown') ? 'Each branch with evidence has a page that shows it.' : "Each branch's page shows its own evidence.";
+  return answer('Varies by branch', `What we know differs from branch to branch. Of ${where}: ${list}. ${pages}`);
 }

@@ -1,19 +1,17 @@
 import { unstable_cache } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 
-// How many places the site can show, said on the homepage and the owners
-// page (Shabir, 2026-10-11: the number of restaurants in our database, on the
-// website). The same rule as search and the admin's catalogue card:
-// is_searchable (migration 0031). "With halal evidence" is a place with any
-// evidence at all, as in the count on a search. Most places are Worth asking,
-// so the words are "places", never "halal restaurants".
+// How many places the site shows, said on the homepage and the owners page
+// (Shabir, 2026-10-11: the number of restaurants in our database, on the
+// website). The same rule as search: is_listed, a place with halal evidence.
+// Places with none came off the site the same day, so this is every place a
+// visitor can find.
 //
 // Kept an hour, like the area pages. A failure is thrown, not kept, and the
 // pages then leave the line out rather than show a wrong number.
 
 export interface SiteCounts {
-  places: number;
-  withEvidence: number;
+  listed: number;
 }
 
 function publicClient() {
@@ -24,16 +22,14 @@ function publicClient() {
 
 const fetchCounts = unstable_cache(
   async (): Promise<SiteCounts> => {
-    const db = publicClient();
-    const searchable = () =>
-      db.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_searchable', true);
-    const [all, evidence] = await Promise.all([searchable(), searchable().not('halal_evidence_strength', 'is', null)]);
-    if (all.error || evidence.error || all.count == null || evidence.count == null) {
-      throw new Error(all.error?.message ?? evidence.error?.message ?? 'no count');
-    }
-    return { places: all.count, withEvidence: evidence.count };
+    const { count, error } = await publicClient()
+      .from('restaurants')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_listed', true);
+    if (error || count == null) throw new Error(error?.message ?? 'no count');
+    return { listed: count };
   },
-  ['site-counts-v1'],
+  ['site-counts-v2'],
   { revalidate: 3600 }
 );
 
@@ -45,5 +41,5 @@ export async function getSiteCounts(): Promise<SiteCounts | null> {
   }
 }
 
-/** 11801 as "11,801". */
+/** 2150 as "2,150". */
 export const formatCount = (n: number) => n.toLocaleString('en-GB');

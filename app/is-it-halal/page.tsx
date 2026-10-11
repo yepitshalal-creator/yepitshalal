@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Is it halal? London restaurant chains, A to Z',
   description:
-    'Is Chicken Cottage halal? Is Morley’s? Every London chain in our search, with what is actually known about each branch and the evidence behind it.',
+    'Is Chicken Cottage halal? Is Morley’s? Every London chain on YepItsHalal, with what is actually known about each branch and the evidence behind it.',
   alternates: { canonical: '/is-it-halal' },
 };
 

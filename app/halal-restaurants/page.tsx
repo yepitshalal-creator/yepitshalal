@@ -26,7 +26,6 @@ export default async function LondonAreasPage() {
   const total = areas.reduce((n, a) => n + a.listed, 0);
   const fully = areas.reduce((n, a) => n + a.fully_halal, 0);
   const options = areas.reduce((n, a) => n + a.halal_options, 0);
-  const notChecked = areas.reduce((n, a) => n + a.not_checked, 0);
 
   return (
     <>
@@ -35,8 +34,8 @@ export default async function LondonAreasPage() {
         lede={
           <>
             {total.toLocaleString('en-GB')} places with evidence of halal food, including{' '}
-            {fully.toLocaleString('en-GB')} Fully Halal and {options.toLocaleString('en-GB')} with Halal
-            Options, plus {notChecked.toLocaleString('en-GB')} more that are worth asking about.
+            {fully.toLocaleString('en-GB')} Fully Halal and {options.toLocaleString('en-GB')} with halal
+            food available.
           </>
         }
         art={STREET}

@@ -129,7 +129,8 @@ export async function approveSubmission(id: string) {
       data_source: 'owner_submitted',
       catalogue_status: 'active',
       halal_classification: 'unverified',
-      // Nothing said about halal: listed as Worth asking rather than given a label.
+      // Nothing said about halal: kept as a candidate, not given a label. The
+      // site has not shown places with no evidence since 2026-10-11.
       is_candidate: !saysSomethingHalal(sub),
       location: `SRID=4326;POINT(${sub.lng} ${sub.lat})`,
       ...prayerPatch(sub),

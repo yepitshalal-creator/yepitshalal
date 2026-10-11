@@ -44,8 +44,8 @@ export function generateMetadata({ params }: { params: { lang: string } }): Meta
   };
 }
 
-/** The four labels, in the order the English pages show them. */
-const ORDER: HalalStatus[] = ['fully_halal', 'halal_options', 'unverified', 'unknown'];
+/** The three labels, in the order the English pages show them. */
+const ORDER: HalalStatus[] = ['fully_halal', 'halal_options', 'unverified'];
 
 export default async function LocalePage({ params }: { params: { lang: string } }) {
   const locale = localeByCode(params.lang);

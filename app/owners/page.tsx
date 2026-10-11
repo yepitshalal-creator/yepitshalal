@@ -50,7 +50,7 @@ export default async function OwnersPage() {
         title="Is your restaurant on here?"
         lede={
           <>
-            {counts ? `${formatCount(counts.places)} places in London are on YepItsHalal.` : 'Lots of London places are on YepItsHalal.'}{' '}
+            {counts ? `${formatCount(counts.listed)} places in London are on YepItsHalal.` : 'Lots of London places are on YepItsHalal.'}{' '}
             Yours may be one of them. Find it and claim it. Claiming is <Free tone="dark">free</Free>.
           </>
         }

@@ -15,7 +15,7 @@ export const HALAL_DOT_COLOR: Record<HalalStatus, string> = {
 // this keeps the wording identical to the badge.
 export const HALAL_PIN_LABEL: Record<HalalStatus, string> = {
   fully_halal: 'Fully Halal',
-  halal_options: 'Halal Options',
+  halal_options: 'Halal food available',
   unverified: 'Unverified',
-  unknown: 'Worth asking',
+  unknown: 'No halal info',
 };

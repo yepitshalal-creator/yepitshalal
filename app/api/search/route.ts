@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { runSearch } from '@/lib/search';
-import { HALAL_STATUSES, type HalalStatus } from '@/lib/types';
+import { PUBLIC_STATUSES, type HalalStatus } from '@/lib/types';
 import { isHygieneMin } from '@/lib/hygiene/display';
 import { parsePriceList } from '@/lib/price';
 
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
   const classification = (searchParams.get('classification') ?? '')
     .split(',')
-    .filter((c): c is HalalStatus => (HALAL_STATUSES as string[]).includes(c));
+    .filter((c): c is HalalStatus => (PUBLIC_STATUSES as string[]).includes(c));
   const hygiene = Number(searchParams.get('hygiene'));
 
   try {

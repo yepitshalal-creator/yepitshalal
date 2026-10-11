@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { getNearbyWithEvidence, getRestaurantBySlug } from '@/lib/restaurants';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { getNearbyWithEvidence, getRestaurantBySlug, mergedTargetSlug } from '@/lib/restaurants';
 import { getBranches, MIN_CHAIN_BRANCHES, placeTitle, statusFor, summaryFor } from '@/lib/halalPages';
 import { getAreasWithPages } from '@/lib/areas';
 import { halalAnswerFor } from '@/lib/halalAnswer';
@@ -41,7 +41,7 @@ function verdictWord(status: ReturnType<typeof statusFor>): string {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const r = await getRestaurantBySlug(params.slug);
-  if (!r) return { title: 'Not found', robots: { index: false } };
+  if (!r || !r.isListed) return { title: 'Not found', robots: { index: false } };
   const title = placeTitle(r);
   const where = r.borough ?? r.postcode ?? 'London';
   const status = statusFor(r);
@@ -50,9 +50,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: `Is ${title} halal? ${verdictWord(status)}, ${where}`,
     description: answer.sentence.slice(0, 300),
     alternates: { canonical: `/is-it-halal/${r.slug}` },
-    // Every place in search, including the ones nobody has checked: somebody
-    // asking about one deserves our honest "not checked yet" and the places
-    // nearby that do have evidence. A place out of search stays out of Google.
+    // Only places with halal evidence have this page. From 2026-09-24 to
+    // 2026-10-11 the ones nobody had checked had one too, in Google; Shabir
+    // took them off the site on 2026-10-11, so they are not found now.
     robots: r.isSearchable ? undefined : { index: false, follow: true },
     openGraph: { title: `Is ${title} halal?`, description: answer.sentence.slice(0, 300), url: `/is-it-halal/${r.slug}` },
   };
@@ -61,6 +61,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function IsItHalalPage({ params }: { params: { slug: string } }) {
   const r = await getRestaurantBySlug(params.slug);
   if (!r) notFound();
+  // A merged duplicate sends an old link to the record that was kept, as the
+  // restaurant page does.
+  if (r.mergedInto) {
+    const kept = await mergedTargetSlug(r.mergedInto);
+    if (kept && kept !== r.slug) permanentRedirect(`/is-it-halal/${kept}`);
+  }
+  if (!r.isListed) notFound();
 
   const [nearby, branches, areas] = await Promise.all([
     getNearbyWithEvidence(r),
@@ -82,7 +89,8 @@ export default async function IsItHalalPage({ params }: { params: { slug: string
   const closed = r.catalogueStatus === 'permanently_closed' || r.catalogueStatus === 'temporarily_closed';
   const phones = splitPhones(r.phone);
   const addressKnown = !/street address not known/i.test(r.address);
-  const otherBranches = branches.filter((b) => b.id !== r.id);
+  // Branches with no halal evidence have no page, so they are not linked.
+  const otherBranches = branches.filter((b) => b.id !== r.id && b.status !== 'unknown');
   const chainPage = r.brandSlug && branches.length >= MIN_CHAIN_BRANCHES ? `/is-it-halal/chain/${r.brandSlug}` : null;
   const hasGenuineCheck = r.evidence.some((e) => e.kind === 'yepitshalal_check');
 
@@ -325,7 +333,7 @@ export default async function IsItHalalPage({ params }: { params: { slug: string
 
       <p className="mt-8 text-sm leading-relaxed text-muted">
         YepItsHalal labels a place only from evidence: what it says itself, certification, or our own check, each with
-        the date it was read. Unverified and Worth asking never mean not halal.{' '}
+        the date it was read. Unverified never means not halal.{' '}
         <Link href="/how-we-check" className={LINK}>
           How we label places
         </Link>

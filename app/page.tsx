@@ -164,11 +164,11 @@ export default async function HomePage() {
               </div>
 
               {/* How big the search is, from the database (lib/siteCounts.ts).
-                  "Places", because most are not labelled halal yet. */}
+                  Every place on the site has halal evidence, so one number. */}
               {counts && (
                 <p className="mt-2 text-sm font-medium text-white/90 [text-shadow:0_1px_12px_rgba(4,24,30,0.7)]">
-                  {formatCount(counts.places)} places in London.{' '}
-                  <span className="max-[359px]:block">{formatCount(counts.withEvidence)} with halal evidence.</span>
+                  {formatCount(counts.listed)} places in London{' '}
+                  <span className="max-[359px]:block">with signs of halal food.</span>
                 </p>
               )}
 

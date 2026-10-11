@@ -171,13 +171,13 @@ export default async function AdminCoveragePage() {
           )}
         </Panel>
 
-        <Panel title="In search, by label">
+        <Panel title="By label">
           <div className="grid grid-cols-2 gap-3 px-5 py-4 sm:grid-cols-5">
             {[
               ['Fully Halal', totals.fully_halal],
-              ['Halal Options', totals.halal_options],
+              ['Halal food available', totals.halal_options],
               ['Unverified', totals.unverified],
-              ['Worth asking', totals.not_checked],
+              ['No evidence', totals.not_checked],
               ['Hidden', totals.no_evidence],
             ].map(([label, n]) => (
               <div key={label} className="rounded-xl border border-line px-3.5 py-3">
@@ -271,8 +271,8 @@ export default async function AdminCoveragePage() {
 
         <p className="flex items-start gap-2 px-1 text-xs leading-relaxed text-muted">
           <InfoIcon className="mt-0.5 h-4 w-4 shrink-0 text-subtle" />
-          Listed means shown in search with at least some evidence of halal food. Not checked counts
-          places shown as Worth asking. Hidden counts active records we hold but do not show. Districts come
+          Listed means shown in search with at least some evidence of halal food. No evidence counts
+          places nobody has found halal evidence for, which the site has not shown since 2026-10-11. Hidden counts active records we hold but do not show. Districts come
           from each record&apos;s postcode, so records without one group under ??.
         </p>
       </div>

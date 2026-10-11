@@ -51,14 +51,14 @@ const KIND_LABEL: Record<string, string> = {
 
 const CLAIM_LABEL: Record<string, string> = {
   fully_halal: 'Fully Halal',
-  halal_options: 'Halal Options',
+  halal_options: 'Halal food available',
   halal_mentioned: 'Mentions halal',
   not_halal: 'Not halal',
 };
 
 const OUTCOME_LABEL: Record<string, string> = {
   fully_halal: 'Fully Halal',
-  halal_options: 'Halal Options',
+  halal_options: 'Halal food available',
   unverified: "Couldn't confirm",
   not_halal: 'Told us not halal',
 };
@@ -239,10 +239,7 @@ export default async function AdminRestaurantPage({ params }: { params: { id: st
             {r.halal_summary && <p className="border-b border-line px-5 py-3 text-sm text-ink/85">{r.halal_summary}</p>}
             {evidenceRows.length === 0 ? (
               <p className="px-5 py-8 text-center text-sm text-muted">
-                No evidence yet.{' '}
-                {r.is_candidate
-                  ? 'It shows as Worth asking because its name or food is often halal in London.'
-                  : 'Search leaves it out until there is some.'}
+                No evidence yet, so the site leaves it out until there is some.
               </p>
             ) : (
               <ul className="divide-y divide-line">

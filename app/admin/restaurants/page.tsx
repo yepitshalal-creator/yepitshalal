@@ -55,7 +55,7 @@ export default async function AdminRestaurantsPage({ searchParams }: { searchPar
       description={
         filtered
           ? `${total.toLocaleString('en-GB')} records match. Showing ${SHOWS_LABEL[f.shows].toLowerCase()}.`
-          : `Every record in the catalogue: ${facets.all.toLocaleString('en-GB')} in all, ${(facets.fully_halal + facets.halal_options + facets.unverified).toLocaleString('en-GB')} with a halal label, ${facets.unknown.toLocaleString('en-GB')} marked Worth asking and ${facets.hidden.toLocaleString('en-GB')} hidden from search.`
+          : `Every record in the catalogue: ${facets.all.toLocaleString('en-GB')} in all, ${(facets.fully_halal + facets.halal_options + facets.unverified).toLocaleString('en-GB')} with a halal label, ${facets.unknown.toLocaleString('en-GB')} with no evidence (not shown) and ${facets.hidden.toLocaleString('en-GB')} hidden from search.`
       }
       action={
         <Link href="/submit-restaurant" className={BUTTON_SECONDARY}>

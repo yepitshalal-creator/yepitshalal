@@ -337,6 +337,12 @@ export async function runOutreachDay({ dryRun }: { dryRun: boolean }): Promise<R
       continue;
     }
     const target = await targetOf(db, c);
+    // The follow up asks for photos for their page. A place with no halal
+    // evidence has had no page since 2026-10-11.
+    if (target && !target.listed) {
+      result.skipped[c.id] = 'not on the site: no halal evidence';
+      continue;
+    }
     const opened = target && !target.isChain && target.slug && opens ? opens.get(target.slug) ?? 0 : null;
     const email = followUpEmail({ token: c.token, pageOpens: opened });
     if (dryRun) {
@@ -413,6 +419,12 @@ export async function runOutreachDay({ dryRun }: { dryRun: boolean }): Promise<R
     const target = await targetOf(db, c);
     if (!target?.slug) {
       result.skipped[c.id] = 'no page on the site to point to';
+      continue;
+    }
+    // The first email says their place is on the site and links its page,
+    // which is not found for a place with no halal evidence (2026-10-11).
+    if (!target.listed) {
+      result.skipped[c.id] = 'not on the site: no halal evidence';
       continue;
     }
     const email = firstEmail({

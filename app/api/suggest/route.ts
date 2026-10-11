@@ -306,7 +306,7 @@ export async function GET(request: Request) {
 
   const [{ locations, usedOsm }, { data: rows }] = await Promise.all([
     getLocations(query),
-    supabase.rpc('suggest_restaurants', { p_query: query, p_limit: 8, p_include_candidates: true }),
+    supabase.rpc('suggest_restaurants', { p_query: query, p_limit: 8, p_include_candidates: false }),
   ]);
 
   const seen = new Set<string>();

@@ -74,6 +74,12 @@ export interface Target {
   name: string;
   /** The place's slug, or a branch's slug for a chain. Null if a chain has no branch on the site. */
   slug: string | null;
+  /**
+   * The place, or at least one branch, has halal evidence and so a page on the
+   * site. Places with none came off the site on 2026-10-11, and their pages
+   * are not found, so no email may point at one.
+   */
+  listed: boolean;
   isChain: boolean;
   /** None of the place's photos are its own yet (stock pictures and logos do not count). */
   noOwnPhotos: boolean;
@@ -108,22 +114,30 @@ export async function contactToStop(db: SupabaseClient, token: string): Promise<
 
 export async function targetOf(db: SupabaseClient, c: Pick<Contact, 'restaurant_id' | 'brand_id'>): Promise<Target | null> {
   if (c.restaurant_id) {
-    const { data: r } = await db.from('restaurants').select('id, name, slug').eq('id', c.restaurant_id).maybeSingle();
+    const { data: r } = await db.from('restaurants').select('id, name, slug, is_listed').eq('id', c.restaurant_id).maybeSingle();
     if (!r) return null;
-    return { name: r.name, slug: r.slug, isChain: false, noOwnPhotos: await hasNoOwnPhotos(db, [r.id]) };
+    return { name: r.name, slug: r.slug, listed: r.is_listed === true, isChain: false, noOwnPhotos: await hasNoOwnPhotos(db, [r.id]) };
   }
   if (c.brand_id) {
     const { data: b } = await db.from('brands').select('name').eq('id', c.brand_id).maybeSingle();
     if (!b) return null;
     const { data: branches } = await db
       .from('restaurants')
-      .select('id, slug')
+      .select('id, slug, is_listed')
       .eq('brand_id', c.brand_id)
       .eq('is_searchable', true)
       .order('slug')
       .limit(200);
     const ids = (branches ?? []).map((x) => x.id);
-    return { name: b.name, slug: branches?.[0]?.slug ?? null, isChain: true, noOwnPhotos: await hasNoOwnPhotos(db, ids) };
+    // Point at a branch that has a page.
+    const shown = (branches ?? []).find((x) => x.is_listed === true);
+    return {
+      name: b.name,
+      slug: shown?.slug ?? branches?.[0]?.slug ?? null,
+      listed: Boolean(shown),
+      isChain: true,
+      noOwnPhotos: await hasNoOwnPhotos(db, ids),
+    };
   }
   return null;
 }

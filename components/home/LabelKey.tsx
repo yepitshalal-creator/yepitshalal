@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import {
   ArrowRightIcon,
   HalalFullMark,
-  HalalNotCheckedMark,
   HalalPartialMark,
   HalalUnknownMark,
   InfoIcon,
@@ -12,15 +11,17 @@ import { halalLabel } from '@/components/HalalBadge';
 import { Reveal } from '@/components/Reveal';
 import type { HalalStatus } from '@/lib/types';
 
-// The four labels, as a key rather than a legend.
+// The three labels, as a key rather than a legend.
 //
-// They are not one scale, and the old single list read as one: four rows,
-// strongest to weakest, which quietly implied the bottom two sat somewhere
-// near "no". They are two different kinds of statement. Two labels say what
-// the evidence shows. Two say that it has not been confirmed yet, and neither
-// of those is ever a no (see the vault's "Never fabricate halal facts"). So
-// they are grouped that way, and the second group carries its own warning in
-// words rather than leaving it to a footnote.
+// They are not one scale, and a single list reads as one: rows from strongest
+// to weakest quietly imply the bottom one sits somewhere near "no". They are
+// two kinds of statement. Two labels say what the evidence shows. Unverified
+// says it has not been confirmed yet, which is never a no (see the vault's
+// "Never fabricate halal facts"). So they are grouped that way, and the second
+// group carries its own warning in words rather than leaving it to a footnote.
+//
+// There were four until 2026-10-11. The fourth, Worth asking, was a place with
+// no halal evidence at all; Shabir took those off the site that day.
 //
 // Definitions match /how-we-check word for word in meaning; that page is the
 // long version, and the link to it closes the section.
@@ -29,16 +30,15 @@ type Row = { status: HalalStatus; Mark: typeof HalalFullMark; ink: string; body:
 
 const SHOWN: Row[] = [
   { status: 'fully_halal', Mark: HalalFullMark, ink: 'text-halal-fullInk', body: 'Strong evidence that all the meat is halal.' },
-  { status: 'halal_options', Mark: HalalPartialMark, ink: 'text-halal-partialInk', body: "Halal food is served, and so is food that isn't." },
+  { status: 'halal_options', Mark: HalalPartialMark, ink: 'text-halal-partialInk', body: 'Halal food is available, but not everything is halal. Check before you order.' },
 ];
 
 const OPEN: Row[] = [
-  { status: 'unverified', Mark: HalalUnknownMark, ink: 'text-halal-unverifiedInk', body: 'There are signs of halal food, but not enough to confirm it.' },
   {
-    status: 'unknown',
-    Mark: HalalNotCheckedMark,
-    ink: 'text-ink/70',
-    body: "The kind of place that's often halal in London. Nobody has checked this one yet.",
+    status: 'unverified',
+    Mark: HalalUnknownMark,
+    ink: 'text-halal-unverifiedInk',
+    body: "There are signs this place is halal, but we haven't checked. Ask before you order.",
   },
 ];
 
@@ -70,7 +70,7 @@ export function LabelKey() {
             A &ldquo;halal&rdquo; sign only tells you so much
           </h2>
           <p className="mt-3 max-w-xl text-pretty text-[15px] leading-relaxed text-muted sm:text-[17px]">
-            It doesn&apos;t tell you who says so, or when. Every place here shows both, under one of four
+            It doesn&apos;t tell you who says so, or when. Every place here shows both, under one of three
             labels.
           </p>
         </Reveal>
@@ -87,11 +87,12 @@ export function LabelKey() {
             <p className="mt-2 flex items-start gap-2.5 border-t border-black/[0.07] pt-4 text-[15px] font-semibold leading-relaxed text-ink">
               <InfoIcon className="mt-0.5 h-5 w-5 shrink-0 text-spice-ink" aria-hidden="true" />
               <span>
-                Neither one means a place isn&apos;t halal. It means ask them when you order.
+                Unverified never means a place isn&apos;t halal.
               </span>
             </p>
             <p className="mt-1.5 pl-[1.875rem] text-sm leading-relaxed text-muted">
-              Places that say they don&apos;t serve halal food aren&apos;t listed at all.
+              We only list places with a sign of halal food. Places that say they don&apos;t serve it
+              aren&apos;t listed at all.
             </p>
           </Reveal>
         </div>

@@ -10,12 +10,13 @@ import { SITE_URL } from '@/lib/site';
 import { ArrowUpRightIcon } from '@/components/icons';
 import type { HalalStatus } from '@/lib/types';
 
-// "Is <chain> halal?", for every chain with two or more branches in search.
+// "Is <chain> halal?", for every chain with two or more branches we know of
+// and at least one with halal evidence.
 // It is the question most people type ("is Chicken Cottage halal"), and the
 // honest answer is usually that it depends what is known about each branch.
 //
 // The answer is built only from the branches' own labels (chainAnswer): a chain
-// is called halal only where every branch in search carries that label. What
+// is called halal only where every branch we know of carries that label. What
 // the chain says on its own website is quoted separately, as its words, not as
 // a check of any kitchen.
 
@@ -25,6 +26,9 @@ export const dynamic = 'force-dynamic';
 
 const LINK = 'font-semibold text-accent-ink hover:underline';
 const ORDER: HalalStatus[] = ['fully_halal', 'halal_options', 'unverified', 'unknown'];
+// Branches with no halal evidence count towards the answer but have no page
+// since 2026-10-11, so they are counted and not listed.
+const LISTED = ORDER.filter((s) => s !== 'unknown');
 
 export async function generateMetadata({ params }: { params: { brand: string } }): Promise<Metadata> {
   const chain = await getChain(params.brand);
@@ -45,6 +49,7 @@ export default async function ChainPage({ params }: { params: { brand: string } 
   const answer = chainAnswer(chain.name, chain.branches);
   const byStatus = new Map<HalalStatus, Branch[]>();
   for (const b of chain.branches) byStatus.set(b.status, [...(byStatus.get(b.status) ?? []), b]);
+  const noInfo = byStatus.get('unknown')?.length ?? 0;
 
   const pageUrl = `${SITE_URL}/is-it-halal/chain/${chain.slug}`;
   const faqLd = {
@@ -85,7 +90,10 @@ export default async function ChainPage({ params }: { params: { brand: string } 
         Is {chain.name} halal?
       </h1>
       <p className="mt-2 text-sm text-muted">
-        {chain.branches.length} branches in London in our search, each labelled from its own evidence.
+        {chain.branches.length} branches in London that we know of.{' '}
+        {noInfo
+          ? `${chain.branches.length - noInfo} ${chain.branches.length - noInfo === 1 ? 'has' : 'have'} halal evidence, each labelled from its own.`
+          : 'Each is labelled from its own evidence.'}
       </p>
 
       <section aria-labelledby="short-answer" className="ground-dark mt-5 rounded-2xl bg-forest-deep p-5 text-white shadow-sm sm:p-6">
@@ -128,7 +136,7 @@ export default async function ChainPage({ params }: { params: { brand: string } 
         </section>
       )}
 
-      {ORDER.filter((s) => byStatus.get(s)?.length).map((s) => (
+      {LISTED.filter((s) => byStatus.get(s)?.length).map((s) => (
         <section key={s} aria-labelledby={`branches-${s}`} className="mt-8">
           <div className="flex items-center gap-2">
             <HalalBadge classification={s} size="md" variant="solid" />
@@ -154,9 +162,16 @@ export default async function ChainPage({ params }: { params: { brand: string } 
         </section>
       ))}
 
+      {noInfo > 0 && (
+        <p className="mt-8 text-sm leading-relaxed text-muted">
+          {noInfo === 1 ? '1 more branch has' : `${noInfo} more branches have`} no halal information yet, so{' '}
+          {noInfo === 1 ? 'it is' : 'they are'} not on YepItsHalal. Ask the branch before you order.
+        </p>
+      )}
+
       <p className="mt-8 text-sm leading-relaxed text-muted">
-        A chain is only called halal here where every branch in our search carries that label. Unverified and Worth
-        asking never mean not halal.{' '}
+        A chain is only called halal here where every branch we know of carries that label. Unverified never means not
+        halal.{' '}
         <Link href="/how-we-check" className={LINK}>
           How we label places
         </Link>

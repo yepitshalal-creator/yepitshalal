@@ -12,7 +12,7 @@ import { EVIDENCE } from '@/lib/media';
 export const metadata: Metadata = {
   title: 'How we label halal places',
   description:
-    'What Fully Halal, Halal Options, Unverified and Worth asking mean on YepItsHalal, where the evidence comes from, and what we do not know.',
+    'What Fully Halal, Halal food available and Unverified mean on YepItsHalal, where the evidence comes from, and what we do not know.',
   alternates: { canonical: '/how-we-check' },
 };
 
@@ -24,18 +24,13 @@ const LABELS = [
   },
   {
     classification: 'halal_options' as const,
-    needs: 'Halal food is served, but so is food that is not halal.',
+    needs: 'Halal food is available, but not everything is halal. Check before you order.',
     examples: 'The restaurant says it has halal options or a halal menu, or its site mentions halal food alongside pork or non-halal meat.',
   },
   {
     classification: 'unverified' as const,
-    needs: 'There are signs of halal food, but not enough to say more.',
+    needs: "There are signs this place is halal, but we haven't checked. Ask before you order.",
     examples: 'A mention of halal on its website, "halal" in its name, a community tag on OpenStreetMap, or a halal category in public place data.',
-  },
-  {
-    classification: 'unknown' as const,
-    needs: 'It serves a kind of food often halal in London, and nobody has checked it.',
-    examples: 'A kebab shop, a Pakistani grill, a peri peri chicken shop. It is why the place is here at all, and it is a reason to ask, not an answer. Places that say they are not halal are never shown.',
   },
 ];
 
@@ -108,8 +103,9 @@ export default function HowWeCheckPage() {
             ))}
           </dl>
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            Unverified and Worth asking never mean a place isn&apos;t halal. When a restaurant, or a
-            person who mapped it, says it doesn&apos;t serve halal food, we don&apos;t show it at all.
+            Unverified never means a place isn&apos;t halal. We only show places with a sign of halal
+            food. When a restaurant, or a person who mapped it, says it doesn&apos;t serve halal food,
+            we don&apos;t show it at all.
           </p>
         </PageSection>
 

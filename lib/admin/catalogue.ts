@@ -8,8 +8,9 @@ import type { HalalClassification, HalalStatus } from '@/lib/types';
 //
 // "Shows as" is what a visitor sees, worked out the way search does it
 // (is_searchable, migration 0031, and statusOf in lib/types.ts): the three
-// evidence labels, "Worth asking" for a place with no evidence yet, and
-// "Hidden" for anything search leaves out.
+// evidence labels, "No evidence, not shown" for a place with no evidence yet
+// (shown as Worth asking until 2026-10-11, when Shabir took those off the
+// site), and "Hidden" for anything else search leaves out.
 
 export const PAGE_SIZE = 50;
 
@@ -19,9 +20,9 @@ export type Shows = (typeof SHOWS)[number];
 export const SHOWS_LABEL: Record<Shows, string> = {
   all: 'Everything',
   fully_halal: 'Fully Halal',
-  halal_options: 'Halal Options',
+  halal_options: 'Halal food available',
   unverified: 'Unverified',
-  unknown: 'Worth asking',
+  unknown: 'No evidence, not shown',
   hidden: 'Hidden',
 };
 

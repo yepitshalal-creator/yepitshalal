@@ -119,9 +119,9 @@ export default async function AdminOverview() {
   const listed = labels.fullyHalal + labels.halalOptions + labels.unverified + labels.worthAsking;
   const segments = [
     { key: 'fullyHalal', name: 'Fully Halal', value: labels.fullyHalal },
-    { key: 'halalOptions', name: 'Halal Options', value: labels.halalOptions },
+    { key: 'halalOptions', name: 'Halal food available', value: labels.halalOptions },
     { key: 'unverified', name: 'Unverified', value: labels.unverified },
-    { key: 'worthAsking', name: 'Worth asking', value: labels.worthAsking },
+    { key: 'worthAsking', name: 'No evidence, not shown', value: labels.worthAsking },
   ] as const;
 
   const date = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/London' });
@@ -238,7 +238,7 @@ export default async function AdminOverview() {
         <Figure
           label="Places with a halal label"
           value={(labels.fullyHalal + labels.halalOptions + labels.unverified).toLocaleString('en-GB')}
-          note={`${labels.fullyHalal.toLocaleString('en-GB')} Fully Halal, ${labels.halalOptions.toLocaleString('en-GB')} Halal Options`}
+          note={`${labels.fullyHalal.toLocaleString('en-GB')} Fully Halal, ${labels.halalOptions.toLocaleString('en-GB')} Halal food available`}
           href="/admin/restaurants"
         />
         <Figure label="Checked by us" value={cat.checkedByUs.toLocaleString('en-GB')} note="By phone, visit or certificate" href="/admin/verify" />

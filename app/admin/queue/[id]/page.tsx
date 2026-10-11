@@ -227,7 +227,7 @@ export default async function ReviewVerificationPage({ params }: { params: { id:
               >
                 <select id="classification" name="classification" required className={FIELD}>
                   <option value="fully_halal">Fully Halal</option>
-                  <option value="halal_options">Halal Options</option>
+                  <option value="halal_options">Halal food available</option>
                   <option value="unverified">Unable to Verify</option>
                 </select>
               </Field>

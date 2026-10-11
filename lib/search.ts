@@ -22,9 +22,9 @@ import {
 // Search is the same for everyone. There is no radius entitlement: anybody can
 // look anywhere in London, signed in or not. See migration 0033.
 //
-// Search includes places nobody has checked yet ("Worth asking"), alongside
-// places with halal evidence. Each result carries halal_status to tell them apart,
-// and each radius count says how many of its places have evidence.
+// Search shows only places with halal evidence (is_listed). Until 2026-10-11 it
+// also showed places with none, as "Worth asking"; Shabir took those off the
+// site that day, so p_include_candidates is false everywhere public.
 
 /** Every radius the selector offers, smallest first. */
 export const TIER_MILES: number[] = [...RADIUS_OPTIONS_MILES].sort((a, b) => a - b);
@@ -107,7 +107,7 @@ export async function runSearch(params: SearchParams): Promise<SearchResponse> {
         p_limit: 500,
         p_offset: 0,
         p_sort: params.sort === 'evidence' ? 'evidence' : 'distance',
-        p_include_candidates: true,
+        p_include_candidates: false,
         ...filters,
       })
     ),
@@ -120,7 +120,7 @@ export async function runSearch(params: SearchParams): Promise<SearchResponse> {
         p_classification: classification,
         p_cuisine_ids: null,
         p_query: query,
-        p_include_candidates: true,
+        p_include_candidates: false,
         ...filters,
       })
     ),
@@ -135,7 +135,7 @@ export async function runSearch(params: SearchParams): Promise<SearchResponse> {
           p_classification: classification,
           p_cuisine_ids: null,
           p_query: query,
-          p_include_candidates: true,
+          p_include_candidates: false,
         })
       : Promise.resolve({ data: null }),
   ]);

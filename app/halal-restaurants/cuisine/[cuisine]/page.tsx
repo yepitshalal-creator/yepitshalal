@@ -29,18 +29,18 @@ export async function generateMetadata({ params }: { params: { cuisine: string }
   const name = cuisine.cuisine;
   return {
     title: `Halal ${name} in London`,
-    description: `${cuisine.listed} halal ${name} places across London with evidence behind the label: ${cuisine.fully_halal} Fully Halal and ${cuisine.halal_options} with halal options. See what each label is based on and when it was checked.`,
+    description: `${cuisine.listed} halal ${name} places across London with evidence behind the label: ${cuisine.fully_halal} Fully Halal and ${cuisine.halal_options} with halal food available. See what each label is based on and when it was checked.`,
     alternates: { canonical: `/halal-restaurants/cuisine/${cuisine.slug}` },
   };
 }
 
 const GROUPS: { classification: HalalClassification; heading: string; blurb: string }[] = [
   { classification: 'fully_halal', heading: 'Fully Halal', blurb: 'Strong evidence that all the meat is halal.' },
-  { classification: 'halal_options', heading: 'Halal Options', blurb: 'Halal food is served, alongside food that is not halal.' },
+  { classification: 'halal_options', heading: 'Halal food available', blurb: 'Halal food is available, but not everything is halal. Check before you order.' },
   {
     classification: 'unverified',
     heading: 'Unverified',
-    blurb: "Signs of halal food that haven't been confirmed. It never means not halal.",
+    blurb: "There are signs it's halal, but we haven't checked. Ask before you order. It never means not halal.",
   },
 ];
 
@@ -136,12 +136,6 @@ export default async function CuisinePage({ params }: { params: { cuisine: strin
 
       <div className={`${pageShell} pb-4 pt-8 sm:pt-10`}>
       <div className="max-w-3xl">
-      {cuisine.not_checked > 0 && (
-        <p className="mb-6 max-w-2xl text-pretty text-[15px] leading-relaxed text-muted">
-          Another {cuisine.not_checked.toLocaleString('en-GB')} serve this food and are worth
-          asking about: nobody has checked those.
-        </p>
-      )}
       {topBoroughs.length > 0 && (
         <nav aria-label="By area">
           <h2 className="text-sm font-semibold text-ink">Where they are</h2>

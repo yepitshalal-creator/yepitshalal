@@ -38,7 +38,7 @@ function fixtures(n = 2) {
   const contacts = [];
   const restaurants = [];
   for (let i = 1; i <= n; i++) {
-    restaurants.push({ id: `r${i}`, name: `Place ${i}`, slug: `place-${i}` });
+    restaurants.push({ id: `r${i}`, name: `Place ${i}`, slug: `place-${i}`, is_listed: true });
     contacts.push({
       id: `c${i}`,
       restaurant_id: `r${i}`,
@@ -258,6 +258,25 @@ const status = (t, id) => t.outreach_contacts.find((c) => c.id === id).status;
     }
   );
 
+  // Since 2026-10-11 a place with no halal evidence has no page, so no email may
+  // say it is on the site or ask for photos for it.
+  await scenario(
+    'a place with no halal evidence gets no first email',
+    {
+      tables: (() => {
+        const f = fixtures();
+        f.restaurants[0].is_listed = false;
+        return f;
+      })(),
+    },
+    (r, t, sent) => {
+      assert.strictEqual(sent.length, 1);
+      assert.strictEqual(sent[0].to, 'owner2@example.com');
+      assert.strictEqual(status(t, 'c1'), 'ready');
+      assert.match(r.skipped.c1, /not on the site/);
+    }
+  );
+
   // Follow ups: c1 had its first email 8 days ago and has not answered.
   const DAY = 86400000;
   const firstAt = new Date(Date.now() - 8 * DAY).toISOString();
@@ -285,6 +304,21 @@ const status = (t, id) => t.outreach_contacts.find((c) => c.id === id).status;
       assert.strictEqual(r.followUpsSent, 1);
       assert.strictEqual(sent.length, 1);
       assert.strictEqual(status(t, 'c1'), 'followed_up');
+    }
+  );
+  await scenario(
+    'follow up: a place with no halal evidence gets none',
+    {
+      tables: (() => {
+        const f = due();
+        f.restaurants[0].is_listed = false;
+        return f;
+      })(),
+    },
+    (r, t, sent) => {
+      assert.strictEqual(sent.length, 0);
+      assert.strictEqual(status(t, 'c1'), 'sent');
+      assert.match(r.skipped.c1, /not on the site/);
     }
   );
   await scenario(

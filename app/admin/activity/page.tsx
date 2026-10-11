@@ -53,7 +53,7 @@ const TONE: Record<Kind, string> = {
 
 const OUTCOME: Record<string, string> = {
   fully_halal: 'Fully Halal',
-  halal_options: 'Halal Options',
+  halal_options: 'Halal food available',
   unverified: "couldn't confirm",
   not_halal: 'told us not halal',
 };

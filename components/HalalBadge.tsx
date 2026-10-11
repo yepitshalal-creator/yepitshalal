@@ -28,8 +28,10 @@ const CONFIG: Record<
     ring: 'ring-halal-full/20',
   },
   halal_options: {
-    label: 'Halal Options',
-    hint: 'Some of the menu',
+    // Was "Halal Options". Shabir, 2026-10-11: "Halal food is available, but
+    // check".
+    label: 'Halal food available',
+    hint: 'Not all of it. Check first',
     Mark: HalalPartialMark,
     text: 'text-halal-partialInk',
     bg: 'bg-halal-partialSoft',
@@ -37,18 +39,18 @@ const CONFIG: Record<
   },
   unverified: {
     label: 'Unverified',
-    hint: 'Signs of halal, not confirmed',
+    hint: 'Signs it is halal. Ask first',
     Mark: HalalUnknownMark,
     text: 'text-halal-unverifiedInk',
     bg: 'bg-halal-unverifiedSoft',
     ring: 'ring-halal-unverified/20',
   },
-  // "Not checked yet" said what we had not done and left the obvious question
-  // unanswered: then why am I looking at it? A place is here because the food
-  // it serves is often halal in London, which is a reason to ask. Say that.
+  // A place with no halal evidence. Until 2026-10-11 these were in search as
+  // Worth asking; Shabir took them off the site that day, so this shows only
+  // in the admin and in a chain's branch count.
   unknown: {
-    label: 'Worth asking',
-    hint: 'The kind of place that often is',
+    label: 'No halal info',
+    hint: 'Nobody has checked',
     Mark: HalalNotCheckedMark,
     text: 'text-subtle',
     bg: 'bg-white',

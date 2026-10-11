@@ -81,16 +81,11 @@ export const LOCALES: LocaleCopy[] = [
     labelsHeading: 'ماذا تعني التصنيفات',
     labels: [
       { en: 'Fully Halal', name: 'حلال بالكامل', body: 'أدلة قوية على أن كل اللحوم حلال.' },
-      { en: 'Halal Options', name: 'خيارات حلال', body: 'يقدّم طعامًا حلالًا إلى جانب طعام غير حلال.' },
+      { en: 'Halal food available', name: 'خيارات حلال', body: 'يقدّم طعامًا حلالًا إلى جانب طعام غير حلال.' },
       {
         en: 'Unverified',
         name: 'غير مؤكد',
         body: 'هناك ما يشير إلى طعام حلال، لكنه غير مؤكد. هذا لا يعني أبدًا أنه غير حلال.',
-      },
-      {
-        en: 'Worth asking',
-        name: 'يستحق السؤال',
-        body: 'يقدّم نوعًا من الطعام يكون حلالًا غالبًا في لندن، فيستحق السؤال. لم يتحقق أحد من هذا المكان بعد.',
       },
     ],
     evidenceHeading: 'كيف نعرف',
@@ -131,16 +126,11 @@ export const LOCALES: LocaleCopy[] = [
     labelsHeading: 'لیبل کا مطلب کیا ہے',
     labels: [
       { en: 'Fully Halal', name: 'مکمل حلال', body: 'مضبوط ثبوت کہ سارا گوشت حلال ہے۔' },
-      { en: 'Halal Options', name: 'حلال آپشنز', body: 'یہاں حلال کھانا بھی ملتا ہے اور غیر حلال بھی۔' },
+      { en: 'Halal food available', name: 'حلال آپشنز', body: 'یہاں حلال کھانا بھی ملتا ہے اور غیر حلال بھی۔' },
       {
         en: 'Unverified',
         name: 'غیر تصدیق شدہ',
         body: 'حلال ہونے کے آثار ہیں، مگر تصدیق نہیں ہوئی۔ اس کا مطلب کبھی یہ نہیں کہ حرام ہے۔',
-      },
-      {
-        en: 'Worth asking',
-        name: 'پوچھنا بنتا ہے',
-        body: 'یہاں ایسا کھانا ملتا ہے جو لندن میں اکثر حلال ہوتا ہے، اس لیے پوچھنا بنتا ہے۔ ابھی کسی نے اس جگہ کی جانچ نہیں کی۔',
       },
     ],
     evidenceHeading: 'ہمیں کیسے پتہ چلتا ہے',
@@ -182,7 +172,7 @@ export const LOCALES: LocaleCopy[] = [
     labels: [
       { en: 'Fully Halal', name: 'সম্পূর্ণ হালাল', body: 'শক্ত প্রমাণ আছে যে সব মাংস হালাল।' },
       {
-        en: 'Halal Options',
+        en: 'Halal food available',
         name: 'হালাল অপশন',
         body: 'এখানে হালাল খাবারের পাশাপাশি হালাল নয় এমন খাবারও দেওয়া হয়।',
       },
@@ -190,11 +180,6 @@ export const LOCALES: LocaleCopy[] = [
         en: 'Unverified',
         name: 'যাচাই করা হয়নি',
         body: 'হালাল হওয়ার লক্ষণ আছে, কিন্তু নিশ্চিত করা হয়নি। এর মানে কখনোই এই নয় যে হালাল নয়।',
-      },
-      {
-        en: 'Worth asking',
-        name: 'জিজ্ঞেস করা উচিত',
-        body: 'এখানে এমন ধরনের খাবার হয় যা লন্ডনে প্রায়ই হালাল, তাই জিজ্ঞেস করা উচিত। এই জায়গাটি এখনো কেউ যাচাই করেনি।',
       },
     ],
     evidenceHeading: 'আমরা কীভাবে জানি',
@@ -236,7 +221,7 @@ export const LOCALES: LocaleCopy[] = [
     labels: [
       { en: 'Fully Halal', name: 'Tamamen helal', body: 'Bütün etin helal olduğuna dair güçlü kanıt var.' },
       {
-        en: 'Halal Options',
+        en: 'Halal food available',
         name: 'Helal seçenekler',
         body: 'Burada helal yiyeceklerin yanında helal olmayanlar da var.',
       },
@@ -244,11 +229,6 @@ export const LOCALES: LocaleCopy[] = [
         en: 'Unverified',
         name: 'Doğrulanmadı',
         body: 'Helal olduğuna dair işaretler var ama doğrulanmadı. Bu asla helal değil anlamına gelmez.',
-      },
-      {
-        en: 'Worth asking',
-        name: 'Sormaya değer',
-        body: "Londra'da çoğu zaman helal olan türde bir yemek sunuyor, bu yüzden sormaya değer. Burayı henüz kimse kontrol etmedi.",
       },
     ],
     evidenceHeading: 'Nereden biliyoruz',
@@ -290,7 +270,7 @@ export const LOCALES: LocaleCopy[] = [
     labels: [
       { en: 'Fully Halal', name: 'Entièrement halal', body: 'Preuve solide que toute la viande est halal.' },
       {
-        en: 'Halal Options',
+        en: 'Halal food available',
         name: 'Options halal',
         body: "On y sert du halal à côté de plats qui ne le sont pas.",
       },
@@ -298,11 +278,6 @@ export const LOCALES: LocaleCopy[] = [
         en: 'Unverified',
         name: 'Non vérifié',
         body: "Des indices de halal, mais rien de confirmé. Cela ne veut jamais dire que ce n'est pas halal.",
-      },
-      {
-        en: 'Worth asking',
-        name: 'À demander',
-        body: "On y sert un type de cuisine souvent halal à Londres, donc la question vaut d'être posée. Personne n'a encore vérifié cette adresse.",
       },
     ],
     evidenceHeading: 'Comment nous le savons',
@@ -345,7 +320,7 @@ export const LOCALES: LocaleCopy[] = [
         body: "Caddayn adag oo muujinaysa in hilibka oo dhan xalaal yahay."
       },
       {
-        en: "Halal Options",
+        en: "Halal food available",
         name: "Doorasho xalaal ah",
         body: "Halkan waxaa laga helaa cunto xalaal ah iyo cunto aan xalaal ahayn labadaba."
       },
@@ -353,11 +328,6 @@ export const LOCALES: LocaleCopy[] = [
         en: "Unverified",
         name: "La ma xaqiijin",
         body: "Waxaa jira calaamado muujinaya cunto xalaal ah, laakiin lama xaqiijin. Taasi weligeed macnaheedu ma aha inay xaaraan tahay."
-      },
-      {
-        en: "Worth asking",
-        name: "Waa in la weydiiyo",
-        body: "Waxay bixisaa nooc cunto ah oo London inta badan xalaal ah, markaa waa in la weydiiyo. Qofna weli ma hubin tan."
       }
     ],
     evidenceHeading: "Sidee bay noo ogaannaa",
@@ -400,7 +370,7 @@ export const LOCALES: LocaleCopy[] = [
         body: "مدرک محکمی هست که تمام گوشت حلال است."
       },
       {
-        en: "Halal Options",
+        en: "Halal food available",
         name: "گزینه‌های حلال",
         body: "اینجا هم غذای حلال سرو می‌شود و هم غذایی که حلال نیست."
       },
@@ -408,11 +378,6 @@ export const LOCALES: LocaleCopy[] = [
         en: "Unverified",
         name: "تأیید نشده",
         body: "نشانه‌هایی از حلال بودن هست، اما تأیید نشده. این هرگز به معنای حرام بودن نیست."
-      },
-      {
-        en: "Worth asking",
-        name: "ارزش پرسیدن دارد",
-        body: "نوعی غذا سرو می‌کند که در لندن اغلب حلال است، پس پرسیدنش می‌ارزد. هنوز کسی این یکی را بررسی نکرده است."
       }
     ],
     evidenceHeading: "از کجا می‌دانیم",
@@ -455,7 +420,7 @@ export const LOCALES: LocaleCopy[] = [
         body: "Provë e fortë se i gjithë mishi është hallall."
       },
       {
-        en: "Halal Options",
+        en: "Halal food available",
         name: "Opsione hallall",
         body: "Këtu shërbehet ushqim hallall krahas ushqimit që nuk është hallall."
       },
@@ -463,11 +428,6 @@ export const LOCALES: LocaleCopy[] = [
         en: "Unverified",
         name: "E paverifikuar",
         body: "Ka shenja ushqimi hallall, por nuk është konfirmuar. Kjo kurrë nuk do të thotë se nuk është hallall."
-      },
-      {
-        en: "Worth asking",
-        name: "Ia vlen të pyesësh",
-        body: "Shërben një lloj ushqimi që në Londër shpesh është hallall, prandaj ia vlen të pyesësh. Këtë vend nuk e ka kontrolluar ende askush."
       }
     ],
     evidenceHeading: "Si e dimë",
@@ -510,7 +470,7 @@ export const LOCALES: LocaleCopy[] = [
         body: "Ada bukti kuat bahwa semua dagingnya halal."
       },
       {
-        en: "Halal Options",
+        en: "Halal food available",
         name: "Ada pilihan halal",
         body: "Di sini disajikan makanan halal berdampingan dengan makanan yang tidak halal."
       },
@@ -518,11 +478,6 @@ export const LOCALES: LocaleCopy[] = [
         en: "Unverified",
         name: "Belum diverifikasi",
         body: "Ada tanda-tanda makanan halal, tetapi belum dipastikan. Ini tidak pernah berarti tidak halal."
-      },
-      {
-        en: "Worth asking",
-        name: "Layak ditanyakan",
-        body: "Menyajikan jenis makanan yang di London sering halal, jadi layak ditanyakan. Tempat ini belum diperiksa siapa pun."
       }
     ],
     evidenceHeading: "Dari mana kami tahu",

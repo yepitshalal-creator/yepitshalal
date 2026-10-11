@@ -9,6 +9,12 @@ export type HalalStatus = HalalClassification | 'unknown';
 
 export const HALAL_STATUSES: HalalStatus[] = ['fully_halal', 'halal_options', 'unverified', 'unknown'];
 
+/**
+ * The labels a visitor can see. Since 2026-10-11 places with no halal evidence
+ * ('unknown') are off the public site, so search can't be filtered to them.
+ */
+export const PUBLIC_STATUSES: HalalClassification[] = ['fully_halal', 'halal_options', 'unverified'];
+
 /** A place with no evidence at all is 'unknown', whatever its stored default label says. */
 export function statusOf(r: { halal_status?: HalalStatus | null; halal_evidence_strength?: string | null; halal_classification: HalalClassification }): HalalStatus {
   if (r.halal_status) return r.halal_status;

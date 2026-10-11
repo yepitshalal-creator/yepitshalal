@@ -43,12 +43,12 @@ export function halalAnswerFor(options: {
     case 'halal_options':
       return {
         verdict: 'Partly',
-        sentence: `Partly. ${name} serves halal food alongside food that is not halal. ${because}${checked} Ask for the halal items when you order.`.replace(/\s+/g, ' '),
+        sentence: `Partly. Halal food is available at ${name}, but not everything on the menu is halal. ${because}${checked} Ask which items are halal when you order.`.replace(/\s+/g, ' '),
       };
     case 'unverified':
       return {
         verdict: 'Not confirmed',
-        sentence: `We cannot confirm it. There are signs that ${name} serves halal food, but nobody has verified it. ${because}${checked} Unverified never means not halal: ask the restaurant.`.replace(/\s+/g, ' '),
+        sentence: `We cannot confirm it. There are signs ${name} is halal, but we haven't checked. ${because}${checked} Ask before you order. Unverified never means not halal.`.replace(/\s+/g, ' '),
       };
     case 'unknown': {
       // Lead with the reason it is on a halal site, because the reader's real

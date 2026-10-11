@@ -21,7 +21,6 @@ import {
   HalalFullMark,
   HalalPartialMark,
   HalalUnknownMark,
-  HalalNotCheckedMark,
   InfoIcon,
   XIcon,
 } from './icons';
@@ -57,9 +56,8 @@ const CLASSIFICATION_FILTERS: {
   tone: string;
 }[] = [
   { value: 'fully_halal', label: 'Fully Halal', Mark: HalalFullMark, tone: 'text-halal-full' },
-  { value: 'halal_options', label: 'Halal Options', Mark: HalalPartialMark, tone: 'text-halal-partial' },
+  { value: 'halal_options', label: 'Halal food available', Mark: HalalPartialMark, tone: 'text-halal-partial' },
   { value: 'unverified', label: 'Unverified', Mark: HalalUnknownMark, tone: 'text-halal-unverified' },
-  { value: 'unknown', label: 'Worth asking', Mark: HalalNotCheckedMark, tone: 'text-subtle' },
 ];
 
 // Places listed at a time. The map pins the same ones, so it never shows a
@@ -305,8 +303,6 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
 
   const radiusLabel = formatRadiusMiles(coverageMeters);
   const skeletonCount = Math.min(Math.max(results.length, 3), 6);
-  // Of the places in range, how many have halal evidence. Same query as the count.
-  const withEvidenceHere = tierCounts.find((t) => t.meters === coverageMeters)?.withEvidence ?? null;
   const shown = useMemo(() => results.slice(0, visible), [results, visible]);
   const moreToShow = results.length > visible ? Math.min(PAGE, results.length - visible) : 0;
   const showMore = () => setVisible((v) => v + PAGE);
@@ -613,12 +609,6 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
       >
         <p role="status" aria-live="polite" className="text-[13px] font-medium text-ink/75">
           {countLine}
-          {!loading && !failed && totalCount > 0 && withEvidenceHere !== null && classifications.length === 0 && (
-            <span className="font-normal text-muted">
-              {' · '}
-              {withEvidenceHere === totalCount ? 'all with halal evidence' : `${withEvidenceHere} with halal evidence`}
-            </span>
-          )}
         </p>
         <span className="flex items-center gap-3">
           {activeFilterCount > 0 && (

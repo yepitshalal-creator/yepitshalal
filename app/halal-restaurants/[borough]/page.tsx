@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: { borough: string }
   const { area } = found;
   return {
     title: `Halal restaurants in ${area.borough}`,
-    description: `${area.listed} places in ${area.borough} with evidence of halal food: ${area.fully_halal} Fully Halal, ${area.halal_options} with Halal Options and ${area.unverified} Unverified. See where each label comes from.`,
+    description: `${area.listed} places in ${area.borough} with evidence of halal food: ${area.fully_halal} Fully Halal, ${area.halal_options} with Halal food available and ${area.unverified} Unverified. See where each label comes from.`,
     alternates: { canonical: `/halal-restaurants/${area.slug}` },
   };
 }
@@ -38,13 +38,13 @@ const GROUPS: { classification: HalalClassification; heading: string; blurb: str
   },
   {
     classification: 'halal_options',
-    heading: 'Halal Options',
-    blurb: 'Halal food is served, alongside food that is not halal.',
+    heading: 'Halal food available',
+    blurb: 'Halal food is available, but not everything is halal. Check before you order.',
   },
   {
     classification: 'unverified',
     heading: 'Unverified',
-    blurb: "Signs of halal food that haven't been confirmed. It never means not halal.",
+    blurb: "There are signs it's halal, but we haven't checked. Ask before you order. It never means not halal.",
   },
 ];
 
@@ -129,14 +129,6 @@ export default async function AreaPage({ params }: { params: { borough: string }
 
       <div className={`${pageShell} pb-4 pt-6 sm:pt-8`}>
       <div className="max-w-3xl">
-      {/* Moved out of the header so it fits a phone's first screen; the
-          same words, one step down. */}
-      {area.not_checked > 0 && (
-        <p className="mt-4 max-w-2xl text-pretty text-[15px] leading-relaxed text-muted">
-          Another {area.not_checked.toLocaleString('en-GB')} here serve the kind of food that is often
-          halal, and are on the map as worth asking about.
-        </p>
-      )}
       {GROUPS.map((g) => {
         const rows = listings.filter((r) => r.halal_classification === g.classification);
         if (!rows.length) return null;

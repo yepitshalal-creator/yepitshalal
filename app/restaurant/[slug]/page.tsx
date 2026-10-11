@@ -63,7 +63,7 @@ function hostOf(url: string): string | null {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const restaurant = await getRestaurantBySlug(params.slug);
-  if (!restaurant) return { title: 'Restaurant not found', robots: { index: false } };
+  if (!restaurant || !restaurant.isListed) return { title: 'Restaurant not found', robots: { index: false } };
 
   const title = displayTitle(restaurant);
   const where = restaurant.borough ?? restaurant.postcode ?? 'London';
@@ -89,9 +89,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: listed ? `${title}, ${where}: ${halalLabel(restaurant.halal_classification)}, hours and directions` : `${title}, ${where}`,
     description,
     alternates: { canonical: `/restaurant/${restaurant.slug}` },
-    // A listing with evidence that is in search. Places nobody has checked are
-    // found through their question page instead, which says so honestly and
-    // points to the places nearby that do have evidence.
+    // Only a listed place gets this far. The search check stays in case a
+    // listed place is ever kept out of search.
     robots: listed && restaurant.isSearchable ? undefined : { index: false, follow: true },
   };
 }
@@ -106,6 +105,9 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
     const kept = await mergedTargetSlug(restaurant.mergedInto);
     if (kept && kept !== restaurant.slug) permanentRedirect(`/restaurant/${kept}`);
   }
+  // Only places with halal evidence are on the site (Shabir, 2026-10-11). The
+  // rest, once shown as Worth asking, stay in the catalogue for the admin.
+  if (!restaurant.isListed) notFound();
 
   const [reels, partner, nearby, prayerSpaces, deal] = await Promise.all([
     getPublishedReels(restaurant.id),
