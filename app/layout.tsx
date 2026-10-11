@@ -97,7 +97,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export const viewport = {
-  themeColor: '#0B2F3A',
+  themeColor: '#18424E',
   // Explicitly leaves pinch-zoom enabled: locking it out is an accessibility
   // failure for anyone who needs to magnify a menu photo or address.
   width: 'device-width',

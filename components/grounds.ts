@@ -4,10 +4,11 @@
  *
  * Since 2026-09-24 this is the logo's own ground: a deep teal that is lighter
  * in the middle and darker at the edges, like the field the logo was drawn on,
- * with the faintest lift of its lime from the top right.
+ * with the faintest lift of its lime from the top right. The darkened corner
+ * was softened with the lighter teal on 2026-10-11.
  */
 export const forestLights =
-  'bg-[radial-gradient(90%_80%_at_45%_40%,rgba(28,92,107,0.55),transparent_68%),radial-gradient(110%_85%_at_88%_-12%,rgba(95,203,30,0.12),transparent_55%),radial-gradient(95%_85%_at_-5%_108%,rgba(5,28,35,0.9),transparent_62%)]';
+  'bg-[radial-gradient(90%_80%_at_45%_40%,rgba(28,92,107,0.55),transparent_68%),radial-gradient(110%_85%_at_88%_-12%,rgba(95,203,30,0.12),transparent_55%),radial-gradient(95%_85%_at_-5%_108%,rgba(12,42,50,0.75),transparent_62%)]';
 
 /**
  * Softens the edge between a dark ground and the light page below, and nothing

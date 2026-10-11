@@ -32,7 +32,7 @@ export function YesForm({ token, words, isChain }: { token: string; words: strin
       </div>
 
       <label className="flex items-start gap-3 rounded-2xl border border-line bg-white p-4">
-        <input type="checkbox" name="agree" className="mt-0.5 h-5 w-5 shrink-0 accent-[#0B2F3A]" />
+        <input type="checkbox" name="agree" className="mt-0.5 h-5 w-5 shrink-0 accent-[#18424E]" />
         <span className="text-[15px] leading-relaxed text-ink">
           Yes, I agree. I run this place, or I am allowed to say yes for it.
         </span>

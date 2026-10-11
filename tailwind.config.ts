@@ -5,6 +5,12 @@ import type { Config } from 'tailwindcss';
 // (variation 4): teal #124452 in the middle of the disc, #0B2F3A at its edge,
 // lime #5FCB1E.
 //
+// Lightened on 2026-10-11 (Shabir: "make the colour scheme more subtle... a
+// little lighter (mainly the dark blueish colour)"). The ground is no longer
+// the logo's exact teal but a lighter, slightly greyer one: #0B2F3A became
+// #18424E and #124452 became #1F5361, the same hue. The logo files keep their
+// own colours; its white ring sets it apart from the header.
+//
 // The token names are older than the palette and were kept so nothing had to
 // be renamed: `forest` is now the logo's teal, `accent` its lime, `spice` a
 // quieter teal for small emphasis, and `sand` the cool, teal-tinted neutrals
@@ -13,7 +19,7 @@ import type { Config } from 'tailwindcss';
 // Every text token is contrast-checked against the surfaces it sits on: the
 // page (#F3F7F7), card white and the band (#E4EEEE), and clears 4.5:1 on all
 // three. The logo lime itself is 2:1 on white, so it is for fills, marks and
-// text on the teal only (5.1:1 on #124452, 6.8:1 on #0B2F3A); on a light
+// large text on the teal only (5.2:1 on #18424E, 4.1:1 on #1F5361); on a light
 // ground green text uses `accent.ink`. The unsuffixed halal `full`/`partial`/
 // `unverified` values are dot and map pin colours, never text, and the halal
 // colours are deliberately unchanged: they carry meaning, not brand.
@@ -37,7 +43,8 @@ const config: Config = {
           // 5.3:1 on the band, and still 4.6:1 on the Free highlighter.
           ink: '#276F0A',
           soft: '#E8F6DC',
-          // Lime for text on the teal: 5.7:1 on #124452, 7.6:1 on #0B2F3A.
+          // Lime for text on the teal: 4.6:1 on #1F5361, 5.8:1 on #18424E, and
+          // 4.8:1 on the lit middle of a hero (forestLights).
           onDark: '#6FD52F',
         },
         // A second, quieter teal for small emphasis (labels, icons, the loop
@@ -58,9 +65,10 @@ const config: Config = {
           line: 'rgba(18,68,82,0.14)',
         },
         forest: {
-          // The logo's teal, and the edge of its disc.
-          DEFAULT: '#124452',
-          deep: '#0B2F3A',
+          // The teal, lighter than the logo's since 2026-10-11. White text is
+          // 8.5:1 on DEFAULT and 10.9:1 on deep; deep text on the lime 5.2:1.
+          DEFAULT: '#1F5361',
+          deep: '#18424E',
         },
         halal: {
           full: '#1F7A45',
