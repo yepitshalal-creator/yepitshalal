@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { notifyInbox, sendThroughResend } from '@/lib/notify';
 import { SITE_URL } from '@/lib/site';
 import { PRICE_RANGES } from '@/lib/price';
@@ -9,6 +10,7 @@ import { removeOwnerContent } from './content';
 import {
   activePermission,
   contactByToken,
+  contactToStop,
   longDate,
   outreachDb,
   stopContact,
@@ -226,7 +228,13 @@ export async function takeBack(token: string): Promise<void> {
 
 export async function stopFromPage(token: string): Promise<void> {
   const db = outreachDb();
-  const contact = await contactByToken(db, token);
-  if (contact) await stopContact(db, contact, 'stop_link');
+  try {
+    const contact = await contactToStop(db, token);
+    if (contact) await stopContact(db, contact, 'stop_link');
+  } catch (e) {
+    console.error('[outreach] stop from page', (e as Error).message);
+    // Back to the page with a message, never to "Done".
+    redirect(`/stop/${encodeURIComponent(token)}?failed=1`);
+  }
   revalidatePath(`/stop/${token}`);
 }

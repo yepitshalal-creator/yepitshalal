@@ -416,6 +416,48 @@ const status = (t, id) => t.outreach_contacts.find((c) => c.id === id).status;
     }
   );
 
+  // A bounce on c1's first email, two days ago; c2 is waiting for its first.
+  const bounced = () => {
+    const f = fixtures(2);
+    Object.assign(f.outreach_contacts[0], { status: 'sent', sent_at: new Date(Date.now() - 2 * DAY).toISOString(), resend_id: 're_b' });
+    return f;
+  };
+  const bouncePage = () => [
+    {
+      data: [{ id: 're_b', to: ['owner1@example.com'], subject: FIRST_SUBJECT, created_at: resendAt(Date.now() - 2 * DAY), last_event: 'bounced' }],
+      has_more: false,
+    },
+  ];
+  await scenario('a bounce puts them on the stop list and the run goes on', { tables: bounced(), pages: bouncePage() }, (r, t, sent) => {
+    assert.strictEqual(r.newlyBounced, 1);
+    assert.strictEqual(t.outreach_stop_list.length, 1);
+    assert.strictEqual(t.outreach_stop_list[0].reason, 'bounced');
+    assert.strictEqual(status(t, 'c1'), 'bounced');
+    assert.strictEqual(sent.length, 1);
+    assert.strictEqual(sent[0].to, 'owner2@example.com');
+  });
+  {
+    const tables = bounced();
+    global.__db = makeDb(tables, (q) => (q.table === 'outreach_stop_list' && q.op === 'insert' ? 'boom' : null));
+    global.__sent = [];
+    resendPages = bouncePage();
+    const name = 'a bounce whose stop cannot be saved stops the whole run';
+    try {
+      await runOutreachDay({ dryRun: false });
+      console.log('FAIL', name, '\n   the run finished instead of stopping');
+      process.exitCode = 1;
+    } catch (e) {
+      try {
+        assert.match(e.message, /Could not save the stop/);
+        assert.strictEqual(global.__sent.length, 0);
+        console.log('PASS', name);
+      } catch (e2) {
+        console.log('FAIL', name, '\n  ', e2.message);
+        process.exitCode = 1;
+      }
+    }
+  }
+
   await scenario('dry run sends nothing and writes nothing', { dryRun: true }, (r, t, sent) => {
     assert.strictEqual(sent.length, 0);
     assert.strictEqual(r.firstsSent, 2);

@@ -91,9 +91,18 @@ export const phoneDigits = (p: string | null | undefined) => {
 /** A token is 32 hex characters. Anything else is not worth a database read. */
 export const isToken = (t: string) => /^[0-9a-f]{32}$/.test(t);
 
+/** The contact a link belongs to, or null: an unknown link, or one that could not be read. */
 export async function contactByToken(db: SupabaseClient, token: string): Promise<Contact | null> {
   if (!isToken(token)) return null;
   const { data } = await db.from('outreach_contacts').select(CONTACT_COLUMNS).eq('token', token).maybeSingle();
+  return (data as Contact | null) ?? null;
+}
+
+/** For a stop: as contactByToken, but a read that fails throws, so it is never taken for an unknown link. */
+export async function contactToStop(db: SupabaseClient, token: string): Promise<Contact | null> {
+  if (!isToken(token)) return null;
+  const { data, error } = await db.from('outreach_contacts').select(CONTACT_COLUMNS).eq('token', token).maybeSingle();
+  if (error) throw new Error(`Could not read the contact: ${error.message}`);
   return (data as Contact | null) ?? null;
 }
 
@@ -172,7 +181,12 @@ export async function isStopped(
 
 export type StopReason = 'stop_link' | 'asked_by_email' | 'asked_by_phone' | 'said_no' | 'bounced' | 'complained';
 
-/** Puts a contact on the stop list for good and marks the contact. Safe to repeat. */
+/**
+ * Puts a contact on the stop list for good and marks the contact. Safe to
+ * repeat. Throws if the stop list row could not be saved, so whoever asked is
+ * never told it worked. The stop list is what every send checks; the contact's
+ * status only tidies the admin list.
+ */
 export async function stopContact(db: SupabaseClient, c: Contact, reason: StopReason): Promise<void> {
   const email = normEmail(c.email);
   const row = {
@@ -183,10 +197,11 @@ export async function stopContact(db: SupabaseClient, c: Contact, reason: StopRe
     reason,
   };
   if (email) {
-    const { data: existing } = await db.from('outreach_stop_list').select('id').eq('email', email).maybeSingle();
-    if (!existing) await db.from('outreach_stop_list').insert(row);
+    const { data: existing, error } = await db.from('outreach_stop_list').select('id').eq('email', email).maybeSingle();
+    if (error) throw new Error(`Could not save the stop: ${error.message}`);
+    if (!existing) await saveStop(db, row);
   } else {
-    await db.from('outreach_stop_list').insert(row);
+    await saveStop(db, row);
   }
   const status: ContactStatus =
     reason === 'said_no' ? 'said_no' : reason === 'bounced' ? 'bounced' : reason === 'complained' ? 'complained' : 'stopped';
@@ -198,6 +213,12 @@ export async function stopContact(db: SupabaseClient, c: Contact, reason: StopRe
       .update({ status, answered_at: c.answered_at ?? new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', c.id);
   }
+}
+
+async function saveStop(db: SupabaseClient, row: Record<string, unknown>): Promise<void> {
+  const { error } = await db.from('outreach_stop_list').insert(row);
+  // 23505: the address is on the list already, which is what was wanted.
+  if (error && error.code !== '23505') throw new Error(`Could not save the stop: ${error.message}`);
 }
 
 export async function activePermission(db: SupabaseClient, contactId: string): Promise<Permission | null> {

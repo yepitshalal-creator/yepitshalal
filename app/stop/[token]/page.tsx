@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { contactByToken, isStopped, outreachDb, targetOf } from '@/lib/outreach/data';
+import { contactByToken, outreachDb, stopListState, targetOf } from '@/lib/outreach/data';
 import { stopFromPage } from '@/lib/outreach/actions';
 import { BLOCK_CLASS } from '@/lib/analytics/scrub';
 
@@ -15,11 +15,20 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function StopPage({ params }: { params: { token: string } }) {
+export default async function StopPage({
+  params,
+  searchParams,
+}: {
+  params: { token: string };
+  searchParams: { failed?: string };
+}) {
   const db = outreachDb();
   const contact = await contactByToken(db, params.token);
   if (!contact) notFound();
-  const [target, stopped] = await Promise.all([targetOf(db, contact), isStopped(db, contact)]);
+  // "Done" only when the list was read and they are on it. If it could not be
+  // read, the button shows again: tapping it saves the stop, or says it failed.
+  const [target, state] = await Promise.all([targetOf(db, contact), stopListState(db, contact)]);
+  const stopped = state === 'stopped';
 
   return (
     <main className={`${BLOCK_CLASS} mx-auto max-w-lg px-4 pb-28 pt-6 sm:pt-10`}>
@@ -37,6 +46,11 @@ export default async function StopPage({ params }: { params: { token: string } }
           <p className="mt-3 text-[15px] leading-relaxed text-ink/80">
             Tap the button and we won&apos;t email or call you again. Your place stays on YepItsHalal, as it was.
           </p>
+          {searchParams.failed && (
+            <p role="alert" className="mt-4 text-[15px] font-medium text-halal-partialInk">
+              That did not work. Please tap the button again. Or reply &quot;stop&quot; to our email.
+            </p>
+          )}
           <form action={stopFromPage.bind(null, params.token)} className="mt-6">
             <button
               type="submit"
