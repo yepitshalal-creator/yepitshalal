@@ -5,11 +5,11 @@
 //
 //   node scripts/outreach/tests/yes.test.cjs
 //
-// It uses harness.cjs: the real files compiled with their imports pointed at
-// small stubs, and a fake database.
+// It uses scripts/tests/harness.cjs: the real files compiled with their
+// imports pointed at small stubs, and a fake database.
 const path = require('path');
 const assert = require('assert');
-const { compile, makeDb } = require('./harness.cjs');
+const { compile, makeDb } = require('../../tests/harness.cjs');
 
 const OUT = compile(
   {

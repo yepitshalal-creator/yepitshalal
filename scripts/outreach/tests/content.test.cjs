@@ -7,7 +7,7 @@
 //   node scripts/outreach/tests/content.test.cjs
 const path = require('path');
 const assert = require('assert');
-const { compile, makeDb } = require('./harness.cjs');
+const { compile, makeDb } = require('../../tests/harness.cjs');
 
 const OUT = compile(
   { content: 'lib/outreach/content.ts', data: 'lib/outreach/data.ts' },

@@ -1,14 +1,15 @@
-// Shared by the outreach tests. compile() turns real lib/ files into plain
-// JavaScript in a temporary folder, with sucrase (installed with tailwindcss
-// 3), pointing their imports at stubs. makeDb() is a fake PostgREST client
-// over in-memory tables, enough for the queries lib/outreach makes, and
-// failIf(query) returns an error message to fail any one of them.
+// Shared by the tests in scripts/outreach/tests and scripts/stripe. compile()
+// turns real app/ and lib/ files into plain JavaScript in a temporary folder,
+// with sucrase (installed with tailwindcss 3), pointing their imports at
+// stubs. makeDb() is a fake PostgREST client over in-memory tables, enough
+// for the queries those files make, and failIf(query) returns an error
+// message to fail any one of them.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { transform } = require('sucrase');
 
-const ROOT = path.resolve(__dirname, '../../..');
+const ROOT = path.resolve(__dirname, '../..');
 
 /** files: { outName: 'lib/x.ts' }; rewrites: { '@/lib/y': './stub-y' }; stubs: { 'stub-y': 'exports...' } */
 function compile(files, rewrites, stubs) {
@@ -89,9 +90,12 @@ function makeDb(tables, failIf) {
           else q.returning = true; // insert(...).select() or update(...).select()
           return b;
         },
-        upsert(row) {
+        upsert(row, opts) {
           q.op = 'insert';
           q.patch = row;
+          // onConflict: 'a,b' updates the row with the same a and b instead.
+          q.conflict = opts?.onConflict ? opts.onConflict.split(',') : null;
+          q.ignoreDuplicates = !!opts?.ignoreDuplicates;
           return b;
         },
         insert(row) {
@@ -149,6 +153,13 @@ function makeDb(tables, failIf) {
     // A string, or { message, code } to stand for a particular Postgres error.
     if (err) return { data: null, count: null, error: typeof err === 'string' ? { message: err } : err };
     const all = tables[q.table] ?? (tables[q.table] = []);
+    if (q.op === 'insert' && q.conflict) {
+      const same = all.find((r) => q.conflict.every((c) => r[c] === q.patch[c]));
+      if (same) {
+        if (!q.ignoreDuplicates) Object.assign(same, q.patch);
+        return { data: q.returning ? (q.single ? same : [same]) : null, error: null };
+      }
+    }
     if (q.op === 'insert') {
       const row = { id: `new${++made}`, created_at: new Date().toISOString(), ...q.patch };
       all.push(row);

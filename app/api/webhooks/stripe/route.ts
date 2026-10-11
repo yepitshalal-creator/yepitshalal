@@ -33,101 +33,113 @@ export async function POST(request: Request) {
   const deals = dealsDb();
   const rpc = (fn: string, args: Record<string, unknown>) => deals.rpc(fn, args);
 
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session;
+  // Nothing here may be dropped quietly. A write that fails throws, and the
+  // 500 below makes Stripe send the event again (for up to three days). Every
+  // write is safe to repeat: the upsert and updates set the same values, the
+  // priority check looks for its payment first, and the deal posts are keyed.
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
 
-      // Deal credit. Unlike the branches below, a failure here answers 500 so
-      // Stripe sends the event again: the database posts it once however
-      // many times it arrives.
-      if (isDealCheckout(session)) {
-        try {
-          await handleDealCheckout(session, rpc);
-        } catch (e) {
-          console.error('[stripe] deal top up', (e as Error).message);
-          return NextResponse.json({ error: 'Could not record the top up.' }, { status: 500 });
+        // Deal credit, posted once by the database however many times the
+        // event arrives.
+        if (isDealCheckout(session)) {
+          try {
+            await handleDealCheckout(session, rpc);
+          } catch (e) {
+            console.error('[stripe] deal top up', (e as Error).message);
+            return NextResponse.json({ error: 'Could not record the top up.' }, { status: 500 });
+          }
+          break;
+        }
+
+        if (session.mode === 'subscription') {
+          const userId = session.metadata?.yepitshalal_user_id || session.client_reference_id;
+          if (!userId || !session.subscription || !session.customer) break;
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+          await upsertSubscription(userId, subscription);
+          break;
+        }
+
+        if (session.mode === 'payment' && session.metadata?.yepitshalal_type === 'priority_verification') {
+          // Idempotent: a Stripe retry of this same event must not create a
+          // second verification_requests row for the same payment.
+          const { data: existing, error: findError } = await supabase
+            .from('verification_requests')
+            .select('id')
+            .eq('stripe_payment_id', session.id)
+            .maybeSingle();
+          if (findError) throw new Error(`priority check lookup: ${findError.message}`);
+          if (existing) break;
+
+          const { data: holidays } = await supabase.from('uk_bank_holidays').select('holiday_date');
+          const bankHolidays = new Set((holidays ?? []).map((h) => h.holiday_date));
+          const slaDueAt = addWorkingHours(new Date(), 48, bankHolidays);
+
+          const { error: queueError } = await supabase.from('verification_requests').insert({
+            restaurant_id: session.metadata.restaurant_id,
+            queue_type: 'priority',
+            status: 'queued',
+            stripe_payment_id: session.id,
+            sla_due_at: slaDueAt.toISOString(),
+            contact_name: session.metadata.contact_name || null,
+            contact_email: session.metadata.contact_email || null,
+          });
+          // A paid check that never reached the queue would be paid for and never done.
+          if (queueError) throw new Error(`priority check: ${queueError.message}`);
         }
         break;
       }
 
-      if (session.mode === 'subscription') {
-        const userId = session.metadata?.yepitshalal_user_id || session.client_reference_id;
-        if (!userId || !session.subscription || !session.customer) break;
-        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      // Covers renewals, cancellations, plan changes, and payment-failure status
+      // changes: the same upsert path as the initial checkout.
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const userId = subscription.metadata?.yepitshalal_user_id;
+        if (!userId) break;
         await upsertSubscription(userId, subscription);
         break;
       }
 
-      if (session.mode === 'payment' && session.metadata?.yepitshalal_type === 'priority_verification') {
-        // Idempotent: a Stripe retry of this same event must not create a
-        // second verification_requests row for the same payment.
-        const { data: existing } = await supabase
-          .from('verification_requests')
-          .select('id')
-          .eq('stripe_payment_id', session.id)
-          .maybeSingle();
-        if (existing) break;
-
-        const { data: holidays } = await supabase.from('uk_bank_holidays').select('holiday_date');
-        const bankHolidays = new Set((holidays ?? []).map((h) => h.holiday_date));
-        const slaDueAt = addWorkingHours(new Date(), 48, bankHolidays);
-
-        await supabase.from('verification_requests').insert({
-          restaurant_id: session.metadata.restaurant_id,
-          queue_type: 'priority',
-          status: 'queued',
-          stripe_payment_id: session.id,
-          sla_due_at: slaDueAt.toISOString(),
-          contact_name: session.metadata.contact_name || null,
-          contact_email: session.metadata.contact_email || null,
-        });
-      }
-      break;
-    }
-
-    // Covers renewals, cancellations, plan changes, and payment-failure status
-    // changes: the same upsert path as the initial checkout.
-    case 'customer.subscription.updated':
-    case 'customer.subscription.deleted': {
-      const subscription = event.data.object as Stripe.Subscription;
-      const userId = subscription.metadata?.yepitshalal_user_id;
-      if (!userId) break;
-      await upsertSubscription(userId, subscription);
-      break;
-    }
-
-    // Refunds are only ever initiated manually by an admin (from the Stripe
-    // dashboard, per §16: payment purchases priority, not a guaranteed
-    // outcome, so this never happens automatically). This just reflects that
-    // decision back into our own records once it happens.
-    case 'charge.refunded': {
-      const charge = event.data.object as Stripe.Charge;
-      // A refunded deal top up takes that credit back (see lib/deals).
-      if (charge.metadata?.yepitshalal_type === 'deal_credit') {
-        try {
-          await handleDealRefund(charge, rpc);
-        } catch (e) {
-          console.error('[stripe] deal refund', (e as Error).message);
-          return NextResponse.json({ error: 'Could not record the refund.' }, { status: 500 });
+      // Refunds are only ever initiated manually by an admin (from the Stripe
+      // dashboard, per §16: payment purchases priority, not a guaranteed
+      // outcome, so this never happens automatically). This just reflects that
+      // decision back into our own records once it happens.
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        // A refunded deal top up takes that credit back (see lib/deals).
+        if (charge.metadata?.yepitshalal_type === 'deal_credit') {
+          try {
+            await handleDealRefund(charge, rpc);
+          } catch (e) {
+            console.error('[stripe] deal refund', (e as Error).message);
+            return NextResponse.json({ error: 'Could not record the refund.' }, { status: 500 });
+          }
+          break;
+        }
+        if (typeof charge.payment_intent === 'string') {
+          const session = await stripe.checkout.sessions
+            .list({ payment_intent: charge.payment_intent, limit: 1 })
+            .then((r) => r.data[0]);
+          if (session) {
+            const { error } = await supabase
+              .from('verification_requests')
+              .update({ refund_status: 'issued' })
+              .eq('stripe_payment_id', session.id);
+            if (error) throw new Error(`refund status: ${error.message}`);
+          }
         }
         break;
       }
-      if (typeof charge.payment_intent === 'string') {
-        const session = await stripe.checkout.sessions
-          .list({ payment_intent: charge.payment_intent, limit: 1 })
-          .then((r) => r.data[0]);
-        if (session) {
-          await supabase
-            .from('verification_requests')
-            .update({ refund_status: 'issued' })
-            .eq('stripe_payment_id', session.id);
-        }
-      }
-      break;
-    }
 
-    default:
-      break;
+      default:
+        break;
+    }
+  } catch (e) {
+    console.error('[stripe]', event.type, (e as Error).message);
+    return NextResponse.json({ error: 'Could not record it. Stripe will send it again.' }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
@@ -151,7 +163,7 @@ export async function POST(request: Request) {
         ? 'canceled'
         : 'incomplete';
 
-    await supabase.from('subscriptions').upsert(
+    const { error: subError } = await supabase.from('subscriptions').upsert(
       {
         user_id: userId,
         stripe_customer_id: subscription.customer as string,
@@ -165,10 +177,13 @@ export async function POST(request: Request) {
       },
       { onConflict: 'user_id' }
     );
+    // A supporter who paid and was not recorded would lose their perks.
+    if (subError) throw new Error(`subscription: ${subError.message}`);
 
-    await supabase
+    const { error: userError } = await supabase
       .from('users')
       .update({ is_yep_plus: status === 'active' })
       .eq('id', userId);
+    if (userError) throw new Error(`supporter flag: ${userError.message}`);
   }
 }
