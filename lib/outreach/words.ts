@@ -58,6 +58,7 @@ export interface FirstEmailInput {
 }
 
 export const FIRST_SUBJECT = 'Can we show off your food on YepItsHalal?';
+export const FOLLOW_UP_SUBJECT = `Re: ${FIRST_SUBJECT}`;
 
 export function firstEmail(i: FirstEmailInput): EmailParts {
   const onIt = i.isChain
@@ -113,7 +114,7 @@ export function followUpEmail(i: { token: string; pageOpens: number | null }): E
     '',
     `Don't want emails from us? ${stopUrl(i.token)}`,
   ].join('\n');
-  return { subject: `Re: ${FIRST_SUBJECT}`, text };
+  return { subject: FOLLOW_UP_SUBJECT, text };
 }
 
 export function thankYouEmail(i: {

@@ -123,11 +123,13 @@ export async function targetOf(db: SupabaseClient, c: Pick<Contact, 'restaurant_
 // of its food, so the email can truthfully say "no photos of your food yet".
 async function hasNoOwnPhotos(db: SupabaseClient, restaurantIds: string[]): Promise<boolean> {
   if (!restaurantIds.length) return true;
-  const { data } = await db
+  const { data, error } = await db
     .from('restaurant_photos')
     .select('storage_path, is_logo')
     .in('restaurant_id', restaurantIds)
     .limit(500);
+  // Unread is not the same as none: the email then says nothing about photos.
+  if (error) return false;
   return !(data ?? []).some(
     (p: { storage_path: string; is_logo: boolean | null }) =>
       !p.is_logo &&
@@ -137,11 +139,14 @@ async function hasNoOwnPhotos(db: SupabaseClient, restaurantIds: string[]): Prom
   );
 }
 
+/** On the stop list, not on it, or the list could not be read just now. */
+export type StopListState = 'stopped' | 'clear' | 'unreadable';
+
 /** On the stop list by address, number, place or chain: any one match means never contact. */
-export async function isStopped(
+export async function stopListState(
   db: SupabaseClient,
   c: Pick<Contact, 'email' | 'phone' | 'restaurant_id' | 'brand_id'>
-): Promise<boolean> {
+): Promise<StopListState> {
   const ors: string[] = [];
   const email = normEmail(c.email);
   const phone = phoneDigits(c.phone);
@@ -151,11 +156,18 @@ export async function isStopped(
   if (phone) ors.push(`phone.eq.${phone}`);
   if (c.restaurant_id) ors.push(`restaurant_id.eq.${c.restaurant_id}`);
   if (c.brand_id) ors.push(`brand_id.eq.${c.brand_id}`);
-  if (!ors.length) return false;
+  if (!ors.length) return 'clear';
   const { data, error } = await db.from('outreach_stop_list').select('id').or(ors.join(',')).limit(1);
-  // If the list cannot be read, treat the contact as stopped: never risk it.
-  if (error) return true;
-  return (data ?? []).length > 0;
+  if (error) return 'unreadable';
+  return (data ?? []).length > 0 ? 'stopped' : 'clear';
+}
+
+/** True unless the stop list was read and they are not on it: never risk it. */
+export async function isStopped(
+  db: SupabaseClient,
+  c: Pick<Contact, 'email' | 'phone' | 'restaurant_id' | 'brand_id'>
+): Promise<boolean> {
+  return (await stopListState(db, c)) !== 'clear';
 }
 
 export type StopReason = 'stop_link' | 'asked_by_email' | 'asked_by_phone' | 'said_no' | 'bounced' | 'complained';
