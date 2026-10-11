@@ -54,7 +54,7 @@ export async function OwnershipCta({
           <span>
             Do you run this place?{' '}
             <Link
-              href={`/sign-in?next=/restaurant/${slug}`}
+              href={`/sign-in?next=${encodeURIComponent(`/restaurant/${slug}#claim`)}`}
               className="font-semibold text-accent-ink hover:underline"
             >
               Sign in

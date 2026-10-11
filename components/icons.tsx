@@ -278,6 +278,18 @@ export function PlusIcon(p: IconProps) {
   );
 }
 
+/** A shop front: an awning over a door. For the way in for restaurant owners. */
+export function StoreIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M3 9L4.5 4H19.5L21 9H3Z" />
+      <path d="M3 9C3 10.6569 4.34315 12 6 12C7.65685 12 9 10.6569 9 9C9 10.6569 10.3431 12 12 12C13.6569 12 15 10.6569 15 9C15 10.6569 16.3431 12 18 12C19.6569 12 21 10.6569 21 9" />
+      <path d="M5 12V20H19V12" />
+      <path d="M10 20V16H14V20" />
+    </Svg>
+  );
+}
+
 export function UserIcon(p: IconProps) {
   return (
     <Svg {...p}>

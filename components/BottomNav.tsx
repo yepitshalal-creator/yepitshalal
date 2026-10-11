@@ -3,18 +3,25 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
-import { SearchIcon, MapIcon, PlusIcon, UserIcon } from './icons';
+import { SearchIcon, MapIcon, StoreIcon, UserIcon } from './icons';
 import { LanguageTab } from './LanguageMenu';
 
-// Mobile-only tab bar. The header hides "Add your restaurant" and "Sign in"
-// below sm, which previously left those routes unreachable on a phone, so this is
-// where they live now. Four destinations and, since 2026-09-24, the language:
+// Mobile-only tab bar. The header hides its links below sm, which previously
+// left those routes unreachable on a phone, so this is where they live now.
+// "For owners" took the place of "Add" on 2026-10-11, so a restaurant can see
+// where to put its details in; adding a place is one tap on from there, and in
+// the footer. Four destinations and, since 2026-09-24, the language:
 // five, the ceiling that keeps a tab bar scannable. On a phone the header has
 // no room left for it, and down here it is always in view and in reach.
 const TABS = [
   { href: '/', label: 'Search', Icon: SearchIcon, match: (p: string) => p === '/' || p.startsWith('/search') },
   { href: '/discover', label: 'Discover', Icon: MapIcon, match: (p: string) => p.startsWith('/discover') },
-  { href: '/submit-restaurant', label: 'Add', Icon: PlusIcon, match: (p: string) => p.startsWith('/submit-restaurant') },
+  {
+    href: '/owners',
+    label: 'For owners',
+    Icon: StoreIcon,
+    match: (p: string) => p.startsWith('/owners') || p.startsWith('/submit-restaurant') || p.startsWith('/manage'),
+  },
   { href: '/account', label: 'Account', Icon: UserIcon, match: (p: string) => p.startsWith('/account') || p.startsWith('/sign-in') },
 ];
 

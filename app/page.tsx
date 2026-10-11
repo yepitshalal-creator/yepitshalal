@@ -11,6 +11,7 @@ import { SceneMedia } from '@/components/media/SceneMedia';
 import { getFeaturedReels } from '@/lib/reels';
 import { getAreasWithPages } from '@/lib/areas';
 import { getCuisines } from '@/lib/cuisines';
+import { getSiteCounts, formatCount } from '@/lib/siteCounts';
 import { STREET, TABLE } from '@/lib/media';
 import { heroPrimary } from '@/components/PageHero';
 import { jsonLdHtml } from '@/lib/jsonLd';
@@ -95,7 +96,12 @@ const SITE_LD = {
 // Prayer spaces moved to Discover, where "what is nearby" belongs, and the
 // P.S. support block became the one short prompt at the end.
 export default async function HomePage() {
-  const [featuredReels, areas, cuisines] = await Promise.all([getFeaturedReels(), getAreasWithPages(), getCuisines()]);
+  const [featuredReels, areas, cuisines, counts] = await Promise.all([
+    getFeaturedReels(),
+    getAreasWithPages(),
+    getCuisines(),
+    getSiteCounts(),
+  ]);
   // The borough pages are the indexable half of this site. Every prominent link
   // on this page went to /search, which is noindexed and disallowed in
   // robots.txt, so a crawler arriving here had nowhere to go but the footer.
@@ -156,6 +162,15 @@ export default async function HomePage() {
               <div id="search" className="mt-5 flex scroll-mt-24 justify-center sm:mt-8 lg:justify-start">
                 <LocationSearchBar />
               </div>
+
+              {/* How big the search is, from the database (lib/siteCounts.ts).
+                  "Places", because most are not labelled halal yet. */}
+              {counts && (
+                <p className="mt-2 text-sm font-medium text-white/90 [text-shadow:0_1px_12px_rgba(4,24,30,0.7)]">
+                  {formatCount(counts.places)} places in London.{' '}
+                  <span className="max-[359px]:block">{formatCount(counts.withEvidence)} with halal evidence.</span>
+                </p>
+              )}
 
               <div className="mt-4 sm:mt-7">
                 <h2 className="text-xs font-semibold text-white/70">Popular areas</h2>

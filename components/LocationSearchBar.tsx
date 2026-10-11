@@ -9,7 +9,14 @@ import { SuggestionPanel, type SuggestionItem } from './SearchSuggestions';
 
 const FULL_POSTCODE = /^[a-z]{1,2}\d[a-z\d]?\s*\d[a-z]{2}$/i;
 
-export function LocationSearchBar() {
+/**
+ * The one search box. The owners page passes its own words, and a hash that
+ * opens a picked restaurant's page at the claim box rather than its top.
+ */
+export function LocationSearchBar({
+  placeholder = 'Postcode, area or restaurant',
+  restaurantHash = '',
+}: { placeholder?: string; restaurantHash?: string } = {}) {
   const router = useRouter();
   const inputId = useId();
   const listId = `${inputId}-list`;
@@ -108,7 +115,7 @@ export function LocationSearchBar() {
       // Straight to the restaurant, not a search around it: they named the place
       // they wanted.
       track('location_search_submitted', { search_mode: 'restaurant' });
-      router.push(`/restaurant/${item.slug}`);
+      router.push(`/restaurant/${item.slug}${restaurantHash}`);
       return;
     }
     setQuery(item.label);
@@ -264,7 +271,7 @@ export function LocationSearchBar() {
           onKeyDown={onKeyDown}
           aria-invalid={status === 'error' || undefined}
           aria-describedby={error ? errorId : undefined}
-          placeholder="Postcode, area or restaurant"
+          placeholder={placeholder}
           className="min-w-0 flex-1 bg-transparent py-3 pl-1.5 pr-1 text-[16px] text-ink placeholder:text-subtle focus:outline-none"
         />
         <button

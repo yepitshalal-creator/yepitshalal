@@ -57,6 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/submit-restaurant`, lastModified: CONTENT_UPDATED, changeFrequency: 'yearly', priority: 0.4 },
     { url: `${siteUrl}/yep-plus`, lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${siteUrl}/partners`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${siteUrl}/owners`, changeFrequency: 'monthly', priority: 0.4 },
     ...areas.map((a) => ({
       url: `${siteUrl}/halal-restaurants/${a.slug}`,
       ...(a.last_checked_at ? { lastModified: new Date(a.last_checked_at) } : {}),

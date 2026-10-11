@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { LogoLockup } from './Logo';
 import { NavLink } from './NavLink';
 import { LanguageMenu } from './LanguageMenu';
-import { MapIcon, PlusIcon, SparkleIcon } from './icons';
+import { MapIcon, SparkleIcon, StoreIcon } from './icons';
 import { AccountNavLink } from './AccountNavLink';
 
 // The header is the logo's own ground since 2026-09-24: its deep teal, with
@@ -19,6 +19,8 @@ import { AccountNavLink } from './AccountNavLink';
 // (AccountNavLink). Reading the session here made every page dynamic.
 // A 44px circle around the icon from 640 to 767px, the usual pill above.
 const HEADER_LINK = 'inline-flex items-center justify-center max-md:h-11 max-md:w-11 max-md:px-0';
+const OWNERS_BUTTON =
+  'mx-0.5 inline-flex shrink-0 items-center justify-center gap-1 rounded-full text-sm font-semibold text-white ring-1 ring-white/45 transition-colors hover:bg-white/10 max-md:h-11 max-md:w-11 md:min-h-[40px] md:px-3';
 
 export function SiteHeader() {
   return (
@@ -65,13 +67,20 @@ export function SiteHeader() {
             <MapIcon className="h-[18px] w-[18px] md:hidden" aria-hidden="true" />
             <span className="max-md:sr-only">Discover</span>
           </NavLink>
-          <NavLink href="/submit-restaurant" tone="dark" className={HEADER_LINK}>
-            <PlusIcon className="h-[18px] w-[18px] md:hidden" aria-hidden="true" />
+          {/* The way in for restaurant owners: outlined, so it reads as a
+              button and not one more link (Shabir, 2026-10-11: "Add" did not
+              make it obvious). Its icon alone from 640 to 767px, like the
+              links beside it; on a phone it is a tab in the bottom bar. */}
+          <Link href="/owners" className={OWNERS_BUTTON}>
+            {/* From 768 to 1023px the word and the outline say it alone:
+                with "Account" beside it there is no room for more, measured
+                2026-10-11. */}
+            <StoreIcon className="h-[18px] w-[18px] shrink-0 md:hidden lg:block" aria-hidden="true" />
             <span aria-hidden="true" className="hidden md:inline lg:hidden">
-              Add
+              Owners
             </span>
-            <span className="sr-only lg:not-sr-only">Add your restaurant</span>
-          </NavLink>
+            <span className="sr-only lg:not-sr-only">For restaurant owners</span>
+          </Link>
           <AccountNavLink className={HEADER_LINK} />
         </nav>
 

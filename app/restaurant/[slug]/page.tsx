@@ -525,7 +525,10 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
 
           <OffersList offers={restaurant.offers} />
 
-          <OwnershipCta restaurantId={restaurant.id} slug={restaurant.slug} />
+          {/* /owners sends a picked restaurant here, as #claim. */}
+          <div id="claim" className="scroll-mt-24">
+            <OwnershipCta restaurantId={restaurant.id} slug={restaurant.slug} />
+          </div>
 
           {restaurant.isListed && !hasGenuineCheck && (
             <Link
