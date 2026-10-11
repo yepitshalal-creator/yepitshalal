@@ -219,7 +219,15 @@ export default async function AdminRestaurantPage({ params }: { params: { id: st
             </span>
           )}
         </Fact>
-        <Fact label="Open or closed">{STATUS_LABEL[status as keyof typeof STATUS_LABEL] ?? status}</Fact>
+        <Fact label="Open or closed">
+          {STATUS_LABEL[status as keyof typeof STATUS_LABEL] ?? status}
+          {/* Its old page sends visitors to the kept record; this does the same here. */}
+          {r.merged_into && (
+            <Link href={`/admin/restaurants/${r.merged_into}`} className="mt-1 block text-xs font-semibold text-accent-ink hover:underline">
+              Open the record we kept
+            </Link>
+          )}
+        </Fact>
         <Fact label="Owner">
           {owner.data?.email ? <span className="block truncate">{owner.data.email}</span> : <span className="text-muted">No owner account</span>}
         </Fact>
