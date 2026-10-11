@@ -19,6 +19,7 @@ import {
   setSending,
 } from '@/lib/outreach/admin-actions';
 import { AddContactForm } from '@/components/admin/outreach/AddContactForm';
+import { CHANNEL_LABEL, CONTACT_STATUS as STATUS } from '@/lib/outreach/labels';
 import { SectionTabs } from '@/components/admin/SectionTabs';
 import { AdminPage, Panel, List, Row, Tag, FIELD, BUTTON, BUTTON_SECONDARY } from '@/components/admin/ui';
 
@@ -28,18 +29,6 @@ export const metadata = { title: 'Outreach' };
 // Asking places if we may use their photos, videos, menu and logo (migration
 // 0054). Sending starts switched off; the switch here is the only way on.
 
-const STATUS: Record<ContactStatus, { label: string; tone: 'neutral' | 'good' | 'warn' | 'accent' | 'ink' }> = {
-  new: { label: 'To contact', tone: 'neutral' },
-  ready: { label: 'Email queued', tone: 'accent' },
-  sent: { label: 'Emailed', tone: 'neutral' },
-  followed_up: { label: 'Followed up', tone: 'neutral' },
-  replied: { label: 'Replied', tone: 'accent' },
-  said_yes: { label: 'Said yes', tone: 'good' },
-  said_no: { label: 'Said no', tone: 'warn' },
-  stopped: { label: 'Stopped', tone: 'warn' },
-  bounced: { label: 'Bounced', tone: 'warn' },
-  complained: { label: 'Marked as spam', tone: 'warn' },
-};
 const ORDER = Object.keys(STATUS) as ContactStatus[];
 
 const KIND: Record<string, string> = {
@@ -57,7 +46,7 @@ const SMALL =
   'inline-flex min-h-[32px] items-center rounded-full border border-line bg-white px-3 text-xs font-semibold text-ink transition hover:border-ink/30';
 const PICKED = 'border-ink bg-ink text-white hover:border-ink';
 
-const CHANNELS = { phone: 'Phone', email: 'Email', contact_form: 'Contact form' } as const;
+const CHANNELS = CHANNEL_LABEL;
 type Channel = keyof typeof CHANNELS;
 const CHANNEL_KEYS = Object.keys(CHANNELS) as Channel[];
 const PAGE = 100;
@@ -343,7 +332,7 @@ export default async function AdminOutreachPage({
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="font-medium text-ink">{name}</span>
                       <Tag tone={STATUS[c.status].tone}>{STATUS[c.status].label}</Tag>
-                      <Tag>{c.channel === 'contact_form' ? 'Contact form' : c.channel === 'phone' ? 'Phone' : 'Email'}</Tag>
+                      <Tag>{CHANNEL_LABEL[c.channel]}</Tag>
                       {c.channel === 'phone' && open && !c.tps_checked_at && <Tag tone="warn">Check TPS before calling</Tag>}
                     </div>
                     <p className="mt-0.5 break-all text-xs text-muted">

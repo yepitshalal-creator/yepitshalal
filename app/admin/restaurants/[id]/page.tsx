@@ -20,6 +20,8 @@ import { ArrowLeftIcon, ArrowUpRightIcon, SealCheckIcon, StarIcon, TrashIcon } f
 import { AdminPage, Panel, Field, Tag, FIELD, BUTTON, BUTTON_SECONDARY } from '@/components/admin/ui';
 import { CATALOGUE_COLUMNS, STATUS_LABEL, hiddenReason, showsAs, type CatalogueRow } from '@/lib/admin/catalogue';
 import { ago, stamp } from '@/lib/admin/format';
+import { CHANNEL_LABEL, CONTACT_STATUS } from '@/lib/outreach/labels';
+import type { Channel, ContactStatus } from '@/lib/outreach/data';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,6 +85,7 @@ interface Detail extends CatalogueRow {
   halal_summary: string | null;
   last_checked_at: string | null;
   is_candidate: boolean;
+  brand_id: string | null;
   price_range: number | null;
   price_range_source: string | null;
   price_range_at: string | null;
@@ -104,13 +107,15 @@ export default async function AdminRestaurantPage({ params }: { params: { id: st
   const db = createAdminSupabase();
   const { data } = await db
     .from('restaurants')
-    .select(`${CATALOGUE_COLUMNS}, description, phone, website_url, menu_url, data_source, halal_summary, last_checked_at, is_candidate, price_range, price_range_source, price_range_at`)
+    .select(`${CATALOGUE_COLUMNS}, description, phone, website_url, menu_url, data_source, halal_summary, last_checked_at, is_candidate, price_range, price_range_source, price_range_at, brand_id`)
     .eq('id', params.id)
     .maybeSingle();
   if (!data) notFound();
   const r = data as unknown as Detail;
 
-  const [evidence, facts, history, photos, partnership, owner, allowance, claims, deal, reels, sources, dupes] =
+  // Outreach for this place, or for its chain's head office.
+  const reach = r.brand_id ? `restaurant_id.eq.${r.id},brand_id.eq.${r.brand_id}` : `restaurant_id.eq.${r.id}`;
+  const [evidence, facts, history, photos, partnership, owner, allowance, claims, deal, reels, sources, dupes, contacts, yeses] =
     await Promise.all([
       db
         .from('restaurant_halal_evidence')
@@ -148,6 +153,18 @@ export default async function AdminRestaurantPage({ params }: { params: { id: st
         .select('id')
         .eq('status', 'pending')
         .or(`restaurant_a.eq.${r.id},restaurant_b.eq.${r.id}`),
+      db
+        .from('outreach_contacts')
+        .select('id, brand_id, channel, status, phone, email, last_event, updated_at')
+        .or(reach)
+        .order('updated_at', { ascending: false })
+        .limit(5),
+      db
+        .from('content_permissions')
+        .select('id, brand_id, given_by_name, agreed_at, withdrawn_at')
+        .or(reach)
+        .order('agreed_at', { ascending: false })
+        .limit(3),
     ]);
 
   const evidenceRows = (evidence.data ?? []) as Evidence[];
@@ -160,6 +177,8 @@ export default async function AdminRestaurantPage({ params }: { params: { id: st
   const historyRows = (history.data ?? []) as { id: string; classification_result: string; facts_snapshot: Record<string, unknown>; verified_at: string }[];
   const sourceRows = (sources.data ?? []) as { source: string; source_name: string | null; licence: string | null; last_seen_at: string | null }[];
   const status = r.merged_into ? 'merged' : r.catalogue_status === 'active' ? 'open' : r.catalogue_status;
+  const contactRows = (contacts.data ?? []) as { id: string; brand_id: string | null; channel: Channel; status: ContactStatus; phone: string | null; email: string | null; last_event: string | null; updated_at: string }[];
+  const yesRows = (yeses.data ?? []) as { id: string; brand_id: string | null; given_by_name: string; agreed_at: string; withdrawn_at: string | null }[];
 
   return (
     <AdminPage
@@ -410,6 +429,46 @@ export default async function AdminRestaurantPage({ params }: { params: { id: st
                     <Tag tone={c.status === 'pending' ? 'accent' : c.status === 'approved' ? 'good' : 'neutral'}>
                       {c.status === 'pending' ? 'Claim waiting' : c.status === 'approved' ? 'Approved' : 'Rejected'}
                     </Tag>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel title="Outreach" action={<Link href="/admin/outreach" className="text-xs font-semibold text-accent-ink hover:underline">Open</Link>}>
+            {contactRows.length === 0 && yesRows.length === 0 ? (
+              <p className="px-5 py-4 text-sm text-muted">Not on the outreach list. Add it on Outreach with this page&apos;s address.</p>
+            ) : (
+              <ul className="divide-y divide-line">
+                {yesRows.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-2 px-5 py-2.5 text-sm">
+                    <span className="min-w-0 text-ink/85">
+                      {p.withdrawn_at ? 'Took back their yes' : 'Said yes to photos'}
+                      {p.brand_id ? ' (whole chain)' : ''}, {p.given_by_name}
+                    </span>
+                    <Tag tone={p.withdrawn_at ? 'warn' : 'good'}>{stamp(p.withdrawn_at ?? p.agreed_at)}</Tag>
+                  </li>
+                ))}
+                {contactRows.map((c) => (
+                  <li key={c.id} className="px-5 py-2.5 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 text-ink/85">
+                        {CHANNEL_LABEL[c.channel]}
+                        {c.brand_id ? ', head office' : ''}
+                      </span>
+                      <Tag tone={CONTACT_STATUS[c.status].tone}>{CONTACT_STATUS[c.status].label}</Tag>
+                    </div>
+                    {(c.phone || c.last_event) && (
+                      <p className="mt-0.5 text-xs text-muted">
+                        {c.phone && (
+                          <a href={`tel:${c.phone.replace(/[^\d+]/g, '')}`} className="font-semibold text-accent-ink hover:underline">
+                            {c.phone}
+                          </a>
+                        )}
+                        {c.phone && c.last_event ? ' · ' : ''}
+                        {c.last_event ? `last: ${c.last_event}` : ''}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
