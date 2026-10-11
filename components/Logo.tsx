@@ -61,11 +61,18 @@ export function LogoWordmark({ tone = 'dark', className }: { tone?: 'dark' | 'li
  * mark fills 40 of its 56px from 640px up, and the wordmark's capitals are set
  * to match the pin's head rather than sit small beside it.
  */
-export function LogoLockup({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
+export function LogoLockup({
+  tone = 'dark',
+  wordmarkClassName = 'h-[15px] w-auto min-[380px]:h-4 sm:h-[19px]',
+}: {
+  tone?: 'dark' | 'light';
+  /** The wordmark's height at each width, where a row has less room (the site header). */
+  wordmarkClassName?: string;
+}) {
   return (
     <span className="inline-flex items-center gap-2 sm:gap-2.5">
       <LogoMark size={40} className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
-      <LogoWordmark tone={tone} className="h-[15px] w-auto min-[380px]:h-4 sm:h-[19px]" />
+      <LogoWordmark tone={tone} className={wordmarkClassName} />
     </span>
   );
 }

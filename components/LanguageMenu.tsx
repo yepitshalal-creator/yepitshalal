@@ -113,7 +113,10 @@ export function LanguageMenu() {
         )}
       >
         <GlobeIcon className="h-[18px] w-[18px]" aria-hidden="true" />
-        <span lang={current.code} dir={current.dir}>
+        {/* Below 1280px the globe alone, so the header row fits with the
+            longest name, "Bahasa Indonesia"; the button's label still names
+            the language. */}
+        <span className="hidden xl:inline" lang={current.code} dir={current.dir}>
           {current.endonym}
         </span>
         <ChevronDownIcon className={clsx('h-3.5 w-3.5 transition-transform', open && 'rotate-180')} aria-hidden="true" />

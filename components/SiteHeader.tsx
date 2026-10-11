@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { LogoLockup } from './Logo';
 import { NavLink } from './NavLink';
 import { LanguageMenu } from './LanguageMenu';
-import { SparkleIcon } from './icons';
+import { MapIcon, PlusIcon, SparkleIcon } from './icons';
 import { AccountNavLink } from './AccountNavLink';
 
 // The header is the logo's own ground since 2026-09-24: its deep teal, with
@@ -17,17 +17,32 @@ import { AccountNavLink } from './AccountNavLink';
 // The same for every visitor, so it reads nothing from the request. The one
 // part that differs, "Sign in" or "My account", decides itself in the browser
 // (AccountNavLink). Reading the session here made every page dynamic.
+// A 44px circle around the icon from 640 to 767px, the usual pill above.
+const HEADER_LINK = 'inline-flex items-center justify-center max-md:h-11 max-md:w-11 max-md:px-0';
+
 export function SiteHeader() {
   return (
     <header className="ground-dark sticky top-0 z-30 border-b border-white/10 bg-forest-deep text-white">
       <div className="flex h-14 w-full items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
-        <span className="inline-flex min-w-0 items-center gap-2">
+        {/* Nothing in this row shrinks below its own width: the wordmark is a
+            picture, and a squeezed link let it run under the Beta chip ("YEP
+            ITS HA" with BETA on top, 320 to 385px and 640 to 880px wide, found
+            2026-09-26). Instead, where the row is tight, words give way and
+            links never do: the wordmark steps down a size, Support us is its
+            icon below 375px and from 640 to 767px, the links shorten (below),
+            and the language button is its globe until 1280px, which leaves
+            room for "Bahasa Indonesia". Measured at each width, signed in and
+            out, in English and Indonesian, 2026-10-11. */}
+        <span className="inline-flex shrink-0 items-center gap-2">
           <Link
             href="/"
-            className="inline-flex min-h-[44px] items-center rounded-full"
+            className="inline-flex min-h-[44px] shrink-0 items-center rounded-full"
             aria-label="YepItsHalal home"
           >
-            <LogoLockup tone="dark" />
+            <LogoLockup
+              tone="dark"
+              wordmarkClassName="h-[15px] w-auto min-[375px]:h-[14px] min-[390px]:h-4 lg:h-[19px]"
+            />
           </Link>
           {/* Beside the name on every page, not just the homepage. Somebody who
               arrives on a restaurant page from a search deserves to know how
@@ -41,15 +56,23 @@ export function SiteHeader() {
           </Link>
         </span>
 
-        {/* Below sm these live in the bottom tab bar instead. */}
-        <nav aria-label="Primary" className="hidden items-center gap-1 sm:flex">
-          <NavLink href="/discover" tone="dark">
-            Discover
+        {/* Below sm these live in the bottom tab bar instead. From 640 to
+            767px they are the tab bar's icons, from 768 to 1023px its short
+            words, and from 1024px the full names. Every link stays at every
+            width, and screen readers hear the full name at each. */}
+        <nav aria-label="Primary" className="hidden items-center gap-1 whitespace-nowrap sm:flex">
+          <NavLink href="/discover" tone="dark" className={HEADER_LINK}>
+            <MapIcon className="h-[18px] w-[18px] md:hidden" aria-hidden="true" />
+            <span className="max-md:sr-only">Discover</span>
           </NavLink>
-          <NavLink href="/submit-restaurant" tone="dark">
-            Add your restaurant
+          <NavLink href="/submit-restaurant" tone="dark" className={HEADER_LINK}>
+            <PlusIcon className="h-[18px] w-[18px] md:hidden" aria-hidden="true" />
+            <span aria-hidden="true" className="hidden md:inline lg:hidden">
+              Add
+            </span>
+            <span className="sr-only lg:not-sr-only">Add your restaurant</span>
           </NavLink>
-          <AccountNavLink />
+          <AccountNavLink className={HEADER_LINK} />
         </nav>
 
         <span className="inline-flex shrink-0 items-center gap-1 sm:gap-2">
@@ -61,7 +84,7 @@ export function SiteHeader() {
             className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 text-sm font-semibold text-forest-deep transition duration-200 hover:-translate-y-px hover:bg-accent-onDark active:translate-y-0 active:scale-[0.985] sm:px-4"
           >
             <SparkleIcon className="h-4 w-4" aria-hidden="true" />
-            Support us
+            <span className="max-[374px]:sr-only sm:max-md:sr-only">Support us</span>
           </Link>
         </span>
       </div>

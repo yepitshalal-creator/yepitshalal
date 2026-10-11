@@ -38,7 +38,9 @@ export function SiteFooter() {
             </div>
           </div>
 
-          <nav aria-label="Footer" className="grid grid-cols-2 gap-x-10 gap-y-6 text-sm sm:grid-cols-3 sm:gap-x-12">
+          {/* The column gap narrows from 640 to 767px: at the full 48px the
+              third column ran 1px past the window at 640px. */}
+          <nav aria-label="Footer" className="grid grid-cols-2 gap-x-10 gap-y-6 text-sm sm:grid-cols-3 sm:gap-x-8 md:gap-x-12">
             <div>
               <h2 className="text-xs font-semibold uppercase tracking-wide text-subtle">Explore</h2>
               <ul className="mt-2 space-y-0.5 sm:mt-3 sm:space-y-2">
