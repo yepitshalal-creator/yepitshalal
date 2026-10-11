@@ -87,6 +87,8 @@ export interface OutgoingEmail {
   html: string;
   replyTo?: string;
   bcc?: string[];
+  /** Extra headers, such as List-Unsubscribe on outreach emails. */
+  headers?: Record<string, string>;
 }
 
 export type SendResult =
@@ -127,6 +129,7 @@ export async function sendThroughResend(
         html: email.html,
         ...(email.replyTo ? { reply_to: email.replyTo } : {}),
         ...(email.bcc?.length ? { bcc: email.bcc } : {}),
+        ...(email.headers ? { headers: email.headers } : {}),
       }),
       signal: AbortSignal.timeout(options.timeoutMs ?? 5000),
     });

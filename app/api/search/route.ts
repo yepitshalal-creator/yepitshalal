@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { runSearch } from '@/lib/search';
 import { HALAL_STATUSES, type HalalStatus } from '@/lib/types';
+import { isHygieneMin } from '@/lib/hygiene/display';
+import { parsePriceList } from '@/lib/price';
 
 // A thin pass-through to runSearch(). Search is the same for everyone: no
 // entitlement check here or in the database function behind it.
@@ -16,6 +18,7 @@ export async function GET(request: Request) {
   const classification = (searchParams.get('classification') ?? '')
     .split(',')
     .filter((c): c is HalalStatus => (HALAL_STATUSES as string[]).includes(c));
+  const hygiene = Number(searchParams.get('hygiene'));
 
   try {
     const response = await runSearch({
@@ -25,7 +28,10 @@ export async function GET(request: Request) {
       radiusMiles: Number(searchParams.get('radius_miles')) || null,
       classification,
       query: searchParams.get('q'),
-      sort: searchParams.get('sort') === 'evidence' ? 'evidence' : 'distance',
+      sort: (['evidence', 'popular'] as const).find((s) => s === searchParams.get('sort')) ?? 'distance',
+      minHygiene: isHygieneMin(hygiene) ? hygiene : null,
+      openNow: searchParams.get('open') === '1',
+      price: parsePriceList(searchParams.get('price')),
     });
     return NextResponse.json(response);
   } catch (e) {

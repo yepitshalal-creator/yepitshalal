@@ -5,6 +5,8 @@
   "regions": ["fra1"],
   "crons": [
     { "path": "/api/cron/deals-daily", "schedule": "0 7 * * *" },
-    { "path": "/api/cron/deals-weekly", "schedule": "0 8 * * 1" }
+    { "path": "/api/cron/deals-weekly", "schedule": "0 8 * * 1" },
+    { "path": "/api/cron/hygiene-weekly", "schedule": "0 5 * * 2" },
+    { "path": "/api/cron/outreach-daily", "schedule": "0 9 * * 1-5" }
   ]
 }

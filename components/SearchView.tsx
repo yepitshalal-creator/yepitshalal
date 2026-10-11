@@ -17,6 +17,7 @@ import {
   MapPinIcon,
   SearchIcon,
   SlidersIcon,
+  ClockIcon,
   HalalFullMark,
   HalalPartialMark,
   HalalUnknownMark,
@@ -26,10 +27,12 @@ import {
 } from './icons';
 import { DEFAULT_RADIUS_MILES, effectiveRadiusMeters, formatRadiusMiles } from '@/lib/types';
 import type { HalalStatus, SearchResultRestaurant, TierCount } from '@/lib/types';
-import type { SearchResponse } from '@/lib/search';
+import type { SearchResponse, SortOrder } from '@/lib/search';
 import type { NearbyArea } from '@/app/api/nearby-areas/route';
 import type { MapPrayerSpace } from './RestaurantMap';
 import { formatMetres, walkingMinutes } from '@/lib/prayerSpaces';
+import { HYGIENE_FILTERS } from '@/lib/hygiene/display';
+import { PRICE_RANGES } from '@/lib/price';
 import { MASK_CLASS } from '@/lib/analytics/scrub';
 
 const RestaurantMap = dynamic(() => import('./RestaurantMap').then((m) => m.RestaurantMap), {
@@ -61,23 +64,29 @@ const CLASSIFICATION_FILTERS: {
 
 const PAGE = 30;
 
-type SortOrder = 'distance' | 'evidence';
 
 /**
- * Evidence first or Nearest. A choice of order, not a filter, so it sits on the
- * page beside Filters rather than inside the sheet, the way most search sites
- * show theirs. With only two orders a menu would hide one of them: both stay in
- * view and one tap switches.
+ * Evidence first or Nearest, and Popular once enough places nearby have earned
+ * it (lib/popular.ts). A choice of order, not a filter, so it sits on the page
+ * beside Filters rather than inside the sheet, the way most search sites show
+ * theirs. With so few orders a menu would hide one of them: all stay in view
+ * and one tap switches.
  */
+const SORT_LABEL: Record<SortOrder, string> = { evidence: 'Evidence first', distance: 'Nearest', popular: 'Popular' };
+
 function SortToggle({
   value,
   onChange,
+  popular,
   className,
 }: {
   value: SortOrder;
   onChange: (sort: SortOrder) => void;
+  /** Offer Popular: enough places here have earned it, or it is already on. */
+  popular: boolean;
   className?: string;
 }) {
+  const orders: SortOrder[] = popular ? ['evidence', 'popular', 'distance'] : ['evidence', 'distance'];
   return (
     <div
       role="group"
@@ -101,7 +110,7 @@ function SortToggle({
       >
         <path d="M8 19V5M4 9l4-4 4 4M16 5v14M12 15l4 4 4-4" />
       </svg>
-      {(['evidence', 'distance'] as const).map((s) => (
+      {orders.map((s) => (
         <button
           key={s}
           type="button"
@@ -112,7 +121,7 @@ function SortToggle({
             value === s ? 'bg-ink text-white' : 'text-ink/55 hover:text-ink'
           )}
         >
-          {s === 'distance' ? 'Nearest' : 'Evidence first'}
+          {SORT_LABEL[s]}
         </button>
       ))}
     </div>
@@ -123,11 +132,20 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
   const [results, setResults] = useState<SearchResultRestaurant[]>(initial.results);
   const [totalCount, setTotalCount] = useState(initial.totalCount);
   const [tierCounts, setTierCounts] = useState<TierCount[]>(initial.tierCounts);
+  const [popularReady, setPopularReady] = useState(initial.popularReady);
+  // Places a hygiene, open now or price filter left out, so the page can say so.
+  const [hiddenByFilters, setHiddenByFilters] = useState<number | null>(initial.hiddenByFilters ?? null);
   // One mile to start: near enough to walk to, and the chip for it is selected.
   const [radiusMiles, setRadiusMiles] = useState(DEFAULT_RADIUS_MILES);
   const [classifications, setClassifications] = useState<HalalStatus[]>([]);
   const [queryInput, setQueryInput] = useState('');
   const [query, setQuery] = useState('');
+  // Lowest FSA food hygiene rating to show, or null for any (and unrated).
+  const [minHygiene, setMinHygiene] = useState<number | null>(null);
+  // Only places whose own hours say open. Places with no hours drop out.
+  const [openNow, setOpenNow] = useState(false);
+  // Price a head, any of these (lib/price.ts). Empty means any price, or none known.
+  const [prices, setPrices] = useState<number[]>([]);
   // Evidence first by default: someone looking for halal food wants the places
   // with a reason to believe first, nearest first within each label.
   const [sort, setSort] = useState<SortOrder>('evidence');
@@ -154,17 +172,21 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
   const userChoseRadius = useRef(false);
 
   const coverageMeters = serverRadiusMeters ?? effectiveRadiusMeters(radiusMiles);
-  const filtered = classifications.length > 0 || query.length > 0;
-  const activeFilterCount = classifications.length + (query ? 1 : 0);
+  const activeFilterCount =
+    classifications.length + (query ? 1 : 0) + (minHygiene !== null ? 1 : 0) + (openNow ? 1 : 0) + (prices.length ? 1 : 0);
+  const filtered = activeFilterCount > 0;
 
   const run = useCallback(
-    async (miles: number, filters: HalalStatus[], q: string, s: SortOrder) => {
+    async (miles: number, filters: HalalStatus[], q: string, s: SortOrder, hygiene: number | null, open: boolean, price: number[]) => {
       setLoading(true);
       setFailed(false);
       setServerRadiusMeters(null);
       const params = new URLSearchParams({ lat: String(lat), lng: String(lng), mode, radius_miles: String(miles), sort: s });
       if (filters.length) params.set('classification', filters.join(','));
       if (q) params.set('q', q);
+      if (hygiene !== null) params.set('hygiene', String(hygiene));
+      if (open) params.set('open', '1');
+      if (price.length) params.set('price', price.join(','));
       try {
         const res = await fetch(`/api/search?${params.toString()}`);
         if (!res.ok) throw new Error();
@@ -172,6 +194,8 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
         setResults(json.results);
         setTotalCount(json.totalCount);
         setTierCounts(json.tierCounts);
+        setPopularReady(json.popularReady);
+        setHiddenByFilters(json.hiddenByFilters ?? null);
         setServerRadiusMeters(json.effectiveRadiusMeters);
         setVisible(PAGE);
       } catch {
@@ -191,9 +215,9 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
       hydrated.current = true;
       return;
     }
-    run(radiusMiles, classifications, query, sort);
+    run(radiusMiles, classifications, query, sort, minHygiene, openNow, prices);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radiusMiles, classifications, query, sort]);
+  }, [radiusMiles, classifications, query, sort, minHygiene, openNow, prices]);
 
   // Typing filters after a pause, not on every keystroke.
   useEffect(() => {
@@ -271,6 +295,9 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
 
   function clearFilters() {
     setClassifications([]);
+    setMinHygiene(null);
+    setOpenNow(false);
+    setPrices([]);
     setQueryInput('');
     setQuery('');
   }
@@ -285,7 +312,9 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
     ? 'Searching…'
     : failed
       ? "Search didn't load. Try again."
-      : `${totalCount} ${totalCount === 1 ? 'place' : 'places'} within ${radiusLabel}`;
+      : `${totalCount} ${totalCount === 1 ? 'place' : 'places'} within ${radiusLabel}${
+          hiddenByFilters ? `. ${hiddenByFilters} more hidden by your filters` : ''
+        }`;
 
   const statusFilters = (
     <div role="group" aria-label="Filter by halal status" className="flex flex-wrap gap-2">
@@ -306,6 +335,81 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
           >
             <f.Mark className={clsx('h-4 w-4 shrink-0', on ? 'text-white' : f.tone)} aria-hidden="true" />
             {f.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const chipClass = (on: boolean) =>
+    clsx(
+      'inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium transition active:scale-[0.98]',
+      on
+        ? 'bg-ink text-white shadow-[0_6px_16px_-10px_rgba(15,37,43,0.5)]'
+        : 'bg-white text-ink/75 shadow-[0_1px_2px_rgba(15,37,43,0.04)] hover:text-ink hover:shadow-[0_4px_12px_-8px_rgba(15,37,43,0.25)]'
+    );
+
+  // One choice at a time, so "Any" is a choice too: the way back is in view.
+  const hygieneFilters = (
+    <div role="group" aria-label="Filter by food hygiene rating" className="flex flex-wrap gap-2">
+      {[{ min: null, label: 'Any' }, ...HYGIENE_FILTERS].map((f) => {
+        const on = minHygiene === f.min;
+        return (
+          <button
+            key={f.label}
+            type="button"
+            onClick={() => {
+              setSelected(null);
+              setMinHygiene(f.min);
+            }}
+            aria-pressed={on}
+            className={chipClass(on)}
+          >
+            {f.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const openNowFilter = (
+    <button
+      type="button"
+      onClick={() => {
+        setSelected(null);
+        setOpenNow((v) => !v);
+      }}
+      aria-pressed={openNow}
+      className={chipClass(openNow)}
+    >
+      <ClockIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+      Open now
+    </button>
+  );
+
+  // Prices come only from owners, and today almost none have told us. A chip
+  // that always empties the page is worse than no chip, so this waits until
+  // the places in this search carry enough prices to choose between.
+  const pricedHere = results.filter((r) => r.price_range).length;
+  const showPrice = pricedHere >= 3 || prices.length > 0;
+  const priceFilters = (
+    <div role="group" aria-label="Filter by price a head" className="flex flex-wrap gap-2">
+      {PRICE_RANGES.map((p) => {
+        const on = prices.includes(p.value);
+        return (
+          <button
+            key={p.value}
+            type="button"
+            onClick={() => {
+              setSelected(null);
+              setPrices((prev) => (on ? prev.filter((v) => v !== p.value) : [...prev, p.value].sort()));
+            }}
+            aria-pressed={on}
+            title={p.words}
+            className={chipClass(on)}
+          >
+            <span aria-hidden="true">{p.signs}</span>
+            <span className="sr-only">{p.words}</span>
           </button>
         );
       })}
@@ -385,13 +489,13 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
             className="flex-1 sm:max-w-xs sm:flex-none"
           />
 
-          <SortToggle value={sort} onChange={setSort} className="ml-auto hidden sm:flex" />
+          <SortToggle value={sort} onChange={setSort} popular={popularReady || sort === 'popular'} className="ml-auto hidden sm:flex" />
         </div>
 
         {/* On a phone the order sits beside Filters, as Sort and Filter do on
             most search sites, so changing it never means opening the sheet. */}
         <div className="mt-2 flex items-center gap-2 sm:hidden">
-          <SortToggle value={sort} onChange={setSort} className="min-w-0 flex-1" />
+          <SortToggle value={sort} onChange={setSort} popular={popularReady || sort === 'popular'} className="min-w-0 flex-1" />
 
           <button
             type="button"
@@ -411,8 +515,16 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
           </button>
         </div>
 
-        {/* Desktop shows the status filters inline: the room is there. */}
-        <div className="mt-3 hidden sm:block">{statusFilters}</div>
+        {/* Desktop shows the filters inline: the room is there. */}
+        <div className="mt-3 hidden flex-wrap items-center gap-x-5 gap-y-2 sm:flex">
+          {statusFilters}
+          <span className="flex items-center gap-2.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-subtle">Food hygiene</span>
+            {hygieneFilters}
+          </span>
+          {openNowFilter}
+          {showPrice && priceFilters}
+        </div>
       </div>
 
       <FilterSheet
@@ -448,6 +560,29 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
             </p>
             <div className="mt-3">{statusFilters}</div>
           </div>
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle">Food hygiene</h3>
+            <p className="mt-1 text-[13px] leading-relaxed text-muted">
+              From council food safety checks. Places with no rating are hidden while this is on.
+            </p>
+            <div className="mt-3">{hygieneFilters}</div>
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle">Opening hours</h3>
+            <p className="mt-1 text-[13px] leading-relaxed text-muted">
+              Most places have not told us their hours yet. While this is on, we only show places we know are open.
+            </p>
+            <div className="mt-3">{openNowFilter}</div>
+          </div>
+          {showPrice && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle">Price a head</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                £ is under £10, ££ is £10 to £20, £££ is over £20. The owner told us.
+              </p>
+              <div className="mt-3">{priceFilters}</div>
+            </div>
+          )}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle">Name or cuisine</h3>
             <div className="mt-2">{nameField}</div>
@@ -620,7 +755,7 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
             </div>
           )}
 
-          {!loading && shown.map((r, i) => <RestaurantCard key={r.id} restaurant={r} priority={i < 3} />)}
+          {!loading && shown.map((r, i) => <RestaurantCard key={r.id} restaurant={r} priority={i < 2} layout="tile" />)}
 
           {!loading && results.length > visible && (
             <button

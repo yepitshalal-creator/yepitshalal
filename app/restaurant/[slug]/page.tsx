@@ -11,10 +11,12 @@ import { CheckedByUsBadge } from '@/components/CheckedByUsBadge';
 import { HalalFactsPanel } from '@/components/HalalFactsPanel';
 import { HalalEvidencePanel } from '@/components/HalalEvidencePanel';
 import { OpenStatusBadge } from '@/components/OpenStatusBadge';
-import { PhotoGallery } from '@/components/PhotoGallery';
+import { HeroPhotos } from '@/components/HeroPhotos';
 import { ReelShowcase } from '@/components/ReelShowcase';
 import { OwnershipCta } from '@/components/OwnershipCta';
 import { OpeningHoursList } from '@/components/OpeningHoursList';
+import { HygieneBadge } from '@/components/HygieneBadge';
+import { HygienePanel } from '@/components/HygienePanel';
 import { OffersList } from '@/components/OffersList';
 import { DealCard } from '@/components/deals/DealCard';
 import { getClaimableDeal } from '@/lib/deals/data';
@@ -22,6 +24,7 @@ import { RestaurantCard } from '@/components/RestaurantCard';
 import { ShareButton } from '@/components/ShareButton';
 import { placeTitle as displayTitle, statusFor, summaryFor } from '@/lib/halalPages';
 import { tidyAddress } from '@/lib/address';
+import { priceSigns } from '@/lib/price';
 import { jsonLdHtml } from '@/lib/jsonLd';
 import { isUnsplash, skipOptimiser, unsplashSized } from '@/lib/imageUrl';
 import { halalAnswerFor } from '@/lib/halalAnswer';
@@ -113,6 +116,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
   const realPhotos = restaurant.photos.filter((p) => !isStockPhoto(p.storage_path));
   const hasGenuineCheck = restaurant.evidence.some((e) => e.kind === 'yepitshalal_check');
   const phones = splitPhones(restaurant.phone);
+  const price = priceSigns(restaurant.priceRange);
   const websiteHost = restaurant.website_url ? hostOf(restaurant.website_url) : null;
   const addressKnown = !/street address not known/i.test(restaurant.address);
   const editHref = `/submit-restaurant?update=${restaurant.slug}`;
@@ -172,7 +176,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
   // per question: two pages carrying the same FAQ would compete for it.
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-8">
+    <div className="mx-auto max-w-4xl px-4 pb-24 pt-4 sm:px-6 sm:py-8">
       {restaurant.isListed && (
         <>
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
@@ -188,7 +192,24 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
         </p>
       )}
 
+      {/* Several photos of their own: swipe through them. One, or an example
+          picture: a single figure, as before. The halal label sits on the
+          picture either way, where the eye lands first. */}
+      {realPhotos.length > 1 ? (
+        <HeroPhotos photos={realPhotos} title={title}>
+          {status && (
+            <span className="absolute left-3 top-3">
+              <HalalBadge classification={status} size="md" variant="photo" />
+            </span>
+          )}
+        </HeroPhotos>
+      ) : (
       <figure className="relative -mx-4 overflow-hidden bg-halal-unverifiedSoft sm:mx-0 sm:rounded-2xl">
+        {status && (
+          <span className="absolute left-3 top-3 z-10">
+            <HalalBadge classification={status} size="md" variant="photo" />
+          </span>
+        )}
         <div className="relative aspect-[16/9] sm:aspect-[21/8]">
           <Image
             src={isUnsplash(heroSrc) ? unsplashSized(heroSrc, 1600, 900) : heroSrc}
@@ -222,6 +243,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
           )
         )}
       </figure>
+      )}
 
       <header className="mt-4">
         <h1 className="text-balance font-display text-[1.7rem] font-semibold leading-tight text-ink sm:text-3xl">
@@ -239,36 +261,82 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
             {tidyAddress(restaurant.address)}
           </span>
         </p>
+        {/* Small facts as pills: open now, the kitchen's hygiene rating, and
+            somewhere to pray when someone has told us. Unknown is left off. */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {status && <HalalBadge classification={status} size="lg" variant="solid" />}
           {hasGenuineCheck && <CheckedByUsBadge />}
           {!closed && <OpenStatusBadge hours={restaurant.openingHours} />}
+          <HygieneBadge rating={restaurant.hygiene?.rating} size="md" />
+          {(restaurant.prayerFacility === 'prayer_room' || restaurant.prayerFacility === 'space') && (
+            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-black/[0.055] px-2.5 py-1 text-xs font-semibold text-ink/75">
+              {restaurant.prayerFacility === 'prayer_room' ? 'Prayer room' : 'Space to pray'}
+            </span>
+          )}
         </div>
       </header>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      {/* Directions, Call and Menu sit here on a laptop. On a phone they are
+          held at the bottom of the screen instead (below), in reach of a thumb. */}
+      <div className="-mt-2 flex flex-wrap justify-end gap-2 sm:mt-4 sm:justify-start">
         <a
           href={directionsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-ink hover:shadow-md active:scale-[0.98] sm:flex-none"
+          className="hidden min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-ink hover:shadow-md active:scale-[0.98] sm:inline-flex sm:flex-none"
         >
           <NavigationIcon className="h-4 w-4" />
           Directions
         </a>
         {phones.length > 0 && (
-          <a href={`tel:${phones[0]}`} className={BUTTON}>
+          <a href={`tel:${phones[0]}`} className={`${BUTTON} max-sm:hidden`}>
             <PhoneIcon className="h-4 w-4" />
             Call
           </a>
         )}
         {(restaurant.menu_url || websiteHost) && (
-          <a href={restaurant.menu_url ?? restaurant.website_url!} target="_blank" rel="noopener noreferrer" className={BUTTON}>
+          <a href={restaurant.menu_url ?? restaurant.website_url!} target="_blank" rel="noopener noreferrer" className={`${BUTTON} max-sm:hidden`}>
             {restaurant.menu_url ? 'Menu' : 'Website'}
             <ArrowUpRightIcon className="h-4 w-4 text-subtle" />
           </a>
         )}
-        <ShareButton title={title} className={BUTTON} />
+        <ShareButton title={title} className={`${BUTTON} max-sm:min-h-[40px] max-sm:flex-none max-sm:px-4`} />
+      </div>
+
+      {/* The phone's bar of actions, above the tab bar. Most visitors land here
+          from Google, so this is where they decide. The same links as above,
+          so the visit numbers count a tap here the same way. */}
+      <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-white/95 px-4 py-2.5 backdrop-blur sm:hidden">
+        <div className="mx-auto flex max-w-md gap-2">
+          <a
+            href={directionsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[46px] flex-[1.4] items-center justify-center gap-2 rounded-full bg-ink px-4 text-sm font-semibold text-white active:scale-[0.98]"
+          >
+            <NavigationIcon className="h-4 w-4" />
+            Directions
+          </a>
+          {phones.length > 0 && (
+            <a
+              href={`tel:${phones[0]}`}
+              className="inline-flex min-h-[46px] flex-1 items-center justify-center gap-1.5 rounded-full bg-black/[0.06] px-3 text-sm font-semibold text-ink active:scale-[0.98]"
+            >
+              <PhoneIcon className="h-4 w-4" />
+              Call
+            </a>
+          )}
+          {(restaurant.menu_url || websiteHost) && (
+            <a
+              href={restaurant.menu_url ?? restaurant.website_url!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[46px] flex-1 items-center justify-center gap-1 rounded-full bg-black/[0.06] px-3 text-sm font-semibold text-ink active:scale-[0.98]"
+            >
+              {restaurant.menu_url ? 'Menu' : 'Website'}
+              <ArrowUpRightIcon className="h-3.5 w-3.5 text-subtle" />
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Halal status comes before everything else below the name, because it
@@ -316,8 +384,6 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
 
       <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-[1.4fr_1fr] sm:gap-6">
         <div className="space-y-5 sm:space-y-6">
-          {realPhotos.length > 1 && <PhotoGallery photos={realPhotos} restaurantName={title} />}
-
           {/* Detailed facts only exist when we checked the place ourselves. */}
           {hasGenuineCheck && restaurant.halalFacts && <HalalFactsPanel facts={restaurant.halalFacts} />}
 
@@ -359,6 +425,8 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
             </div>
           </section>
 
+          <HygienePanel hygiene={restaurant.hygiene} />
+
           <section className="rounded-2xl border border-line bg-white p-5 shadow-sm">
             <h2 className="font-display text-base font-semibold text-ink">Details</h2>
             <dl className="mt-3 space-y-3 text-sm">
@@ -372,6 +440,18 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
                   <dd className="mt-0.5 text-ink/80">{restaurant.borough}</dd>
                 </div>
               )}
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-subtle">Price a head</dt>
+                <dd className="mt-0.5 text-ink/80">
+                  {price ? (
+                    <>
+                      <span className="font-semibold text-ink">{price.signs}</span> {price.words}, from the owner
+                    </>
+                  ) : (
+                    <span className="text-muted">Not known yet</span>
+                  )}
+                </dd>
+              </div>
               {phones.length > 0 && (
                 <div>
                   <dt className="text-xs font-medium uppercase tracking-wide text-subtle">Phone</dt>

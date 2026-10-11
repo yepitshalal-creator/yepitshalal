@@ -13,12 +13,16 @@ import {
 // be a question about nothing. And the privacy page, which asks the same
 // question in its Recordings section, where it covers nothing a visitor came
 // to read before answering.
-const NOT_ASKED = ['/admin', '/account', '/manage', '/auth', '/privacy'];
+const NOT_ASKED = ['/admin', '/account', '/manage', '/auth', '/privacy', '/yes', '/stop'];
 
-// Both answers are the same size and the same colour, so no is exactly as
-// easy as yes.
-const ANSWER =
-  'inline-flex min-h-[44px] items-center justify-center rounded-full bg-white/10 px-4 text-sm font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/15 active:scale-[0.98]';
+// Since 2026-10-10 yes is the bright button on top and no the plain one under
+// it. Both stay the same size and easy to read: UK privacy law (the ICO) says
+// saying no must be as easy as saying yes, so no is never shrunk, dimmed or
+// pushed out of sight.
+const BASE =
+  'inline-flex min-h-[44px] items-center justify-center rounded-full px-4 text-sm font-semibold transition active:scale-[0.98]';
+const YES = `${BASE} bg-accent text-forest-deep shadow-sm hover:brightness-105`;
+const NO = `${BASE} text-white ring-1 ring-white/30 hover:bg-white/10`;
 
 // The site's one question: may PostHog record this visit. It shows until it
 // is answered and never where PostHog does not run. It is not in the server's
@@ -37,19 +41,19 @@ export function RecordingConsent() {
       className="ground-dark fixed inset-x-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-2xl bg-forest-deep p-4 text-white shadow-[0_12px_40px_-12px_rgba(15,37,43,0.55)] ring-1 ring-white/10 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-full sm:max-w-sm sm:p-5"
     >
       <h2 id="recording-consent-title" className="font-display text-base font-semibold">
-        Can we record your visit?
+        Help us make the site better?
       </h2>
       <p className="mt-1.5 text-sm leading-relaxed text-white/80">
-        It helps us see where the site is hard to use. We never see what you type.{' '}
+        Let us see how people use the site, so we can fix what&apos;s confusing. We never see what you type.{' '}
         <Link href="/privacy#recordings" className="font-medium text-white underline underline-offset-2">
           How it works
         </Link>
       </p>
-      <div className="mt-3.5 grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => setRecordingChoice(true)} className={ANSWER}>
-          Yes, that&apos;s fine
+      <div className="mt-3.5 grid gap-2">
+        <button type="button" onClick={() => setRecordingChoice(true)} className={YES}>
+          Sure, happy to help
         </button>
-        <button type="button" onClick={() => setRecordingChoice(false)} className={ANSWER}>
+        <button type="button" onClick={() => setRecordingChoice(false)} className={NO}>
           No thanks
         </button>
       </div>

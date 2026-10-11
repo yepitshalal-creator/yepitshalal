@@ -77,6 +77,21 @@ async function hogql(query: string): Promise<Cell[][] | null> {
   }
 }
 
+// A day, for the public search's Popular sort (lib/popular.ts). One query a
+// day answers every visitor's search, however many there are.
+const dailyQuery = unstable_cache(runQuery, ['posthog-hogql-daily-v1'], { revalidate: 86400 });
+
+/** hogql(), but kept a day. Null without the key or when PostHog fails. */
+export async function hogqlDaily(query: string): Promise<Cell[][] | null> {
+  if (!KEY) return null;
+  try {
+    return await dailyQuery(query);
+  } catch (e) {
+    console.error('[popular] PostHog query failed', (e as Error).message);
+    return null;
+  }
+}
+
 const num = (v: Cell) => (typeof v === 'number' ? v : Number(v ?? 0) || 0);
 const str = (v: Cell) => (v === null || v === undefined ? '' : String(v));
 

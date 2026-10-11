@@ -128,6 +128,15 @@ export default async function AdminVerifyPage() {
               is the phone. Anything needing a visit comes last, and most places will never need one.
             </span>
           </p>
+          <p className="mt-2 flex items-start gap-2">
+            <InfoIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>
+              <span className="font-semibold">On every call, also ask:</span> &ldquo;Can we use your photos
+              and menu on your page and our Instagram?&rdquo; If yes, add them in{' '}
+              <a href="/admin/outreach" className="font-semibold underline underline-offset-2">Outreach</a> as a phone
+              contact and send them their yes link. Check the number is not on the TPS list before a call that asks.
+            </span>
+          </p>
         </div>
 
         <Panel title="Biggest first" action={<Tag>{worklist.length}</Tag>}>

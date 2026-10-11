@@ -73,6 +73,13 @@ export interface SearchResultRestaurant {
   postcode: string | null;
   /** Somebody from YepItsHalal visited, phoned, or saw the documents. */
   checked_by_us: boolean;
+  /** The FSA food hygiene rating, 0 to 5. Null or missing: not known. */
+  hygiene_rating?: number | null;
+  hygiene_rating_date?: string | null;
+  /** Price a head from the owner: 1 under £10, 2 £10 to £20, 3 over £20. */
+  price_range?: number | null;
+  /** Earned from our own visit numbers (lib/popular.ts), never set by hand. */
+  popular?: boolean;
 }
 
 /** How many places the same search finds at one radius tier. */

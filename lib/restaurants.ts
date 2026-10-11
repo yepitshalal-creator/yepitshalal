@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { createServerSupabase } from './supabase/server';
+import type { HygieneRecord } from './hygiene/display';
 import type {
   EvidenceStrength,
   HalalEvidence,
@@ -58,6 +59,10 @@ export interface FullRestaurant {
   halalFacts: HalalFactsPublic | null;
   evidence: HalalEvidence[];
   sources: SourceLink[];
+  /** The FSA food hygiene rating (migration 0053). Null: not known. */
+  hygiene: HygieneRecord | null;
+  /** Price a head from the owner, 1 to 3 (lib/price.ts). Null: not known. */
+  priceRange: number | null;
   offers: {
     id: string;
     title: string;
@@ -102,6 +107,8 @@ export const getRestaurantBySlug = cache(async function getRestaurantBySlug(
     { data: offers },
     { data: evidence },
     { data: sources },
+    { data: hygiene },
+    { data: price },
   ] = await Promise.all([
     restaurant.brand_id
       ? supabase.from('brands').select('name, slug').eq('id', restaurant.brand_id).maybeSingle()
@@ -133,6 +140,14 @@ export const getRestaurantBySlug = cache(async function getRestaurantBySlug(
       .from('restaurant_source_links')
       .select('source, source_id, licence, last_seen_at')
       .eq('restaurant_id', restaurant.id),
+    supabase
+      .from('restaurant_hygiene')
+      .select('fhrs_id, rating_label, rating, rating_date, new_rating_pending, local_authority')
+      .eq('restaurant_id', restaurant.id)
+      .maybeSingle(),
+    // On its own, not in the select above: until migration 0053 the column
+    // does not exist, and this fails alone instead of taking the page with it.
+    supabase.from('restaurants').select('price_range').eq('id', restaurant.id).maybeSingle(),
   ]);
 
   const sortedEvidence = ((evidence ?? []) as HalalEvidence[]).sort(
@@ -184,6 +199,8 @@ export const getRestaurantBySlug = cache(async function getRestaurantBySlug(
     halalFacts: facts ?? null,
     evidence: sortedEvidence,
     sources: (sources ?? []) as SourceLink[],
+    hygiene: (hygiene as HygieneRecord | null) ?? null,
+    priceRange: (price as { price_range: number | null } | null)?.price_range ?? null,
     offers: offers ?? [],
   };
 });

@@ -11,9 +11,10 @@ import type { CaptureResult, CapturedNetworkRequest } from 'posthog-js';
 
 // Pages that show someone's own details: the admin queue lists submitters'
 // email addresses, /account shows yours, /manage is a restaurant owner's own
-// dashboard. No event that happens on them is sent at all, and recordings
-// show them as an empty box (BLOCK_CLASS, below).
-const PRIVATE_PATHS = ['/admin', '/account', '/manage', '/auth'];
+// dashboard. /yes and /stop carry an outreach token in the address, which is
+// the key to that place's answer. No event that happens on them is sent at
+// all, and recordings show them as an empty box (BLOCK_CLASS, below).
+const PRIVATE_PATHS = ['/admin', '/account', '/manage', '/auth', '/yes', '/stop'];
 
 // The only query parameters whose values may leave the browser. Everything
 // else keeps its name and loses its value, so /search?lat=51.5&lng=-0.1

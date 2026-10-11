@@ -182,6 +182,27 @@ export async function updateRestaurant(restaurantId: string, formData: FormData)
   revalidatePath(`/restaurant`);
 }
 
+// Price a head, only ever as the owner told us (lib/price.ts). "Not known"
+// clears it rather than leaving an old answer in place.
+export async function setPriceRange(restaurantId: string, formData: FormData) {
+  await requireAdmin();
+  const value = Number(formData.get('price_range'));
+  const known = [1, 2, 3].includes(value);
+  const how = formData.get('how') === 'phone' ? 'owner_by_phone' : 'owner';
+  const supabase = createAdminSupabase();
+  const { error } = await supabase
+    .from('restaurants')
+    .update({
+      price_range: known ? value : null,
+      price_range_source: known ? how : null,
+      price_range_at: known ? new Date().toISOString() : null,
+    })
+    .eq('id', restaurantId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/restaurants/${restaurantId}`);
+  revalidatePath(`/restaurant`);
+}
+
 export async function addVideo(restaurantId: string, formData: FormData) {
   await requireAdmin();
   const supabase = createAdminSupabase();

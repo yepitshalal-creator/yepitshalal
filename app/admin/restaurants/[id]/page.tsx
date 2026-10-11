@@ -3,7 +3,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/require-admin';
-import { updateRestaurant, deletePhoto, setPrimaryPhoto } from '@/lib/admin-actions';
+import { updateRestaurant, deletePhoto, setPrimaryPhoto, setPriceRange } from '@/lib/admin-actions';
+import { PRICE_RANGES } from '@/lib/price';
 import { assignRestaurantOwner, setPartnership } from '@/lib/reel-actions';
 import { getReelAllowance } from '@/lib/reels';
 import { PhotoUploader } from '@/components/PhotoUploader';
@@ -34,15 +35,19 @@ export default async function AdminRestaurantEditPage({ params }: { params: { id
     .order('is_primary', { ascending: false });
 
   const admin2 = createAdminSupabase();
-  const [{ data: partnership }, { data: owner }, allowance] = await Promise.all([
+  const [{ data: partnership }, { data: owner }, allowance, { data: price }] = await Promise.all([
     admin2.from('restaurant_partnerships').select('*').eq('restaurant_id', restaurant.id).maybeSingle(),
     restaurant.owner_id
       ? admin2.from('users').select('email').eq('id', restaurant.owner_id).maybeSingle()
       : Promise.resolve({ data: null }),
     getReelAllowance(restaurant.id),
+    // Its own query: before migration 0053 the columns do not exist and the
+    // panel below simply has nothing to show.
+    admin2.from('restaurants').select('price_range, price_range_source, price_range_at').eq('id', restaurant.id).maybeSingle(),
   ]);
 
   const updateWithId = updateRestaurant.bind(null, restaurant.id);
+  const priceNow = price as { price_range: number | null; price_range_source: string | null; price_range_at: string | null } | null;
 
   return (
     <AdminPage
@@ -122,6 +127,38 @@ export default async function AdminRestaurantEditPage({ params }: { params: { id
             </Field>
             <button type="submit" className={BUTTON}>
               Save details
+            </button>
+          </form>
+        </Panel>
+
+        <Panel title="Price a head">
+          <form action={setPriceRange.bind(null, restaurant.id)} className="space-y-4 px-5 py-4">
+            <p className="text-sm text-muted">
+              Only what the owner told us. Never a guess from the menu.
+              {priceNow?.price_range_at && (
+                <> Last set {new Date(priceNow.price_range_at).toLocaleDateString('en-GB')}{priceNow.price_range_source === 'owner_by_phone' ? ', on a call' : ''}.</>
+              )}
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Price" htmlFor="price_range">
+                <select id="price_range" name="price_range" defaultValue={String(priceNow?.price_range ?? '')} className={FIELD}>
+                  <option value="">Not known</option>
+                  {PRICE_RANGES.map((p) => (
+                    <option key={p.value} value={p.value}>
+                      {p.signs} {p.words}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="How the owner told us" htmlFor="how">
+                <select id="how" name="how" defaultValue={priceNow?.price_range_source === 'owner' ? 'writing' : 'phone'} className={FIELD}>
+                  <option value="phone">On a call</option>
+                  <option value="writing">In writing</option>
+                </select>
+              </Field>
+            </div>
+            <button type="submit" className={BUTTON_SECONDARY}>
+              Save price
             </button>
           </form>
         </Panel>

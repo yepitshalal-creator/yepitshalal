@@ -91,6 +91,11 @@ const COLLECTED: [string, string, string][] = [
     'Kept while the listing shows them.',
   ],
   [
+    'If we ask your restaurant about photos',
+    'The business email or phone number your place put online, and where we found it. If you say yes, your name, your role, your email, any photos or videos you send, and the exact words you agreed to, with the date, as proof.',
+    'Kept while we use your photos, and the proof of your yes after that. If you say no or ask us to stop, we keep only your email or number on a list, so we never contact you again.',
+  ],
+  [
     'A recording of your visit',
     'Only if you say yes when we ask. It shows where you clicked, tapped and scrolled, and what the pages looked like, so we can see what is hard to use. It never shows what you type, the place you search near, or pages with your own details.',
     'Kept for 30 days, then deleted.',
@@ -102,7 +107,7 @@ const PROCESSORS: [string, string, string][] = [
   ['Vercel', 'Hosting, and privacy friendly visitor analytics.', 'https://vercel.com/legal/privacy-policy'],
   ['PostHog', 'Counting which pages and buttons get used, seeing where people tap and scroll, timing how fast pages load, and spotting pages that break. If you say yes, it also records your visit. Its servers are in the EU.', 'https://posthog.com/privacy'],
   ['Stripe', 'Payments, if you support us, buy a priority verification, or top up deal credit.', 'https://stripe.com/gb/privacy'],
-  ['Resend', 'Delivering what you send through a form on this site to our own inbox, so a person reads it, and sending our reply back to you. It does not track whether you open it.', 'https://resend.com/legal/privacy-policy'],
+  ['Resend', 'Delivering what you send through a form on this site to our own inbox, so a person reads it, sending our reply back to you, and sending the emails that ask restaurants about their photos. It does not track whether you open it.', 'https://resend.com/legal/privacy-policy'],
 ];
 
 const RIGHTS = [
@@ -169,7 +174,9 @@ export default function PrivacyPage() {
           button taps, so we know which pages are worth keeping. Seeing where people tap
           and how far they scroll, added up across everyone, so we know what to fix.
           Timing how fast pages load, so we can make slow ones faster. Hearing when a page
-          breaks, so we can fix it. Each is the gentlest way we could think of to do it.
+          breaks, so we can fix it. Asking a restaurant, at the business email or phone it
+          put online, if we may show its photos. Each is the gentlest way we could think of
+          to do it.
         </li>
       </ul>
 

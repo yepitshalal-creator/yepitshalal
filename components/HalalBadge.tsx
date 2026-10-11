@@ -63,7 +63,7 @@ export function HalalBadge({
 }: {
   classification: HalalStatus;
   size?: 'sm' | 'md' | 'lg';
-  variant?: 'inline' | 'solid';
+  variant?: 'inline' | 'solid' | 'photo';
 }) {
   const cfg = CONFIG[classification];
   const Mark = cfg.Mark;
@@ -87,6 +87,24 @@ export function HalalBadge({
   }
 
   const pad = size === 'lg' ? 'px-3 py-1.5 gap-2' : size === 'sm' ? 'px-2 py-0.5 gap-1.5' : 'px-2.5 py-1 gap-1.5';
+
+  // On top of a photograph: plain white, so the mark and word read the same
+  // over any food, light or dark.
+  if (variant === 'photo') {
+    return (
+      <span
+        className={clsx(
+          'inline-flex items-center whitespace-nowrap rounded-full bg-white font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.18)]',
+          classification === 'unknown' ? 'text-ink/70' : cfg.text,
+          pad,
+          textSize
+        )}
+      >
+        <Mark className={clsx('shrink-0', markSize)} />
+        {cfg.label}
+      </span>
+    );
+  }
 
   return (
     <span

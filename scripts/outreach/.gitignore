@@ -1,0 +1,3 @@
+# Contact lists written by find-contacts.mjs. They hold real people's
+# published addresses and numbers, so they never go into git.
+out/

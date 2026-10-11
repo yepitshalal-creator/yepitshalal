@@ -22,6 +22,7 @@ import {
   MenuIcon,
   XIcon,
   TicketIcon,
+  MailIcon,
 } from '../icons';
 
 // The admin's map. It used to be one row of fourteen tabs that scrolled
@@ -71,6 +72,7 @@ const GROUPS: { title: string | null; items: Item[] }[] = [
     items: [
       { href: '/admin/founders', label: 'Founders', Icon: StarIcon },
       { href: '/admin/claims', label: 'Ownership claims', Icon: UserIcon, count: 'claims' },
+      { href: '/admin/outreach', label: 'Outreach', Icon: MailIcon },
       { href: '/admin/offers', label: 'Offers', Icon: SparkleIcon },
       { href: '/admin/reels', label: 'Reels', Icon: MapIcon },
     ],

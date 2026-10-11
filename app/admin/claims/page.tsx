@@ -10,6 +10,7 @@ export const metadata = { title: 'Ownership claims' };
 
 interface Claim {
   id: string;
+  restaurant_id: string;
   status: string;
   contact_note: string | null;
   created_at: string;
@@ -24,11 +25,27 @@ export default async function AdminClaimsPage() {
   const supabase = createAdminSupabase();
   const { data } = await supabase
     .from('restaurant_ownership_claims')
-    .select('id, status, contact_note, created_at, restaurants(name, slug), users(email)')
+    .select('id, restaurant_id, status, contact_note, created_at, restaurants(name, slug), users(email)')
     .eq('status', 'pending')
     .order('created_at', { ascending: true });
 
   const claims = (data ?? []) as unknown as Claim[];
+
+  // Said yes to photos from the same email (outreach, 0054): good evidence
+  // the person runs the place. Before that migration this finds nothing.
+  const { data: yeses } = claims.length
+    ? await supabase
+        .from('content_permissions')
+        .select('restaurant_id, given_by_email, agreed_at')
+        .in('restaurant_id', claims.map((c) => c.restaurant_id))
+        .is('withdrawn_at', null)
+    : { data: [] };
+  const saidYes = new Map(
+    ((yeses ?? []) as { restaurant_id: string; given_by_email: string; agreed_at: string }[]).map((y) => [
+      `${y.restaurant_id}|${y.given_by_email.toLowerCase()}`,
+      y.agreed_at,
+    ])
+  );
 
   return (
     <AdminPage
@@ -55,6 +72,14 @@ export default async function AdminClaimsPage() {
                   {c.users?.email ?? 'Unknown account'} ·{' '}
                   {new Date(c.created_at).toLocaleDateString('en-GB')}
                 </p>
+                {saidYes.has(`${c.restaurant_id}|${(c.users?.email ?? '').toLowerCase()}`) && (
+                  <p className="mt-1.5">
+                    <Tag tone="good">
+                      Said yes to photos with this email on{' '}
+                      {new Date(saidYes.get(`${c.restaurant_id}|${(c.users?.email ?? '').toLowerCase()}`) as string).toLocaleDateString('en-GB')}
+                    </Tag>
+                  </p>
+                )}
                 {c.contact_note && (
                   <p className="mt-1.5 rounded-xl bg-black/[0.03] px-3 py-2 text-sm leading-relaxed text-ink/80">
                     {c.contact_note}
