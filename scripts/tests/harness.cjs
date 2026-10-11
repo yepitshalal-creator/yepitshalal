@@ -1,7 +1,7 @@
-// Shared by the tests in scripts/outreach/tests and scripts/stripe. compile()
-// turns real app/ and lib/ files into plain JavaScript in a temporary folder,
-// with sucrase (installed with tailwindcss 3), pointing their imports at
-// stubs. makeDb() is a fake PostgREST client over in-memory tables, enough
+// Shared by the tests in scripts/outreach/tests, scripts/stripe and
+// scripts/admin. compile() turns real app/ and lib/ files into plain
+// JavaScript in a temporary folder, with sucrase (installed with tailwindcss
+// 3), pointing their imports at stubs. makeDb() is a fake PostgREST client over in-memory tables, enough
 // for the queries those files make, and failIf(query) returns an error
 // message to fail any one of them.
 const fs = require('fs');
@@ -161,9 +161,14 @@ function makeDb(tables, failIf) {
       }
     }
     if (q.op === 'insert') {
-      const row = { id: `new${++made}`, created_at: new Date().toISOString(), ...q.patch };
-      all.push(row);
-      return { data: q.returning ? (q.single ? row : [row]) : null, error: null };
+      // One row, or an array of them added together.
+      const added = (Array.isArray(q.patch) ? q.patch : [q.patch]).map((p) => ({
+        id: `new${++made}`,
+        created_at: new Date().toISOString(),
+        ...p,
+      }));
+      all.push(...added);
+      return { data: q.returning ? (q.single ? added[0] : added) : null, error: null };
     }
     const rows = all.filter((r) => q.filters.every((f) => f(r)));
     if (q.op === 'delete') {

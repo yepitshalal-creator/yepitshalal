@@ -1,5 +1,7 @@
 import { Field, FIELD, BUTTON } from './ui';
+import { ActionForm } from './ActionForm';
 import type { TriState } from '@/lib/types';
+import type { ActionState } from '@/lib/admin/action-state';
 
 // The form for writing down a halal check we made ourselves. The rules it
 // feeds are in lib/admin/save-check.ts; this only asks the questions.
@@ -32,9 +34,15 @@ export interface KnownFacts {
   certification_body: string | null;
 }
 
-export function CheckForm({ action, facts }: { action: (formData: FormData) => Promise<void>; facts?: KnownFacts | null }) {
+export function CheckForm({
+  action,
+  facts,
+}: {
+  action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
+  facts?: KnownFacts | null;
+}) {
   return (
-    <form action={action} className="space-y-4 px-5 py-4">
+    <ActionForm action={action} className="space-y-4 px-5 py-4">
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Field label="How did you check?" htmlFor="check-method">
           <select id="check-method" name="method" required className={FIELD} defaultValue="">
@@ -96,6 +104,6 @@ export function CheckForm({ action, facts }: { action: (formData: FormData) => P
       <button type="submit" className={BUTTON}>
         Save the check
       </button>
-    </form>
+    </ActionForm>
   );
 }

@@ -20,6 +20,10 @@ import { createAdminSupabase } from '@/lib/supabase/admin';
 //   inference. It is recorded as their statement and search then leaves the
 //   place out, the same as a not-halal statement on their own website.
 // - Every fact is three-state. A question left at "Don't know" stays null.
+// - Every write is checked. Older checks step down before the new one goes
+//   in, so a failure part way can only ever show less than the newest check
+//   found, never more; if the new one will not save, they step back up. A
+//   failure throws a sentence for the admin, which the actions show.
 
 export const METHOD_LABEL: Record<string, string> = {
   visit: 'Visited in person',
@@ -87,15 +91,15 @@ export async function saveCheck({
   };
 
   if (finding) {
-    await supabase.from('restaurant_halal_facts').upsert(facts, { onConflict: 'restaurant_id' });
-
     // A newer check replaces an older one rather than stacking beside it.
-    await supabase
+    const { data: steppedDown, error: downError } = await supabase
       .from('restaurant_halal_evidence')
       .update({ is_current: false })
       .eq('restaurant_id', restaurantId)
       .in('kind', ['yepitshalal_check', 'certification'])
-      .eq('is_current', true);
+      .eq('is_current', true)
+      .select('id');
+    if (downError) fail('Nothing was saved. Try again.', downError);
 
     const evidence: Record<string, string | null>[] = [
       {
@@ -127,10 +131,23 @@ export async function saveCheck({
         checked_by: `admin:${adminId}`,
       });
     }
-    await supabase.from('restaurant_halal_evidence').insert(evidence);
+    const { error: addError } = await supabase.from('restaurant_halal_evidence').insert(evidence);
+    if (addError) {
+      const ids = ((steppedDown ?? []) as { id: string }[]).map((r) => r.id);
+      const { error: backError } = ids.length
+        ? await supabase.from('restaurant_halal_evidence').update({ is_current: true }).in('id', ids)
+        : { error: null };
+      if (backError) {
+        fail('The check did not save, and the older check could not be put back, so the page shows less than it did. Save it again.', addError);
+      }
+      fail('Nothing was saved. Try again.', addError);
+    }
+
+    const { error: factsError } = await supabase.from('restaurant_halal_facts').upsert(facts, { onConflict: 'restaurant_id' });
+    if (factsError) fail('The label is saved, but not the answers to each question. Save it again.', factsError);
   }
 
-  await supabase.from('verification_history').insert({
+  const { error: historyError } = await supabase.from('verification_history').insert({
     restaurant_id: restaurantId,
     verification_request_id: requestId,
     // The history column holds the site's three labels; "not halal" is kept
@@ -138,6 +155,15 @@ export async function saveCheck({
     classification_result: outcome === 'not_halal' ? 'unverified' : outcome,
     facts_snapshot: { ...facts, outcome, method, public_summary: publicSummary, source_url: sourceUrl },
   });
+  if (historyError) {
+    fail(finding ? 'The check is saved, but not its line in the history. Save it again.' : 'Nothing was saved. Try again.', historyError);
+  }
 
   return { outcome, verified };
+}
+
+/** Logs what the database said and throws the sentence the admin sees. */
+function fail(message: string, cause: { message: string }): never {
+  console.error('[check]', message, cause.message);
+  throw new Error(message);
 }

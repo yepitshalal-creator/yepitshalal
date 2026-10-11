@@ -4,6 +4,7 @@ import { revalidateAdminPath } from './admin/cache';
 import { createAdminSupabase } from './supabase/admin';
 import { requireAdmin } from './require-admin';
 import { saveCheck } from './admin/save-check';
+import type { ActionState } from './admin/action-state';
 
 /**
  * Publish the outcome of a verification request.
@@ -14,7 +15,7 @@ import { saveCheck } from './admin/save-check';
  * from evidence. "Unable to verify" records the attempt and changes nothing
  * public.
  */
-export async function publishVerification(requestId: string, formData: FormData) {
+export async function publishVerification(requestId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
   const adminUser = await requireAdmin();
   const supabase = createAdminSupabase();
 
@@ -23,27 +24,36 @@ export async function publishVerification(requestId: string, formData: FormData)
     .select('id, restaurant_id')
     .eq('id', requestId)
     .single();
-  if (!request) throw new Error('Verification request not found.');
+  if (!request) return { error: 'Verification request not found.' };
 
-  const { outcome, verified } = await saveCheck({
-    restaurantId: request.restaurant_id,
-    requestId: request.id,
-    formData,
-    adminId: adminUser.id,
-    allowNotHalal: false,
-  });
+  try {
+    const { outcome, verified } = await saveCheck({
+      restaurantId: request.restaurant_id,
+      requestId: request.id,
+      formData,
+      adminId: adminUser.id,
+      allowNotHalal: false,
+    });
 
-  await supabase
-    .from('verification_requests')
-    .update({
-      status: verified ? 'completed' : 'unable_to_verify',
-      outcome_classification: outcome,
-      completed_at: new Date().toISOString(),
-    })
-    .eq('id', requestId);
-
-  revalidateAdminPath('/admin/queue');
-  revalidateAdminPath(`/admin/queue/${requestId}`);
+    const { error } = await supabase
+      .from('verification_requests')
+      .update({
+        status: verified ? 'completed' : 'unable_to_verify',
+        outcome_classification: outcome,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', requestId);
+    if (error) {
+      console.error('[check] request status', error.message);
+      return { error: 'The check is saved, but the request still shows as waiting. Publish it again to finish.' };
+    }
+    return { ok: 'Published. The request is done.' };
+  } catch (e) {
+    return { error: (e as Error).message };
+  } finally {
+    revalidateAdminPath('/admin/queue');
+    revalidateAdminPath(`/admin/queue/${requestId}`);
+  }
 }
 
 /** Records a photo that was just uploaded through a signed URL. */

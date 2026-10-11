@@ -14,6 +14,7 @@ import {
   FIELD,
   BUTTON,
 } from '@/components/admin/ui';
+import { ActionForm } from '@/components/admin/ActionForm';
 import type { HalalClassification, TriState } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -144,7 +145,7 @@ export default async function ReviewVerificationPage({ params }: { params: { id:
           </Panel>
         )}
 
-        <form action={publishWithId}>
+        <ActionForm action={publishWithId}>
           <Panel title="Verified facts">
             <div className="space-y-4 px-5 py-4">
               <TriSelect
@@ -236,7 +237,7 @@ export default async function ReviewVerificationPage({ params }: { params: { id:
               </button>
             </div>
           </Panel>
-        </form>
+        </ActionForm>
       </div>
     </AdminPage>
   );
