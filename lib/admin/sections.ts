@@ -14,6 +14,7 @@ export type CountKey =
   | 'founders'
   | 'reels'
   | 'deals'
+  | 'outreach'
   | 'setup';
 
 export interface Tab {
@@ -58,7 +59,7 @@ export const SECTIONS: Record<SectionId, Section> = {
     label: 'Owners and partners',
     tabs: [
       { href: '/admin/claims', label: 'Ownership claims', count: 'claims' },
-      { href: '/admin/outreach', label: 'Outreach' },
+      { href: '/admin/outreach', label: 'Outreach', count: 'outreach' },
       { href: '/admin/founders', label: 'Founders', count: 'founders' },
       { href: '/admin/reels', label: 'Reels', count: 'reels' },
     ],

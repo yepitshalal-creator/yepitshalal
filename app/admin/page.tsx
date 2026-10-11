@@ -15,7 +15,7 @@ import { LineChart } from '@/components/admin/charts/LineChart';
 import { StackedColumns } from '@/components/admin/charts/StackedColumns';
 import { SERIES } from '@/components/admin/charts/theme';
 import { MessageRow } from '@/components/admin/inbox/parts';
-import { CheckIcon, InboxIcon, ListIcon, PlayIcon, PlusIcon, SealCheckIcon, StarIcon, TicketIcon, UserIcon } from '@/components/icons';
+import { CheckIcon, InboxIcon, ListIcon, MailIcon, PlayIcon, PlusIcon, SealCheckIcon, StarIcon, TicketIcon, UserIcon } from '@/components/icons';
 import { INBOX_LABEL, loadInbox } from '@/lib/admin/inbox';
 import { catalogue, messagesByDay, moneyGlance, waitingCounts } from '@/lib/admin/stats';
 import { journey, posthogConfigured, topPages, totals, trafficByDay } from '@/lib/admin/posthog';
@@ -92,6 +92,19 @@ export default async function AdminOverview() {
     { href: '/admin/submissions', short: 'New restaurants', count: waiting.submissions, label: 'new restaurants to review', clear: 'No new restaurants', Icon: PlusIcon },
     { href: '/admin/duplicates', short: 'Duplicates', count: waiting.duplicates, label: 'possible duplicates', clear: 'No duplicates', Icon: ListIcon },
     { href: '/admin/claims', short: 'Ownership claims', count: waiting.claims, label: 'ownership claims', clear: 'No ownership claims', Icon: UserIcon },
+    {
+      href: '/admin/outreach',
+      short: 'Outreach',
+      count: waiting.outreach,
+      label: 'things from owners to look at',
+      clear: 'Nothing from outreach',
+      Icon: MailIcon,
+      urgent: waiting.outreachPaused
+        ? 'Sending paused itself. Look before turning it back on'
+        : waiting.takeDowns > 0
+          ? `${waiting.takeDowns} ${waiting.takeDowns === 1 ? 'take-down' : 'take-downs'} owed (we promise 14 days)`
+          : null,
+    },
     { href: '/admin/founders', short: 'Founders', count: waiting.founders, label: 'Founder sign-ups to look at', clear: 'No Founder sign-ups', Icon: StarIcon },
     { href: '/admin/reels', short: 'Reels', count: waiting.reels, label: 'reels to watch', clear: 'No reels waiting', Icon: PlayIcon },
     { href: '/admin/deals', short: 'Deals', count: waiting.deals, label: 'deals stopped by reports', clear: 'No deals stopped', Icon: TicketIcon },

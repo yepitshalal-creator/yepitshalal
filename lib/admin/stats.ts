@@ -26,6 +26,13 @@ export interface Waiting {
   reels: number;
   /** Paid priority checks past the time we promised. */
   overdue: number;
+  /** Outreach that needs a person: owners' photos and videos to look at,
+   *  take-downs owed, and sending that paused itself (counted as one). */
+  outreach: number;
+  /** Yeses taken back whose photos and posts must come down within 14 days. */
+  takeDowns: number;
+  /** Why outreach sending paused itself (a complaint or bounces), or null. */
+  outreachPaused: string | null;
 }
 
 /** What is waiting on a person. The sidebar badges and the overview's first row.
@@ -34,7 +41,7 @@ export interface Waiting {
 export const waitingCounts = cache(adminCached(async (): Promise<Waiting> => {
   const db = createAdminSupabase();
   const open = ['awaiting_slot', 'queued', 'in_review', 'pending_qc'];
-  const [inbox, submissions, checks, claims, deals, duplicates, founders, reels, overdue] = await Promise.all([
+  const [inbox, submissions, checks, claims, deals, duplicates, founders, reels, overdue, uploads, takeDowns, outreach] = await Promise.all([
     loadInbox(),
     db.from('restaurant_submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     db
@@ -52,7 +59,15 @@ export const waitingCounts = cache(adminCached(async (): Promise<Waiting> => {
       .eq('queue_type', 'priority')
       .in('status', open)
       .lt('sla_due_at', new Date().toISOString()),
+    db.from('owner_uploads').select('id', { count: 'exact', head: true }).eq('status', 'waiting'),
+    db
+      .from('content_permissions')
+      .select('id', { count: 'exact', head: true })
+      .not('withdrawn_at', 'is', null)
+      .is('removed_at', null),
+    db.from('outreach_settings').select('paused_reason').eq('id', true).maybeSingle(),
   ]);
+  const outreachPaused = (outreach.data as { paused_reason: string | null } | null)?.paused_reason ?? null;
   return {
     messages: inbox.items.filter((i) => statusOf(i) === 'to_answer').length,
     submissions: submissions.count ?? 0,
@@ -63,8 +78,11 @@ export const waitingCounts = cache(adminCached(async (): Promise<Waiting> => {
     founders: founders.count ?? 0,
     reels: reels.count ?? 0,
     overdue: overdue.count ?? 0,
+    outreach: (uploads.count ?? 0) + (takeDowns.count ?? 0) + (outreachPaused ? 1 : 0),
+    takeDowns: takeDowns.count ?? 0,
+    outreachPaused,
   };
-}, 'waiting-v2', 30));
+}, 'waiting-v3', 30));
 
 export interface Catalogue {
   /** The four labels a visitor can see, in the order the site shows them. */
