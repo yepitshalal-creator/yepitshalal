@@ -14,7 +14,8 @@ function Submit() {
   );
 }
 
-export function AddContactForm() {
+/** `place` fills in the place, for a form opened from that restaurant's admin page. */
+export function AddContactForm({ place }: { place?: string }) {
   const ref = useRef<HTMLFormElement>(null);
   const [state, action] = useFormState<AddState, FormData>(async (prev, formData) => {
     const next = await addContact(prev, formData);
@@ -44,7 +45,7 @@ export function AddContactForm() {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Place" htmlFor="place" hint="Its page address on our site, or its slug.">
-          <input id="place" name="place" placeholder="yepitshalal.com/restaurant/…" className={FIELD} />
+          <input id="place" name="place" defaultValue={place} placeholder="yepitshalal.com/restaurant/…" className={FIELD} />
         </Field>
         <Field label="Chain (head office only)" htmlFor="brand" hint="The chain's brand slug.">
           <input id="brand" name="brand" className={FIELD} />

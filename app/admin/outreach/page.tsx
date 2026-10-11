@@ -65,7 +65,7 @@ function listHref(now: { status: string | null; channel: string | null }, change
 export default async function AdminOutreachPage({
   searchParams,
 }: {
-  searchParams: { status?: string; channel?: string; page?: string; preview?: string };
+  searchParams: { status?: string; channel?: string; page?: string; preview?: string; place?: string };
 }) {
   await requireAdmin();
   const db = outreachDb();
@@ -294,9 +294,11 @@ export default async function AdminOutreachPage({
           </List>
         </Panel>
 
-        <Panel title="Add a contact">
-          <AddContactForm />
-        </Panel>
+        <section id="add" className="scroll-mt-24">
+          <Panel title="Add a contact">
+            <AddContactForm place={searchParams.place?.slice(0, 200)} />
+          </Panel>
+        </section>
 
         <section id="contacts" className="scroll-mt-24">
         <Panel title="Contacts" action={<Tag>{total.toLocaleString('en-GB')}</Tag>}>

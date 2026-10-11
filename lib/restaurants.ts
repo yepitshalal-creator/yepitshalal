@@ -233,11 +233,6 @@ export interface NearbyPlace {
 }
 
 /**
- * Places with halal evidence within half a mile, strongest first. The same
- * search, and the same half-mile a visitor gets from a searched place, so this
- * shows nothing search would not.
- */
-/**
  * The page address of the record a duplicate was merged into, or null when
  * that record is gone or was itself merged. One step only, never a chain.
  */
@@ -251,6 +246,11 @@ export const mergedTargetSlug = cache(async function mergedTargetSlug(id: string
   return (data as { slug: string } | null)?.slug ?? null;
 });
 
+/**
+ * Places with halal evidence within half a mile, strongest first. The same
+ * search, and the same half-mile a visitor gets from a searched place, so this
+ * shows nothing search would not.
+ */
 export const getNearbyWithEvidence = cache(async function getNearbyWithEvidence(
   restaurant: { id: string; lat: number; lng: number },
   limit = 6

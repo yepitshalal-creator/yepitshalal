@@ -437,7 +437,12 @@ export default async function AdminRestaurantPage({ params }: { params: { id: st
 
           <Panel title="Outreach" action={<Link href="/admin/outreach" className="text-xs font-semibold text-accent-ink hover:underline">Open</Link>}>
             {contactRows.length === 0 && yesRows.length === 0 ? (
-              <p className="px-5 py-4 text-sm text-muted">Not on the outreach list. Add it on Outreach with this page&apos;s address.</p>
+              <p className="px-5 py-4 text-sm text-muted">
+                Not on the outreach list.{' '}
+                <Link href={`/admin/outreach?place=${encodeURIComponent(r.slug)}#add`} className="font-semibold text-accent-ink hover:underline">
+                  Add it
+                </Link>
+              </p>
             ) : (
               <ul className="divide-y divide-line">
                 {yesRows.map((p) => (
