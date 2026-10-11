@@ -12,7 +12,7 @@ import type { HalalStatus } from '@/lib/types';
 // `solid` keeps the filled pill for the two places that need to hold their own
 // against a photograph or act as a page-level headline.
 //
-// The mark does the semantic work in both: filled-with-a-tick / half-filled /
+// The mark does the semantic work in both: filled / half-filled /
 // dashed-and-empty / ring-with-a-bar survives greyscale and colour blindness, where three
 // coloured dots did not.
 const CONFIG: Record<

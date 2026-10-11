@@ -333,22 +333,20 @@ export function ChatIcon(p: IconProps) {
 }
 
 // Halal status marks. These are fill-based rather than stroke-based, and they
-// carry the meaning themselves: solid-with-a-tick = we checked and it's all
-// halal; half-filled = some of the menu; dashed-and-empty = we haven't looked.
-// That reads before the words do, and the three are still distinguishable with
-// no colour at all, which colour-coded dots were not.
+// carry the meaning themselves: solid = all of the menu; half-filled = some of
+// it; dashed-and-empty = signs, not confirmed; a ring with a bar = worth
+// asking. That reads before the words do, and the four are still
+// distinguishable with no colour at all, which colour-coded dots were not.
+//
+// No tick in any of them. Shabir, 2026-09-24: "reserve the tick". A tick reads
+// as "we checked", and a Fully Halal label usually rests on the restaurant's
+// own words, so the tick belongs only to the Checked by us seal
+// (CheckedByUsBadge), which only our own check can earn.
 export function HalalFullMark({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" className={className} aria-hidden="true" focusable="false">
-      <circle cx="10" cy="10" r="9" fill="currentColor" />
-      <path
-        d="m5.8 10.2 2.8 2.8 5.6-5.9"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="2.1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      {/* The same outer edge as the half-filled mark (8.6 plus half its 1.9 ring). */}
+      <circle cx="10" cy="10" r="9.55" fill="currentColor" />
     </svg>
   );
 }
