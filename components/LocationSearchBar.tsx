@@ -6,6 +6,7 @@ import { track } from '@/lib/analytics/posthog';
 import { geocodePostcode } from '@/lib/geocode';
 import { SearchIcon, CrosshairIcon } from './icons';
 import { SuggestionPanel, type SuggestionItem } from './SearchSuggestions';
+import { showNavPending } from './NavPending';
 
 const FULL_POSTCODE = /^[a-z]{1,2}\d[a-z\d]?\s*\d[a-z]{2}$/i;
 
@@ -101,11 +102,16 @@ export function LocationSearchBar({
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [open]);
 
+  // Each move also shows the next page's grey shape at once (NavPending): a
+  // search reads the database before its page can arrive.
+  function go(href: string) {
+    showNavPending(href);
+    router.push(href);
+  }
+
   function goToLocation(lat: number, lng: number, label: string) {
     track('location_search_submitted', { search_mode: 'location' });
-    router.push(
-      `/search?lat=${lat}&lng=${lng}&mode=searched_location&label=${encodeURIComponent(label)}`
-    );
+    go(`/search?lat=${lat}&lng=${lng}&mode=searched_location&label=${encodeURIComponent(label)}`);
   }
 
   function pick(item: SuggestionItem) {
@@ -115,7 +121,7 @@ export function LocationSearchBar({
       // Straight to the restaurant, not a search around it: they named the place
       // they wanted.
       track('location_search_submitted', { search_mode: 'restaurant' });
-      router.push(`/restaurant/${item.slug}${restaurantHash}`);
+      go(`/restaurant/${item.slug}${restaurantHash}`);
       return;
     }
     setQuery(item.label);
@@ -144,9 +150,7 @@ export function LocationSearchBar({
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        router.push(
-          `/search?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&mode=current_location&label=Your location`
-        );
+        go(`/search?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&mode=current_location&label=Your location`);
       },
       () => {
         setError("We couldn't get your location. Type a postcode or area name instead.");

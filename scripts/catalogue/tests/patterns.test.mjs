@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { CONTRADICTIONS } from '../page-text.mjs';
 
-const src = readFileSync(new URL('../classify-evidence.mjs', import.meta.url), 'utf8');
+// Line endings made even: a Windows checkout has CRLF, and pick() ends each
+// pattern at a semicolon followed by LF.
+const src = readFileSync(new URL('../classify-evidence.mjs', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const pick = (name) => {
   const start = src.indexOf(`const ${name} = `);
   const end = src.indexOf(';\n', start);

@@ -32,17 +32,32 @@ function skeletonFor(pathname: string) {
   return null;
 }
 
-/** The path a click is about to open in this tab, if it is one of ours. */
-function destination(e: MouseEvent): string | null {
-  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;
-  const a = (e.target as Element | null)?.closest?.('a');
-  if (!a || a.hasAttribute('download') || (a.target && a.target !== '_self')) return null;
-  const url = new URL(a.href, window.location.href);
+/** The path of another page of ours that `href` opens, if it is one. */
+function otherPage(href: string): string | null {
+  const url = new URL(href, window.location.href);
   if (url.origin !== window.location.origin) return null;
   // Only a move to another page: a new search on the search page, or a link
   // to a heading on this one, is handled where it happens.
   if (url.pathname === window.location.pathname) return null;
   return url.pathname;
+}
+
+/** The path a click is about to open in this tab, if it is one of ours. */
+function destination(e: MouseEvent): string | null {
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;
+  const a = (e.target as Element | null)?.closest?.('a');
+  if (!a || a.hasAttribute('download') || (a.target && a.target !== '_self')) return null;
+  return otherPage(a.href);
+}
+
+const PUSH_EVENT = 'yih:nav-pending';
+
+/**
+ * For a page change made in code rather than by a link (the search box's
+ * router.push): call it just before, and the next page's shape shows at once.
+ */
+export function showNavPending(href: string) {
+  window.dispatchEvent(new CustomEvent<string>(PUSH_EVENT, { detail: href }));
 }
 
 export function NavPending() {
@@ -57,11 +72,17 @@ export function NavPending() {
       const path = destination(e);
       if (path && skeletonFor(path)) setPending(path);
     };
+    const onPush = (e: Event) => {
+      const path = otherPage((e as CustomEvent<string>).detail);
+      if (path && skeletonFor(path)) setPending(path);
+    };
     const clear = () => setPending(null);
     document.addEventListener('click', onClick);
+    window.addEventListener(PUSH_EVENT, onPush);
     window.addEventListener('popstate', clear);
     return () => {
       document.removeEventListener('click', onClick);
+      window.removeEventListener(PUSH_EVENT, onPush);
       window.removeEventListener('popstate', clear);
     };
   }, []);
