@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getNearbyWithEvidence, getRestaurantBySlug } from '@/lib/restaurants';
+import { getNearbyWithEvidence, getRestaurantBySlug, mergedTargetSlug } from '@/lib/restaurants';
 import { getNearestPrayerSpaces } from '@/lib/prayerSpaces';
 import { NearestPrayerSpace } from '@/components/NearestPrayerSpace';
 import { getPublishedReels, isActivePartner } from '@/lib/reels';
@@ -99,6 +99,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function RestaurantPage({ params }: { params: { slug: string } }) {
   const restaurant = await getRestaurantBySlug(params.slug);
   if (!restaurant) notFound();
+
+  // A duplicate merged into another record (admin, Duplicates) sends anyone
+  // with an old link or bookmark to the record that was kept, permanently.
+  if (restaurant.mergedInto) {
+    const kept = await mergedTargetSlug(restaurant.mergedInto);
+    if (kept && kept !== restaurant.slug) permanentRedirect(`/restaurant/${kept}`);
+  }
 
   const [reels, partner, nearby, prayerSpaces, deal] = await Promise.all([
     getPublishedReels(restaurant.id),

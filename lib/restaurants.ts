@@ -39,6 +39,8 @@ export interface FullRestaurant {
   isSearchable: boolean;
   isCandidate: boolean;
   catalogueStatus: 'active' | 'temporarily_closed' | 'permanently_closed' | 'needs_review';
+  /** Set when this record was merged into another as its duplicate. */
+  mergedInto: string | null;
   lat: number;
   lng: number;
   cuisines: string[];
@@ -90,7 +92,7 @@ export const getRestaurantBySlug = cache(async function getRestaurantBySlug(
   const { data: restaurant } = await supabase
     .from('restaurants_with_coords')
     .select(
-      'id, name, slug, description, address, postcode, borough, phone, website_url, menu_url, socials, halal_classification, halal_evidence_strength, halal_summary, halal_checked_at, is_listed, is_searchable, is_candidate, catalogue_status, lat, lng, branch_label, cuisine_label, brand_id, prayer_facility, prayer_facility_note, prayer_facility_source, prayer_facility_at'
+      'id, name, slug, description, address, postcode, borough, phone, website_url, menu_url, socials, halal_classification, halal_evidence_strength, halal_summary, halal_checked_at, is_listed, is_searchable, is_candidate, catalogue_status, lat, lng, branch_label, cuisine_label, brand_id, prayer_facility, prayer_facility_note, prayer_facility_source, prayer_facility_at, merged_into'
     )
     .eq('slug', slug)
     .maybeSingle();
@@ -177,6 +179,7 @@ export const getRestaurantBySlug = cache(async function getRestaurantBySlug(
     isSearchable: Boolean(restaurant.is_searchable),
     isCandidate: Boolean(restaurant.is_candidate),
     catalogueStatus: restaurant.catalogue_status,
+    mergedInto: restaurant.merged_into ?? null,
     brandName: (brand as { name: string } | null)?.name ?? null,
     brandId: restaurant.brand_id ?? null,
     brandSlug: (brand as { slug: string | null } | null)?.slug ?? null,
@@ -234,6 +237,20 @@ export interface NearbyPlace {
  * search, and the same half-mile a visitor gets from a searched place, so this
  * shows nothing search would not.
  */
+/**
+ * The page address of the record a duplicate was merged into, or null when
+ * that record is gone or was itself merged. One step only, never a chain.
+ */
+export const mergedTargetSlug = cache(async function mergedTargetSlug(id: string): Promise<string | null> {
+  const { data } = await createServerSupabase()
+    .from('restaurants')
+    .select('slug')
+    .eq('id', id)
+    .is('merged_into', null)
+    .maybeSingle();
+  return (data as { slug: string } | null)?.slug ?? null;
+});
+
 export const getNearbyWithEvidence = cache(async function getNearbyWithEvidence(
   restaurant: { id: string; lat: number; lng: number },
   limit = 6
