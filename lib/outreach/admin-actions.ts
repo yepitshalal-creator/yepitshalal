@@ -14,7 +14,7 @@ import {
   type Channel,
   type Contact,
 } from './data';
-import { publishOwnerPhoto, type OwnerUpload } from './content';
+import { publishOwnerPhoto, removeOwnerContent, type OwnerUpload } from './content';
 
 // Everything /admin/outreach can do. Each action checks the admin itself:
 // a server action is a public endpoint, whatever page it sits on.
@@ -156,9 +156,14 @@ export async function markReady(id: string) {
   revalidateAdminPath(PATH);
 }
 
+/** A take-down done. Anything still on the site is tried again first, and it is not Done until that worked. */
 export async function markRemoved(permissionId: string) {
   await requireAdmin();
-  await outreachDb().from('content_permissions').update({ removed_at: new Date().toISOString() }).eq('id', permissionId);
+  const db = outreachDb();
+  const allOff = await removeOwnerContent(db, permissionId);
+  revalidateAdminPath('/restaurant/[slug]', 'page');
+  if (!allOff) throw new Error('Some of their photos would not come off the site. Try again in a minute.');
+  await db.from('content_permissions').update({ removed_at: new Date().toISOString() }).eq('id', permissionId);
   revalidateAdminPath(PATH);
 }
 

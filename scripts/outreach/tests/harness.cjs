@@ -43,6 +43,20 @@ function parseOr(expr) {
 
 function makeDb(tables, failIf) {
   return {
+    // Storage buckets are tables named storage:<bucket>, each a list of paths.
+    storage: {
+      from(bucket) {
+        const table = `storage:${bucket}`;
+        return {
+          async remove(paths) {
+            const err = failIf({ table, op: 'remove', filters: [], keys: [], opts: {} });
+            if (err) return { data: null, error: typeof err === 'string' ? { message: err } : err };
+            tables[table] = (tables[table] ?? []).filter((x) => !paths.includes(x));
+            return { data: paths.map((name) => ({ name })), error: null };
+          },
+        };
+      },
+    },
     from(table) {
       const q = { table, op: 'select', filters: [], keys: [], opts: {}, patch: null, limitN: null, single: false };
       const add = (key, fn) => {
@@ -66,12 +80,17 @@ function makeDb(tables, failIf) {
           q.patch = row;
           return b;
         },
+        delete() {
+          q.op = 'delete';
+          return b;
+        },
         update(patch) {
           q.op = 'update';
           q.patch = patch;
           return b;
         },
         eq: (c, v) => add(`eq:${c}`, (r) => r[c] === v),
+        neq: (c, v) => add(`neq:${c}`, (r) => r[c] !== v),
         is: (c, v) => add(`is:${c}`, (r) => (r[c] ?? null) === v),
         gte: (c, v) => add(`gte:${c}`, (r) => r[c] != null && r[c] >= v),
         lte: (c, v) => add(`lte:${c}`, (r) => r[c] != null && r[c] <= v),
@@ -112,6 +131,10 @@ function makeDb(tables, failIf) {
       return { data: null, error: null };
     }
     const rows = all.filter((r) => q.filters.every((f) => f(r)));
+    if (q.op === 'delete') {
+      tables[q.table] = all.filter((r) => !rows.includes(r));
+      return { data: null, error: null };
+    }
     if (q.op === 'update') {
       rows.forEach((r) => Object.assign(r, q.patch));
       return { data: q.returning ? rows : null, error: null };

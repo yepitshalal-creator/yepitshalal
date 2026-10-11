@@ -43,7 +43,7 @@ const OUT = compile(
     'stub-site': "exports.SITE_URL = 'https://yepitshalal.com'; exports.INBOX = 'hello@yepitshalal.com';",
     'stub-supabase-server': 'exports.createServerSupabase = () => ({ auth: { getUser: async () => ({ data: { user: null } }) } });',
     'stub-db': 'exports.dealsDb = () => global.__db;',
-    'stub-content': 'exports.removeOwnerContent = async (db, id) => { global.__removed.push(id); };',
+    'stub-content': 'exports.removeOwnerContent = async (db, id) => { global.__removed.push(id); return global.__removeOk; };',
   }
 );
 const { sayYes, sayNo, takeBack, stopFromPage } = require(path.join(OUT, 'actions.js'));
@@ -72,6 +72,8 @@ async function check(name, tables, failIf, run, verify) {
   global.__sent = [];
   global.__inbox = [];
   global.__removed = [];
+  global.__removeOk = global.__nextRemoveOk ?? true;
+  global.__nextRemoveOk = undefined;
   let out;
   let thrown = null;
   try {
@@ -136,6 +138,19 @@ const ok = () => null;
       assert.strictEqual(t2.outreach_stop_list.length, 1);
       assert.strictEqual(t2.outreach_stop_list[0].reason, 'said_no');
       assert.strictEqual(t2.outreach_contacts[0].status, 'said_no');
+      assert.match(global.__inbox[0], /Delete our posts by/);
+    });
+  }
+
+  {
+    // The same, but some of their photos would not come off: the inbox must not say they did.
+    const t = fixtures();
+    await check('setup: yes', t, ok, () => sayYes(TOKEN, {}, yesForm()), (out) => assert.deepStrictEqual(out, {}));
+    global.__nextRemoveOk = false;
+    await check('a take-back whose photos would not all come off says so', t, ok, () => takeBack(TOKEN), (out, t2) => {
+      assert.match(global.__inbox[0], /Some photos are still on the site/);
+      assert.ok(t2.content_permissions[0].withdrawn_at, 'still withdrawn');
+      assert.strictEqual(t2.outreach_stop_list.length, 1, 'still stopped');
     });
   }
 

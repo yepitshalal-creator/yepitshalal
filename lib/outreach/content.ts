@@ -103,35 +103,62 @@ export async function publishOwnerPhoto(db: SupabaseClient, upload: OwnerUpload)
  * Everything an owner sent, off the site and out of storage. Used the moment
  * a yes is taken back: the site part is done at once, our social posts are
  * the only thing left for a person to delete.
+ *
+ * True only when all of it is gone. An upload that could not be fully
+ * removed keeps its status, so running this again carries on from there; it
+ * is safe to repeat (/admin/outreach does, before a take-down can be Done).
  */
-export async function removeOwnerContent(db: SupabaseClient, permissionId: string): Promise<void> {
-  const { data } = await db.from('owner_uploads').select('*').eq('permission_id', permissionId).neq('status', 'removed');
+export async function removeOwnerContent(db: SupabaseClient, permissionId: string): Promise<boolean> {
+  const { data, error } = await db.from('owner_uploads').select('*').eq('permission_id', permissionId).neq('status', 'removed');
+  if (error) return false;
+  let all = true;
   for (const u of (data ?? []) as OwnerUpload[]) {
-    if (u.photo_ids.length) {
-      const { data: rows } = await db.from('restaurant_photos').select('id, restaurant_id, storage_path, is_primary').in('id', u.photo_ids);
-      await db.from('restaurant_photos').delete().in('id', u.photo_ids);
-      const paths = new Set<string>();
-      for (const r of rows ?? []) {
-        const path = r.storage_path.split(PUBLIC_MARKER)[1];
-        if (path) {
-          paths.add(path);
-          paths.add(`thumb/${path}`);
-        }
-        // A page whose lead photo went keeps a lead: its earliest other one.
-        if (r.is_primary) {
-          const { data: next } = await db
-            .from('restaurant_photos')
-            .select('id')
-            .eq('restaurant_id', r.restaurant_id)
-            .order('created_at')
-            .limit(1)
-            .maybeSingle();
-          if (next) await db.from('restaurant_photos').update({ is_primary: true }).eq('id', next.id);
-        }
-      }
-      if (paths.size) await db.storage.from(PUBLIC_BUCKET).remove([...paths]);
-    }
-    await db.storage.from(OWNER_BUCKET).remove(Object.values(u.paths));
-    await db.from('owner_uploads').update({ status: 'removed', reviewed_at: new Date().toISOString() }).eq('id', u.id);
+    if (!(await removeUpload(db, u))) all = false;
   }
+  return all;
+}
+
+/** One upload off the site and out of storage, in an order a retry can finish. */
+async function removeUpload(db: SupabaseClient, u: OwnerUpload): Promise<boolean> {
+  if (u.photo_ids.length) {
+    // The public files first, while the rows still say where they are.
+    const { data: rows, error: readError } = await db
+      .from('restaurant_photos')
+      .select('id, restaurant_id, storage_path, is_primary')
+      .in('id', u.photo_ids);
+    if (readError) return false;
+    const paths = new Set<string>();
+    for (const r of rows ?? []) {
+      const path = r.storage_path.split(PUBLIC_MARKER)[1];
+      if (path) {
+        paths.add(path);
+        paths.add(`thumb/${path}`);
+      }
+    }
+    if (paths.size) {
+      const { error } = await db.storage.from(PUBLIC_BUCKET).remove([...paths]);
+      if (error) return false;
+    }
+    const { error: deleteError } = await db.from('restaurant_photos').delete().in('id', u.photo_ids);
+    if (deleteError) return false;
+    // A page whose lead photo went keeps a lead: its earliest other one.
+    for (const r of rows ?? []) {
+      if (!r.is_primary) continue;
+      const { data: next } = await db
+        .from('restaurant_photos')
+        .select('id')
+        .eq('restaurant_id', r.restaurant_id)
+        .order('created_at')
+        .limit(1)
+        .maybeSingle();
+      if (next) await db.from('restaurant_photos').update({ is_primary: true }).eq('id', next.id);
+    }
+  }
+  const { error: privateError } = await db.storage.from(OWNER_BUCKET).remove(Object.values(u.paths));
+  if (privateError) return false;
+  const { error: markError } = await db
+    .from('owner_uploads')
+    .update({ status: 'removed', reviewed_at: new Date().toISOString() })
+    .eq('id', u.id);
+  return !markError;
 }

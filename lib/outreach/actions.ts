@@ -195,8 +195,9 @@ export async function takeBack(token: string): Promise<void> {
 
   const now = new Date();
   await db.from('content_permissions').update({ withdrawn_at: now.toISOString(), withdrawn_how: 'yes_page' }).eq('id', permission.id);
-  // Off the site at once: their photos, and everything they sent us.
-  await removeOwnerContent(db, permission.id);
+  // Off the site at once: their photos, and everything they sent us. If any
+  // of it would not come off, the inbox says so and /admin/outreach tries again.
+  const allOff = await removeOwnerContent(db, permission.id);
   // A menu link we added because of this yes comes off with it.
   const extras = permission.extras as { menu_url?: string | null; applied?: { menu_url?: boolean } };
   if (extras.applied?.menu_url && extras.menu_url) {
@@ -215,11 +216,15 @@ export async function takeBack(token: string): Promise<void> {
   );
   await notifyInbox({
     inbox: 'info',
-    subject: `Took back their yes: ${target?.name ?? 'a place'}. Delete our posts by ${byDate}`,
+    subject: allOff
+      ? `Took back their yes: ${target?.name ?? 'a place'}. Delete our posts by ${byDate}`
+      : `Took back their yes: ${target?.name ?? 'a place'}. Some photos are still on the site`,
     fields: [
       ['Place', target?.name],
       ['Page', target?.slug ? `${SITE_URL}/restaurant/${target.slug}` : null],
-      ['Already done', 'Their photos are off the site and their files are deleted.'],
+      allOff
+        ? ['Already done', 'Their photos are off the site and their files are deleted.']
+        : ['Do this now', 'Some of their photos or files would not come off. Open outreach and tap Done on them: it tries again.'],
       ['Still to do by ' + byDate, 'Delete our social media posts of their photos, videos, menu or logo.'],
       ['Email', permission.given_by_email],
     ],

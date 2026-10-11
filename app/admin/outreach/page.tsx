@@ -130,6 +130,11 @@ export default async function AdminOutreachPage({
   const now = { status, channel };
   const permissions = (perms ?? []) as unknown as PermissionRow[];
   const toTakeDown = permissions.filter((p) => p.withdrawn_at && !p.removed_at);
+  // What a take-back could not remove yet. Done tries it again before it counts.
+  const { data: leftRows } = toTakeDown.length
+    ? await db.from('owner_uploads').select('permission_id').in('permission_id', toTakeDown.map((p) => p.id)).neq('status', 'removed')
+    : { data: [] };
+  const notOffYet = new Set(((leftRows ?? []) as { permission_id: string }[]).map((r) => r.permission_id));
   const yeses = permissions.filter((p) => !p.withdrawn_at);
   // Owners' files are private: shown and downloaded through links that last an hour.
   const uploads = (uploadRows ?? []) as (OwnerUpload & { restaurants: { name: string } | null; brands: { name: string } | null })[];
@@ -205,7 +210,12 @@ export default async function AdminOutreachPage({
                     <div className="min-w-0 flex-1 text-sm">
                       <p className="font-medium text-ink">{p.restaurants?.name ?? p.brands?.name ?? p.place_name}</p>
                       <p className="mt-0.5 text-xs text-muted">
-                        Took back their yes on {longDate(p.withdrawn_at as string)}. Their photos are already off the site.
+                        Took back their yes on {longDate(p.withdrawn_at as string)}.{' '}
+                        {notOffYet.has(p.id) ? (
+                          <b>Some of their photos or files did not come off yet. Done tries again.</b>
+                        ) : (
+                          'Their photos are already off the site.'
+                        )}{' '}
                         Delete our social media posts of their photos, videos, menu or logo by <b>{longDate(by)}</b>, then tap Done.
                       </p>
                     </div>
