@@ -55,22 +55,58 @@ type PermissionRow = Permission & { restaurants: { name: string; slug: string } 
 
 const SMALL =
   'inline-flex min-h-[32px] items-center rounded-full border border-line bg-white px-3 text-xs font-semibold text-ink transition hover:border-ink/30';
+const PICKED = 'border-ink bg-ink text-white hover:border-ink';
 
-export default async function AdminOutreachPage({ searchParams }: { searchParams: { status?: string; preview?: string } }) {
+const CHANNELS = { phone: 'Phone', email: 'Email', contact_form: 'Contact form' } as const;
+type Channel = keyof typeof CHANNELS;
+const CHANNEL_KEYS = Object.keys(CHANNELS) as Channel[];
+const PAGE = 100;
+
+/** The list's address with one filter changed and the others kept. */
+function listHref(now: { status: string | null; channel: string | null }, change: { status?: string | null; channel?: string | null; page?: number }) {
+  const next = { ...now, ...change };
+  const q = new URLSearchParams();
+  if (next.channel) q.set('channel', next.channel);
+  if (next.status) q.set('status', next.status);
+  if (change.page) q.set('page', String(change.page));
+  const query = q.toString();
+  return `/admin/outreach${query ? `?${query}` : ''}#contacts`;
+}
+
+export default async function AdminOutreachPage({
+  searchParams,
+}: {
+  searchParams: { status?: string; channel?: string; page?: string; preview?: string };
+}) {
   await requireAdmin();
   const db = outreachDb();
   const status = ORDER.includes(searchParams.status as ContactStatus) ? (searchParams.status as ContactStatus) : null;
+  const channel = searchParams.channel && searchParams.channel in CHANNELS ? (searchParams.channel as Channel) : null;
+  const page = Math.max(0, Math.floor(Number(searchParams.page) || 0));
 
-  const [{ data: settings, error: settingsError }, { data: all }, list, { data: perms }, { data: uploadRows }] = await Promise.all([
+  // Counted by the database, one number each. Reading every row to count
+  // them stopped at the API's 1,000 row cap (1,041 contacts on 2026-10-11).
+  const count = (filter: { status?: ContactStatus | null; channel?: Channel | null }) => {
+    let q = db.from('outreach_contacts').select('id', { count: 'exact', head: true });
+    if (filter.status) q = q.eq('status', filter.status);
+    if (filter.channel) q = q.eq('channel', filter.channel);
+    return q.then((r) => r.count ?? 0);
+  };
+
+  const [{ data: settings, error: settingsError }, statusCounts, channelCounts, total, list, { data: perms }, { data: uploadRows }] = await Promise.all([
     db.from('outreach_settings').select('*').eq('id', true).maybeSingle(),
-    db.from('outreach_contacts').select('status').limit(20000),
+    Promise.all(ORDER.map((s) => count({ status: s, channel }))),
+    Promise.all(CHANNEL_KEYS.map((c) => count({ channel: c, status }))),
+    count({}),
     (() => {
       let q = db
         .from('outreach_contacts')
-        .select(`${CONTACT_COLUMNS}, restaurants(name, slug), brands(name, slug)`)
+        .select(`${CONTACT_COLUMNS}, restaurants(name, slug), brands(name, slug)`, { count: 'exact' })
         .order('updated_at', { ascending: false })
-        .limit(200);
+        .order('id')
+        .range(page * PAGE, page * PAGE + PAGE - 1);
       if (status) q = q.eq('status', status);
+      if (channel) q = q.eq('channel', channel);
       return q;
     })(),
     db
@@ -98,9 +134,11 @@ export default async function AdminOutreachPage({ searchParams }: { searchParams
     );
   }
 
-  const counts = new Map<string, number>();
-  for (const r of all ?? []) counts.set(r.status, (counts.get(r.status) ?? 0) + 1);
+  const counts = new Map<string, number>(ORDER.map((s, i) => [s, statusCounts[i]]));
+  const byChannel = new Map<Channel, number>(CHANNEL_KEYS.map((c, i) => [c, channelCounts[i]]));
   const rows = (list.data ?? []) as unknown as Row[];
+  const shown = list.count ?? rows.length;
+  const now = { status, channel };
   const permissions = (perms ?? []) as unknown as PermissionRow[];
   const toTakeDown = permissions.filter((p) => p.withdrawn_at && !p.removed_at);
   const yeses = permissions.filter((p) => !p.withdrawn_at);
@@ -271,20 +309,29 @@ export default async function AdminOutreachPage({ searchParams }: { searchParams
           <AddContactForm />
         </Panel>
 
-        <Panel title="Contacts">
-          <div className="flex flex-wrap gap-1.5 border-b border-line px-5 py-3">
-            <Link href="/admin/outreach" className={`${SMALL} ${!status ? 'border-ink bg-ink text-white hover:border-ink' : ''}`}>
-              All {all?.length ?? 0}
-            </Link>
-            {ORDER.filter((s) => counts.get(s)).map((s) => (
-              <Link
-                key={s}
-                href={`/admin/outreach?status=${s}`}
-                className={`${SMALL} ${status === s ? 'border-ink bg-ink text-white hover:border-ink' : ''}`}
-              >
-                {STATUS[s].label} {counts.get(s)}
+        <section id="contacts" className="scroll-mt-24">
+        <Panel title="Contacts" action={<Tag>{total.toLocaleString('en-GB')}</Tag>}>
+          <div className="space-y-2 border-b border-line px-5 py-3">
+            <div className="flex flex-wrap gap-1.5">
+              <Link href={listHref(now, { channel: null })} className={`${SMALL} ${!channel ? PICKED : ''}`}>
+                Any way
               </Link>
-            ))}
+              {CHANNEL_KEYS.filter((c) => byChannel.get(c)).map((c) => (
+                <Link key={c} href={listHref(now, { channel: c })} className={`${SMALL} ${channel === c ? PICKED : ''}`}>
+                  {CHANNELS[c]} {byChannel.get(c)?.toLocaleString('en-GB')}
+                </Link>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Link href={listHref(now, { status: null })} className={`${SMALL} ${!status ? PICKED : ''}`}>
+                Any state
+              </Link>
+              {ORDER.filter((s) => counts.get(s)).map((s) => (
+                <Link key={s} href={listHref(now, { status: s })} className={`${SMALL} ${status === s ? PICKED : ''}`}>
+                  {STATUS[s].label} {counts.get(s)?.toLocaleString('en-GB')}
+                </Link>
+              ))}
+            </div>
           </div>
           <List empty="Nobody here yet.">
             {rows.map((c) => {
@@ -300,10 +347,26 @@ export default async function AdminOutreachPage({ searchParams }: { searchParams
                       {c.channel === 'phone' && open && !c.tps_checked_at && <Tag tone="warn">Check TPS before calling</Tag>}
                     </div>
                     <p className="mt-0.5 break-all text-xs text-muted">
-                      {[c.contact_name, c.email, c.phone].filter(Boolean).join(' · ')}
+                      {[c.contact_name, c.email].filter(Boolean).join(' · ')}
+                      {c.phone && (
+                        <>
+                          {c.contact_name || c.email ? ' · ' : ''}
+                          {/* Tap to call from a phone. */}
+                          <a href={`tel:${c.phone.replace(/[^\d+]/g, '')}`} className="font-semibold text-accent-ink hover:underline">
+                            {c.phone}
+                          </a>
+                        </>
+                      )}
                     </p>
                     <p className="mt-0.5 text-xs text-muted">
-                      {KIND[c.business_kind]} · found on {foundWhere(c.found_at_url, c.found_how)}
+                      {KIND[c.business_kind]} · found on{' '}
+                      {c.found_at_url ? (
+                        <a href={c.found_at_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent-ink hover:underline">
+                          {foundWhere(c.found_at_url, c.found_how)}
+                        </a>
+                      ) : (
+                        foundWhere(c.found_at_url, c.found_how)
+                      )}
                       {c.sent_at ? ` · emailed ${longDate(c.sent_at)}` : ''}
                       {c.followed_up_at ? ` · followed up ${longDate(c.followed_up_at)}` : ''}
                       {c.last_event ? ` · last: ${c.last_event}` : ''}
@@ -344,7 +407,28 @@ export default async function AdminOutreachPage({ searchParams }: { searchParams
               );
             })}
           </List>
+          {shown > PAGE && (
+            <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-3 text-xs text-muted">
+              <span>
+                {(page * PAGE + 1).toLocaleString('en-GB')} to {Math.min(shown, page * PAGE + PAGE).toLocaleString('en-GB')} of{' '}
+                {shown.toLocaleString('en-GB')}
+              </span>
+              <span className="flex gap-1.5">
+                {page > 0 && (
+                  <Link href={listHref(now, { page: page - 1 })} className={SMALL}>
+                    Back
+                  </Link>
+                )}
+                {(page + 1) * PAGE < shown && (
+                  <Link href={listHref(now, { page: page + 1 })} className={SMALL}>
+                    Next {PAGE}
+                  </Link>
+                )}
+              </span>
+            </div>
+          )}
         </Panel>
+        </section>
       </div>
     </AdminPage>
   );
