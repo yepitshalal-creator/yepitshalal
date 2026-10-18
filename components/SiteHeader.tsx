@@ -4,6 +4,7 @@ import { NavLink } from './NavLink';
 import { LanguageMenu } from './LanguageMenu';
 import { MapIcon, SparkleIcon, StoreIcon } from './icons';
 import { AccountNavLink } from './AccountNavLink';
+import { supporterPaymentsReady } from '@/lib/supporterReadiness';
 
 // The header is the logo's own ground since 2026-09-24: its deep teal, with
 // the lockup in the logo's white and lime, and the one button in lime.
@@ -22,7 +23,14 @@ const HEADER_LINK = 'inline-flex items-center justify-center max-md:h-11 max-md:
 const OWNERS_BUTTON =
   'mx-0.5 inline-flex shrink-0 items-center justify-center gap-1 rounded-full text-sm font-semibold text-white ring-1 ring-white/45 transition-colors hover:bg-white/10 max-md:h-11 max-md:w-11 md:min-h-[40px] md:px-3';
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  // Support us shows only once a supporter can actually pay (the 2026-10-12
+  // plan, Step 3): until the Stripe prices exist it led to a page saying card
+  // payments open soon. The same check the page makes, cached for ten minutes,
+  // so the button comes back by itself the day the prices are made. It reads
+  // Stripe, not the request, so pages stay static.
+  const supportReady = await supporterPaymentsReady();
+
   return (
     <header className="ground-dark header-lift sticky top-0 z-30 border-b border-white/10 bg-forest-deep text-white">
       <div className="flex h-14 w-full items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
@@ -65,7 +73,7 @@ export function SiteHeader() {
         <nav aria-label="Primary" className="hidden items-center gap-1 whitespace-nowrap sm:flex">
           <NavLink href="/discover" tone="dark" className={HEADER_LINK}>
             <MapIcon className="h-[18px] w-[18px] md:hidden" aria-hidden="true" />
-            <span className="max-md:sr-only">Discover</span>
+            <span className="max-md:sr-only">Browse</span>
           </NavLink>
           {/* The way in for restaurant owners: outlined, so it reads as a
               button and not one more link (Shabir, 2026-10-11: "Add" did not
@@ -88,13 +96,15 @@ export function SiteHeader() {
           {/* From 640px. On a phone the language lives in the bottom bar. */}
           <LanguageMenu />
 
-          <Link
-            href="/yep-plus"
-            className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 text-sm font-semibold text-forest-deep transition duration-200 hover:-translate-y-px hover:bg-accent-onDark active:translate-y-0 active:scale-[0.985] sm:px-4"
-          >
-            <SparkleIcon className="h-4 w-4" aria-hidden="true" />
-            <span className="max-[374px]:sr-only sm:max-md:sr-only">Support us</span>
-          </Link>
+          {supportReady && (
+            <Link
+              href="/yep-plus"
+              className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 text-sm font-semibold text-forest-deep transition duration-200 hover:-translate-y-px hover:bg-accent-onDark active:translate-y-0 active:scale-[0.985] sm:px-4"
+            >
+              <SparkleIcon className="h-4 w-4" aria-hidden="true" />
+              <span className="max-[374px]:sr-only sm:max-md:sr-only">Support us</span>
+            </Link>
+          )}
         </span>
       </div>
     </header>

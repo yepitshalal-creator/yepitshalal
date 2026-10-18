@@ -47,6 +47,8 @@ interface SearchViewProps {
   mode: 'current_location' | 'searched_location';
   label: string;
   initial: SearchResponse;
+  /** Labels the first search was already filtered to (app/search's `only`). */
+  initialClassifications?: HalalStatus[];
 }
 
 // Same marks the cards use, so the filter row and the map legend read in the
@@ -130,7 +132,7 @@ function SortToggle({
   );
 }
 
-export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) {
+export function SearchView({ lat, lng, mode, label, initial, initialClassifications = [] }: SearchViewProps) {
   const [results, setResults] = useState<SearchResultRestaurant[]>(initial.results);
   const [totalCount, setTotalCount] = useState(initial.totalCount);
   const [tierCounts, setTierCounts] = useState<TierCount[]>(initial.tierCounts);
@@ -139,7 +141,7 @@ export function SearchView({ lat, lng, mode, label, initial }: SearchViewProps) 
   const [hiddenByFilters, setHiddenByFilters] = useState<number | null>(initial.hiddenByFilters ?? null);
   // One mile to start: near enough to walk to, and the chip for it is selected.
   const [radiusMiles, setRadiusMiles] = useState(DEFAULT_RADIUS_MILES);
-  const [classifications, setClassifications] = useState<HalalStatus[]>([]);
+  const [classifications, setClassifications] = useState<HalalStatus[]>(initialClassifications);
   const [queryInput, setQueryInput] = useState('');
   const [query, setQuery] = useState('');
   // Lowest FSA food hygiene rating to show, or null for any (and unrated).

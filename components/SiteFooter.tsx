@@ -6,8 +6,7 @@ import { LogoBadge, LogoWordmark } from './Logo';
 import { HeartHandIcon } from './icons';
 import { FeedbackBox } from './FeedbackBox';
 
-// Hidden on the two routes that own the full viewport: the Discover feed is a
-// snap-scrolling column, and admin has its own chrome.
+// Hidden on admin, which has its own chrome.
 const HIDDEN_ON = ['/admin'];
 
 export function SiteFooter() {
@@ -81,7 +80,12 @@ export function SiteFooter() {
                 </li>
                 <li>
                   <Link href="/discover" className="inline-flex min-h-[40px] items-center text-muted transition-colors hover:text-ink sm:min-h-[32px]">
-                    Discover
+                    Browse
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/saved" className="inline-flex min-h-[40px] items-center text-muted transition-colors hover:text-ink sm:min-h-[32px]">
+                    Saved places
                   </Link>
                 </li>
                 <li>

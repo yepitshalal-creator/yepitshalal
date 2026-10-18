@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { HalalBadge } from './HalalBadge';
+import { StillRight } from './StillRight';
 import { ArrowUpRightIcon, InfoIcon } from './icons';
 import { foodKind } from '@/lib/whyListed';
 import type { EvidenceStrength, HalalClassification, HalalEvidence } from '@/lib/types';
@@ -180,6 +181,9 @@ export function HalalEvidencePanel({
 
   const positive = evidence.filter((e) => e.claim !== 'not_halal');
   const [lead, ...rest] = positive;
+  // When the newest piece of evidence was read, up by the label, so nobody has
+  // to open the evidence to see how fresh it is.
+  const lastChecked = positive.reduce<string | null>((max, e) => (!max || e.checked_at > max ? e.checked_at : max), null);
 
   return (
     <section aria-labelledby="halal-status" className="rounded-2xl border border-line bg-white p-5 shadow-sm">
@@ -190,6 +194,11 @@ export function HalalEvidencePanel({
         <HalalBadge classification={classification} size="md" variant="solid" />
       </div>
       <p className="mt-1.5 text-sm leading-relaxed text-muted">{LABEL_MEANING[classification]}</p>
+      {lastChecked && (
+        <p className="mt-1 text-xs text-subtle">
+          Evidence last checked <time dateTime={lastChecked}>{formatCheckedDate(lastChecked)}</time>
+        </p>
+      )}
 
       <div className="mt-4 rounded-xl bg-sand p-4">
         <h3 className="text-sm font-semibold text-ink">Why we say this</h3>
@@ -234,15 +243,14 @@ export function HalalEvidencePanel({
         </details>
       )}
 
-      <p className="mt-4 text-xs text-muted">
-        <Link href="/how-we-check" className="font-medium text-accent-ink hover:underline">
-          How we label places
-        </Link>
-        {' · '}
-        <Link href={`/submit-restaurant?update=${slug}`} className="font-medium text-accent-ink hover:underline">
-          Something wrong? Tell us
-        </Link>
-      </p>
+      <div className="mt-4 border-t border-line pt-4">
+        <StillRight slug={slug} />
+        <p className="mt-3 text-xs text-muted">
+          <Link href="/how-we-check" className="font-medium text-accent-ink hover:underline">
+            How we label places
+          </Link>
+        </p>
+      </div>
     </section>
   );
 }

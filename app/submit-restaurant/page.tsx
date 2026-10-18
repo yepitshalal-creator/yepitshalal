@@ -29,7 +29,11 @@ function streetPart(address: string, postcode: string | null): string {
   return (i > 0 ? address.slice(0, i) : address).replace(/[,\s]+$/, '');
 }
 
-export default async function SubmitRestaurantPage({ searchParams }: { searchParams: { update?: string } }) {
+export default async function SubmitRestaurantPage({
+  searchParams,
+}: {
+  searchParams: { update?: string; closed?: string };
+}) {
   const supabase = createServerSupabase();
   const [{ data: cuisines }, { data: place }] = await Promise.all([
     supabase.from('cuisines').select('id, name').order('name'),
@@ -52,6 +56,8 @@ export default async function SubmitRestaurantPage({ searchParams }: { searchPar
         phone: splitPhones(place.phone).map(formatUkPhone).join(', '),
         website: place.website_url ?? '',
         cuisine: place.cuisine_label ?? '',
+        // "Is this still right? It has closed" on the place page lands here.
+        notes: searchParams.closed === '1' ? 'This place has closed.' : undefined,
       }
     : null;
 

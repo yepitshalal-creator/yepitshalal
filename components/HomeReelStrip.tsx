@@ -32,7 +32,7 @@ export function HomeReelStrip({ reels }: { reels: FeaturedReel[] }) {
           </p>
         </div>
         <Link href="/discover" className={ctaSecondarySm}>
-          Open Discover
+          Browse more places
           <ArrowRightIcon className="h-4 w-4 transition duration-200 group-hover:translate-x-0.5" />
         </Link>
       </div>

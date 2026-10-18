@@ -22,6 +22,8 @@ import { DealCard } from '@/components/deals/DealCard';
 import { getClaimableDeal } from '@/lib/deals/data';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { ShareButton } from '@/components/ShareButton';
+import { SaveButton } from '@/components/SaveButton';
+import { AskBeforeYouOrder } from '@/components/AskBeforeYouOrder';
 import { placeTitle as displayTitle, statusFor, summaryFor } from '@/lib/halalPages';
 import { tidyAddress } from '@/lib/address';
 import { priceSigns } from '@/lib/price';
@@ -309,6 +311,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
             <ArrowUpRightIcon className="h-4 w-4 text-subtle" />
           </a>
         )}
+        <SaveButton slug={restaurant.slug} className={`${BUTTON} max-sm:min-h-[40px] max-sm:flex-none max-sm:px-4`} />
         <ShareButton title={title} className={`${BUTTON} max-sm:min-h-[40px] max-sm:flex-none max-sm:px-4`} />
       </div>
 
@@ -372,6 +375,8 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
             </Link>
           </p>
         )}
+
+        {!closed && <AskBeforeYouOrder phone={phones[0] ?? null} />}
 
         <NearestPrayerSpace
           spaces={prayerSpaces}

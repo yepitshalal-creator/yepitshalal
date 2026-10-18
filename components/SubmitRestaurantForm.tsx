@@ -91,6 +91,8 @@ export interface ExistingPlace {
   phone: string;
   website: string;
   cuisine: string;
+  /** Filled in when someone tapped "It has closed" on the place page. */
+  notes?: string;
 }
 
 export function SubmitRestaurantForm({
@@ -333,7 +335,7 @@ export function SubmitRestaurantForm({
           <label htmlFor={notesId} className={LABEL_CLASS}>
             Anything else we should know?
           </label>
-          <textarea id={notesId} name="notes" rows={3} maxLength={1000} className={FIELD_CLASS} />
+          <textarea id={notesId} name="notes" rows={3} maxLength={1000} className={FIELD_CLASS} defaultValue={existing?.notes} />
         </div>
       </section>
 

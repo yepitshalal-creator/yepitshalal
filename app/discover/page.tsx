@@ -1,56 +1,59 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRightIcon, ForkKnifeIcon, MapIcon, MapPinIcon, SealCheckIcon, SearchIcon } from '@/components/icons';
+import { ArrowRightIcon, ForkKnifeIcon, HeartIcon, MapIcon, SealCheckIcon } from '@/components/icons';
 import { PageHero, heroPrimary, heroSecondary } from '@/components/PageHero';
 import { PrayerBand } from '@/components/discover/PrayerBand';
+import { FullyHalalNearButton } from '@/components/FullyHalalNearButton';
 import { Reveal } from '@/components/Reveal';
 import { linkCard } from '@/components/cta';
-import { pageShell } from '@/components/prose';
+import { pageShell, sectionTitle } from '@/components/prose';
 import { STREET } from '@/lib/media';
 import { boroughSlug, getAreasWithPages } from '@/lib/areas';
 import { countPrayerSpaces, getPrayerSpaceBoroughs } from '@/lib/prayerSpaces';
 
-// Discover is the wider places hub, and the feed part of it is deliberately
-// not live yet. Search, then evidence, then discovery: a feed is only worth
-// scrolling once the places in it can be trusted, so the top of this page says
-// what is coming without pretending any of it exists.
+// Browse, the phone's second tab. Until the 2026-10-12 plan (Step 3) this was
+// Discover, a "Coming soon" page for a video feed with no videos in it. Now it
+// is ready made ways in, built only from what the site already holds: Fully
+// Halal near you, every borough, every kind of food, every chain, and
+// somewhere to pray. No list here makes a claim the place pages do not.
 //
-// What already exists lives here too (2026-09-24): somewhere to pray near
-// where you eat, moved from the homepage, and the ways to browse the catalogue
-// today, by borough and by kind of food.
-//
-// The same street as the homepage and Add a restaurant, in the same
-// treatment: discovering places, adding places and the catalogue growing are
-// one story, so they share one picture.
-//
-// The route, header link and bottom tab stay as they are. When the feed is
-// ready it goes under the header. (DiscoverFeed and lib/discover.ts are kept
-// for that.)
+// The route stays /discover, so old links, the header and the app keep
+// working. The feed (DiscoverFeed and lib/discover.ts) is kept for the day
+// owners have videos to fill it.
 
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Discover',
-  description: 'A better way to discover halal places across London is on its way. Meanwhile: prayer spaces near where you eat, and every borough and kind of food.',
-  // A holding page is not something to send searchers to.
-  robots: { index: false, follow: true },
+  title: 'Browse halal places in London',
+  description:
+    'Fully Halal places near you, every London borough, every kind of food, every chain branch by branch, and somewhere to pray nearby.',
+  alternates: { canonical: '/discover' },
 };
 
-const NOW = [
+const LISTS = [
   {
-    Icon: MapPinIcon,
-    title: 'More of London',
-    body: 'Finding halal places borough by borough, including the ones that are hard to find online.',
+    href: '/halal-restaurants',
+    Icon: MapIcon,
+    title: 'By borough',
+    body: 'Every part of London we list, with its labels.',
   },
   {
+    href: '/halal-restaurants/cuisine',
+    Icon: ForkKnifeIcon,
+    title: 'By kind of food',
+    body: 'Start with what you fancy, then pick a place.',
+  },
+  {
+    href: '/is-it-halal',
     Icon: SealCheckIcon,
-    title: 'Evidence behind every label',
-    body: 'Showing where each halal label came from and when it was checked, and saying so when we are not sure.',
+    title: 'Chains A to Z',
+    body: 'Is it halal? Each chain, branch by branch.',
   },
   {
-    Icon: SearchIcon,
-    title: 'Search you can rely on',
-    body: 'Postcodes, streets, areas and restaurant names, with results that match the map.',
+    href: '/saved',
+    Icon: HeartIcon,
+    title: 'Your saved places',
+    body: 'The places you saved, kept on this phone.',
   },
 ];
 
@@ -72,73 +75,45 @@ export default async function DiscoverPage() {
   return (
     <>
       <PageHero
-        label={{ text: 'Coming soon' }}
-        title="Something better is coming."
-        lede="We're building a better way to discover halal places across London. First we're making sure the places, and the halal information about them, are right."
+        title="Browse halal places in London"
+        lede="Pick a way in. Every place shows the proof behind its label."
         art={STREET}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Link href="/" className={heroPrimary}>
-            Search near you
-            <ArrowRightIcon className="h-4 w-4 transition duration-200 group-hover:translate-x-0.5" />
-          </Link>
-          <Link href="/submit-restaurant" className={heroSecondary}>
-            Tell us about a place
+          <FullyHalalNearButton className={`${heroPrimary} disabled:opacity-70`} />
+          <Link href="/" className={heroSecondary}>
+            Search a postcode or area
           </Link>
         </div>
       </PageHero>
 
-      {/* Straight under the first banner: what is nearby, and where to pray. */}
-      <PrayerBand total={total} boroughs={boroughs} />
-
-      <div className={`${pageShell} grid grid-cols-1 gap-12 pb-4 pt-14 sm:pt-16 lg:grid-cols-[1.1fr_1fr] lg:gap-16`}>
-        <Reveal as="section" aria-labelledby="working-on-title">
-          <h2 id="working-on-title" className="font-display text-[1.6rem] font-semibold leading-tight text-ink sm:text-[1.85rem]">
-            What we&apos;re working on first
+      <div className={`${pageShell} pb-14 pt-12 sm:pt-14`}>
+        <Reveal as="section" aria-labelledby="lists-title">
+          <h2 id="lists-title" className={sectionTitle}>
+            Start with a list
           </h2>
-          <ul className="mt-5 divide-y divide-line border-y border-line">
-            {NOW.map(({ Icon, title, body }) => (
-              <li key={title} className="flex gap-4 py-4">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
-                  <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {LISTS.map(({ href, Icon, title, body }) => (
+              <Link key={href} href={href} className={`${linkCard} flex items-center gap-4 p-5`}>
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sand text-spice-ink ring-1 ring-sand-line">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <div>
-                  <h3 className="font-display text-[17px] font-semibold text-ink">{title}</h3>
-                  <p className="mt-0.5 text-[15px] leading-relaxed text-muted">{body}</p>
-                </div>
-              </li>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-[17px] font-semibold text-ink">{title}</span>
+                  <span className="block text-sm text-muted">{body}</span>
+                </span>
+                <ArrowRightIcon
+                  className="h-4 w-4 shrink-0 text-subtle transition duration-200 group-hover:translate-x-0.5 group-hover:text-ink"
+                  aria-hidden="true"
+                />
+              </Link>
             ))}
-          </ul>
-        </Reveal>
-
-        <Reveal as="section" delay={120} aria-labelledby="browse-title">
-          <h2 id="browse-title" className="font-display text-[1.6rem] font-semibold leading-tight text-ink sm:text-[1.85rem]">
-            Browse what&apos;s here today
-          </h2>
-          <div className="mt-5 grid grid-cols-1 gap-3">
-            <Link href="/halal-restaurants" className={`${linkCard} flex items-center gap-4 p-5`}>
-              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sand text-spice-ink ring-1 ring-sand-line">
-                <MapIcon className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-display text-[17px] font-semibold text-ink">By borough</span>
-                <span className="block text-sm text-muted">Every part of London we list, with its labels.</span>
-              </span>
-              <ArrowRightIcon className="h-4 w-4 shrink-0 text-subtle transition duration-200 group-hover:translate-x-0.5 group-hover:text-ink" aria-hidden="true" />
-            </Link>
-            <Link href="/halal-restaurants/cuisine" className={`${linkCard} flex items-center gap-4 p-5`}>
-              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sand text-spice-ink ring-1 ring-sand-line">
-                <ForkKnifeIcon className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-display text-[17px] font-semibold text-ink">By kind of food</span>
-                <span className="block text-sm text-muted">Start with what you fancy, then pick a place.</span>
-              </span>
-              <ArrowRightIcon className="h-4 w-4 shrink-0 text-subtle transition duration-200 group-hover:translate-x-0.5 group-hover:text-ink" aria-hidden="true" />
-            </Link>
           </div>
         </Reveal>
       </div>
+
+      {/* Where to eat, then where to pray nearby. */}
+      <PrayerBand total={total} boroughs={boroughs} />
     </>
   );
 }

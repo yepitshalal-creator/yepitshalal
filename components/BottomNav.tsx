@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
-import { SearchIcon, MapIcon, StoreIcon, UserIcon } from './icons';
+import { SearchIcon, MapIcon, StoreIcon, HeartIcon } from './icons';
 import { LanguageTab } from './LanguageMenu';
 
 // Mobile-only tab bar. The header hides its links below sm, which previously
@@ -13,16 +13,20 @@ import { LanguageTab } from './LanguageMenu';
 // the footer. Four destinations and, since 2026-09-24, the language:
 // five, the ceiling that keeps a tab bar scannable. On a phone the header has
 // no room left for it, and down here it is always in view and in reach.
+// Since the 2026-10-12 plan (Step 3) no tab is a dead end: Discover, a coming
+// soon page, became Browse, and Account, a sign-in most visitors never need,
+// became Saved, which needs none. Account is one tap on from Saved, and in the
+// footer.
 const TABS = [
   { href: '/', label: 'Search', Icon: SearchIcon, match: (p: string) => p === '/' || p.startsWith('/search') },
-  { href: '/discover', label: 'Discover', Icon: MapIcon, match: (p: string) => p.startsWith('/discover') },
+  { href: '/discover', label: 'Browse', Icon: MapIcon, match: (p: string) => p.startsWith('/discover') },
   {
     href: '/owners',
     label: 'For owners',
     Icon: StoreIcon,
     match: (p: string) => p.startsWith('/owners') || p.startsWith('/submit-restaurant') || p.startsWith('/manage'),
   },
-  { href: '/account', label: 'Account', Icon: UserIcon, match: (p: string) => p.startsWith('/account') || p.startsWith('/sign-in') },
+  { href: '/saved', label: 'Saved', Icon: HeartIcon, match: (p: string) => p.startsWith('/saved') },
 ];
 
 export function BottomNav() {
