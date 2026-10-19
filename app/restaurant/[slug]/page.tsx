@@ -400,7 +400,9 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
       <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-[1.4fr_1fr] sm:gap-6">
         <div className="space-y-5 sm:space-y-6">
           {/* Detailed facts only exist when we checked the place ourselves. */}
-          {hasGenuineCheck && restaurant.halalFacts && <HalalFactsPanel facts={restaurant.halalFacts} />}
+          {hasGenuineCheck && restaurant.halalFacts && (
+            <HalalFactsPanel facts={restaurant.halalFacts} evidence={restaurant.evidence} />
+          )}
 
           <ReelShowcase
             reels={reels}

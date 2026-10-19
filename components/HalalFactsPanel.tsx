@@ -1,7 +1,8 @@
 import clsx from 'clsx';
 import { CheckIcon, WarningIcon, InfoIcon } from './icons';
 import { CheckFreshness } from './CheckFreshness';
-import type { HalalFactsPublic, TriState } from '@/lib/types';
+import { formatCheckedDate } from './HalalEvidencePanel';
+import type { HalalEvidence, HalalFactsPublic, TriState } from '@/lib/types';
 
 type Tone = 'good' | 'warn' | 'neutral';
 
@@ -47,12 +48,58 @@ function Row({ label, value, tone }: { label: string; value: string; tone: Tone 
   );
 }
 
-export function HalalFactsPanel({ facts }: { facts: HalalFactsPublic | null }) {
+// Certification is the one answer here that is somebody else's to give: only
+// HMC can say HMC certifies a place. So "Certified" needs a current
+// 'certification' evidence row, which lib/admin/save-check.ts writes only for
+// a check against the certifier's own list. When a restaurant told us on the
+// phone, or showed us a certificate, the panel says that is what the
+// restaurant says, as /how-we-check promises.
+function certificationRow(said: TriState, listing: HalalEvidence | null): { value: string; tone: Tone } {
+  if (said === true) return listing ? { value: 'Certified', tone: 'good' } : { value: 'They say so', tone: 'neutral' };
+  return { value: triLabel(said, 'Certified', 'Not certified'), tone: toneFor(said, false) };
+}
+
+function CertificationNote({ body, listing }: { body: string | null; listing: HalalEvidence | null }) {
+  if (listing) {
+    const list = `${listing.source_name}'s list`;
+    return (
+      <p className="mt-3 text-xs text-muted">
+        Certified by {listing.source_name}. We checked{' '}
+        {listing.source_url ? (
+          <a
+            href={listing.source_url}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="font-medium text-accent-ink underline underline-offset-2"
+          >
+            {list}
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        ) : (
+          list
+        )}{' '}
+        on <time dateTime={listing.checked_at}>{formatCheckedDate(listing.checked_at)}</time>.
+      </p>
+    );
+  }
+  return (
+    <p className="mt-3 text-xs text-muted">
+      {body
+        ? `The restaurant says it is certified by ${body}. We have not checked ${body}'s list.`
+        : 'The restaurant says it is certified. It did not tell us who by, so we have not checked.'}
+    </p>
+  );
+}
+
+export function HalalFactsPanel({ facts, evidence }: { facts: HalalFactsPublic | null; evidence: HalalEvidence[] }) {
   const allMeatHalal = facts?.all_meat_halal ?? null;
   const halalFoodLabel =
     allMeatHalal === true ? 'All' : allMeatHalal === false ? 'Selected options' : 'Not known';
   const halalFoodTone: Tone =
     allMeatHalal === true ? 'good' : allMeatHalal === false ? 'warn' : 'neutral';
+  const saysCertified = facts?.has_certification ?? null;
+  const listing = saysCertified === true ? evidence.find((e) => e.kind === 'certification') ?? null : null;
+  const certification = certificationRow(saysCertified, listing);
 
   return (
     <div className="rounded-2xl border border-line bg-white p-5 shadow-sm">
@@ -75,15 +122,9 @@ export function HalalFactsPanel({ facts }: { facts: HalalFactsPublic | null }) {
           value={triLabel(facts?.serves_non_halal_meat ?? null)}
           tone={toneFor(facts?.serves_non_halal_meat ?? null, true)}
         />
-        <Row
-          label="Halal certification"
-          value={triLabel(facts?.has_certification ?? null, 'Certified', 'Not certified')}
-          tone={toneFor(facts?.has_certification ?? null, false)}
-        />
+        <Row label="Halal certification" value={certification.value} tone={certification.tone} />
       </dl>
-      {facts?.certification_body && (
-        <p className="mt-3 text-xs text-muted">Certified by {facts.certification_body}.</p>
-      )}
+      {saysCertified === true && <CertificationNote body={facts?.certification_body ?? null} listing={listing} />}
       <p className="mt-3 text-xs leading-relaxed text-muted">
         We only show what we actually know. &ldquo;Not known&rdquo; doesn&apos;t mean
         &ldquo;no.&rdquo;

@@ -25,6 +25,10 @@ function TriSelect({ name, label, defaultValue }: { name: string; label: string;
   );
 }
 
+// Shared with the queue page's form, which saves through the same saveCheck.
+export const CERTIFICATION_BODY_HINT =
+  "Only if they named one. The public page says Certified only when you found them on the certifier's own register. Any other way, it says the restaurant says so.";
+
 export interface KnownFacts {
   all_meat_halal: TriState;
   serves_non_halal_meat: TriState;
@@ -78,7 +82,10 @@ export function CheckForm({
 
       <fieldset className="rounded-xl bg-sand-soft/70 p-4">
         <legend className="px-1 text-sm font-semibold text-ink">What they told you</legend>
-        <p className="mb-3 text-xs text-muted">Leave a question at Don&apos;t know unless you asked it.</p>
+        <p className="mb-3 text-xs text-muted">
+          Leave a question at Don&apos;t know unless you asked it. Not finding them on one certifier&apos;s register is
+          Don&apos;t know, not No.
+        </p>
         <div className="space-y-3">
           <TriSelect name="all_meat_halal" label="All meat halal?" defaultValue={facts?.all_meat_halal} />
           <TriSelect name="serves_non_halal_meat" label="Serves non-halal meat?" defaultValue={facts?.serves_non_halal_meat} />
@@ -89,7 +96,7 @@ export function CheckForm({
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Field label="Certification body" htmlFor="check-body" hint="Only if they named one.">
+        <Field label="Certification body" htmlFor="check-body" hint={CERTIFICATION_BODY_HINT}>
           <input id="check-body" name="certification_body" defaultValue={facts?.certification_body ?? ''} placeholder="For example HMC or HFA" className={FIELD} />
         </Field>
         <Field label="Source link" htmlFor="check-source" hint="Optional. The certifier's register page for this outlet.">

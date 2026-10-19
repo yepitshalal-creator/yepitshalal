@@ -15,6 +15,7 @@ import {
   BUTTON,
 } from '@/components/admin/ui';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { CERTIFICATION_BODY_HINT } from '@/components/admin/CheckForm';
 import type { HalalClassification, TriState } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -174,7 +175,7 @@ export default async function ReviewVerificationPage({ params }: { params: { id:
                 defaultValue={claim?.has_certification}
               />
 
-              <Field label="Certification body" htmlFor="certification_body">
+              <Field label="Certification body" htmlFor="certification_body" hint={CERTIFICATION_BODY_HINT}>
                 <input
                   id="certification_body"
                   name="certification_body"

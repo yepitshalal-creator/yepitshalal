@@ -1,5 +1,5 @@
 // Shared by the tests in scripts/outreach/tests, scripts/stripe and
-// scripts/admin. compile() turns real app/ and lib/ files into plain
+// scripts/admin. compile() turns real app/, lib/ and components/ files into plain
 // JavaScript in a temporary folder, with sucrase (installed with tailwindcss
 // 3), pointing their imports at stubs. makeDb() is a fake PostgREST client over in-memory tables, enough
 // for the queries those files make, and failIf(query) returns an error
@@ -17,7 +17,12 @@ function compile(files, rewrites, stubs) {
   for (const [name, file] of Object.entries(files)) {
     let src = fs.readFileSync(path.join(ROOT, file), 'utf8');
     for (const [from, to] of Object.entries(rewrites)) src = src.split(`'${from}'`).join(`'${to}'`);
-    fs.writeFileSync(path.join(out, name + '.js'), transform(src, { transforms: ['typescript', 'imports'] }).code);
+    // A component: JSX becomes React.createElement, with React required by its
+    // full path because the compiled file sits outside the project.
+    const tsx = file.endsWith('.tsx');
+    const { code } = transform(src, tsx ? { transforms: ['typescript', 'imports', 'jsx'], jsxRuntime: 'classic', production: true } : { transforms: ['typescript', 'imports'] });
+    const react = tsx ? `const React = require(${JSON.stringify(require.resolve('react'))});\n` : '';
+    fs.writeFileSync(path.join(out, name + '.js'), react + code);
   }
   for (const [name, code] of Object.entries(stubs)) fs.writeFileSync(path.join(out, name + '.js'), code);
   return out;

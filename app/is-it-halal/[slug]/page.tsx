@@ -231,7 +231,7 @@ export default async function IsItHalalPage({ params }: { params: { slug: string
         />
         {facts && (
           <div className="mt-5">
-            <HalalFactsPanel facts={facts} />
+            <HalalFactsPanel facts={facts} evidence={r.evidence} />
           </div>
         )}
       </div>

@@ -116,7 +116,9 @@ export async function saveCheck({
       },
     ];
     // Certification is only recorded as confirmed when it was confirmed with
-    // the certifier, not when a restaurant showed us a logo.
+    // the certifier, not when a restaurant showed us a logo. This row is what
+    // lets the public facts panel say "Certified". Without it, a yes to
+    // has_certification shows as what the restaurant says (HalalFactsPanel).
     if (verified && facts.has_certification === true && certificationBody && method === 'certifier_register') {
       evidence.push({
         restaurant_id: restaurantId,

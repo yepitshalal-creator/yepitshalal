@@ -10,8 +10,17 @@ const assert = require('assert');
 const { compile, makeDb } = require('../tests/harness.cjs');
 
 const OUT = compile(
-  { 'save-check': 'lib/admin/save-check.ts', 'check-actions': 'lib/admin/check-actions.ts', 'admin-actions': 'lib/admin-actions.ts' },
   {
+    'save-check': 'lib/admin/save-check.ts',
+    'check-actions': 'lib/admin/check-actions.ts',
+    'admin-actions': 'lib/admin-actions.ts',
+    'facts-panel': 'components/HalalFactsPanel.tsx',
+  },
+  {
+    clsx: require.resolve('clsx').replace(/\\/g, '/'),
+    './icons': './stub-icons',
+    './CheckFreshness': './stub-freshness',
+    './HalalEvidencePanel': './stub-evidence-panel',
     'next/cache': './stub-next-cache',
     '@/lib/supabase/admin': './stub-supabase',
     './supabase/admin': './stub-supabase',
@@ -27,11 +36,17 @@ const OUT = compile(
     'stub-supabase': 'exports.createAdminSupabase = () => global.__db;',
     'stub-admin': "exports.requireAdmin = async () => ({ id: 'a1' });",
     'stub-cache': "exports.ADMIN_DATA = 'admin-data'; exports.revalidateAdminPath = (p) => global.__revalidated.push(p);",
+    'stub-icons': 'exports.CheckIcon = exports.WarningIcon = exports.InfoIcon = () => null;',
+    'stub-freshness': 'exports.CheckFreshness = () => null;',
+    'stub-evidence-panel': "exports.formatCheckedDate = () => '19 Oct 2026';",
   }
 );
 const { saveCheck } = require(path.join(OUT, 'save-check.js'));
 const { recordCheck } = require(path.join(OUT, 'check-actions.js'));
 const { publishVerification } = require(path.join(OUT, 'admin-actions.js'));
+const { HalalFactsPanel } = require(path.join(OUT, 'facts-panel.js'));
+const { createElement } = require('react');
+const { renderToStaticMarkup } = require('react-dom/server');
 
 function fixtures() {
   return {
@@ -73,6 +88,18 @@ function form(fields) {
 }
 /** The evidence rows for r1 the label is derived from (new rows are current by default). */
 const current = (t) => t.restaurant_halal_evidence.filter((e) => e.restaurant_id === 'r1' && e.is_current !== false);
+
+/** The public facts panel for r1, as HTML and as the words a visitor reads. */
+function panel(t) {
+  const facts = t.restaurant_halal_facts.find((f) => f.restaurant_id === 'r1');
+  const html = renderToStaticMarkup(createElement(HalalFactsPanel, { facts, evidence: current(t) }));
+  const words = html
+    .replace(/<\/?(a|span|time)\b[^>]*>/g, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&#x27;/g, "'")
+    .replace(/\s+/g, ' ');
+  return { html, words };
+}
 
 let logged = [];
 console.error = (...args) => logged.push(args.join(' '));
@@ -165,15 +192,51 @@ const checks = [
     },
   ],
   [
-    "certification is recorded only from the certifier's register",
+    "certification is recorded, and shown as Certified, only from the certifier's register",
     async () => {
       const cert = { ...FOUND, classification: 'fully_halal', has_certification: 'yes', certification_body: 'HMC' };
-      const byPhone = fixtures();
-      await save(byPhone, none, cert);
-      assert.strictEqual(current(byPhone).some((e) => e.kind === 'certification'), false);
+      for (const method of ['phone', 'visit', 'documents']) {
+        const told = fixtures();
+        await save(told, none, { ...cert, method });
+        assert.strictEqual(current(told).some((e) => e.kind === 'certification'), false);
+        const { words } = panel(told);
+        assert.match(words, /Halal certification They say so/, method);
+        assert.match(words, /The restaurant says it is certified by HMC\. We have not checked HMC's list\./, method);
+        assert.doesNotMatch(words, /Certified by|Halal certification Certified/, method);
+      }
+
       const byRegister = fixtures();
-      await save(byRegister, none, { ...cert, method: 'certifier_register' });
+      await save(byRegister, none, { ...cert, method: 'certifier_register', source_url: 'https://halalhmc.org/outlet' });
       assert.strictEqual(current(byRegister).some((e) => e.kind === 'certification' && e.source_name === 'HMC'), true);
+      const { html, words } = panel(byRegister);
+      assert.match(words, /Halal certification Certified/);
+      assert.match(words, /Certified by HMC\. We checked HMC's list \(opens in a new tab\) on 19 Oct 2026\./);
+      assert.match(html, /href="https:\/\/halalhmc\.org\/outlet"/);
+
+      // A later phone call replaces the register check, so "Certified" goes
+      // with it. The fake database has no column defaults, so the rows just
+      // saved get the real one (is_current default true, migration 0023).
+      for (const e of byRegister.restaurant_halal_evidence) e.is_current ??= true;
+      await save(byRegister, none, cert);
+      assert.match(panel(byRegister).words, /Halal certification They say so/);
+    },
+  ],
+  [
+    'the certification row never turns unknown into no, and names nobody it was not told',
+    async () => {
+      const nobody = fixtures();
+      await save(nobody, none, { ...FOUND, has_certification: 'yes' });
+      assert.match(panel(nobody).words, /The restaurant says it is certified\. It did not tell us who by, so we have not checked\./);
+
+      const unknown = fixtures();
+      await save(unknown, none, { ...FOUND, has_certification: 'dont_know', certification_body: 'HMC' });
+      assert.match(panel(unknown).words, /Halal certification Not known/);
+      assert.doesNotMatch(panel(unknown).words, /HMC/);
+
+      const no = fixtures();
+      await save(no, none, { ...FOUND, has_certification: 'no', certification_body: 'HMC' });
+      assert.match(panel(no).words, /Halal certification Not certified/);
+      assert.doesNotMatch(panel(no).words, /HMC/);
     },
   ],
   [
