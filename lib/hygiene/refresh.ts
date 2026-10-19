@@ -42,6 +42,10 @@ export interface HygieneSummary {
   byRating: Record<string, number>;
   changed: number;
   removed: number;
+  /** Listed places among the removed, flagged for a person (in a dry run, that would be). */
+  flagged: number;
+  /** Set when flagging failed. The ratings were still updated. */
+  flagError?: string;
 }
 
 /** The service role client, with every request sent fresh: Next 14 would
@@ -94,6 +98,61 @@ const same = (a: HygieneRow, b: HygieneRow) =>
   a.new_rating_pending === b.new_rating_pending &&
   a.local_authority === b.local_authority;
 
+/**
+ * A listed place whose registration has left the FSA's files may have closed.
+ * It is flagged for a person (place_flags, migration 0055) and never changed:
+ * the listing and its label stay as they are until someone looks. A place that
+ * already has an open flag is not flagged again.
+ */
+async function flagLeavers(
+  supabase: SupabaseClient,
+  removedIds: string[],
+  held: Map<string, HygieneRow>,
+  dryRun: boolean
+): Promise<number> {
+  const listed: string[] = [];
+  for (let i = 0; i < removedIds.length; i += 200) {
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('id')
+      .in('id', removedIds.slice(i, i + 200))
+      .eq('is_listed', true);
+    if (error) throw new Error(error.message);
+    listed.push(...((data ?? []) as { id: string }[]).map((r) => r.id));
+  }
+  if (dryRun || listed.length === 0) return listed.length;
+
+  const open = new Set<string>();
+  for (let i = 0; i < listed.length; i += 200) {
+    const { data, error } = await supabase
+      .from('place_flags')
+      .select('restaurant_id')
+      .eq('reason', 'left_fsa_register')
+      .is('resolved_at', null)
+      .in('restaurant_id', listed.slice(i, i + 200));
+    if (error) throw new Error(error.message);
+    for (const r of (data ?? []) as { restaurant_id: string }[]) open.add(r.restaurant_id);
+  }
+
+  const rows = listed
+    .filter((id) => !open.has(id))
+    .map((id) => {
+      const h = held.get(id);
+      const where = h?.local_authority ? ` (${h.local_authority})` : '';
+      const when = h?.rating_date ? ` on ${h.rating_date}` : '';
+      return {
+        restaurant_id: id,
+        reason: 'left_fsa_register',
+        detail: h ? `FSA registration ${h.fhrs_id}${where}, last rated ${h.rating_label}${when}, was not in this week's files.` : null,
+      };
+    });
+  for (let i = 0; i < rows.length; i += 200) {
+    const { error } = await supabase.from('place_flags').insert(rows.slice(i, i + 200));
+    if (error) throw new Error(error.message);
+  }
+  return rows.length;
+}
+
 export async function refreshHygiene({ dryRun }: { dryRun: boolean }): Promise<HygieneSummary> {
   const supabase = db();
 
@@ -140,6 +199,18 @@ export async function refreshHygiene({ dryRun }: { dryRun: boolean }): Promise<H
   // council) no longer has a published rating, so it goes back to not known.
   const removed = [...held.keys()].filter((id) => !best.has(id));
 
+  // Flagged before the old ratings are removed, so each flag can say what the
+  // place was last rated. A failure here is reported, not thrown: this week's
+  // ratings still go in.
+  let flagged = 0;
+  let flagError: string | undefined;
+  try {
+    flagged = await flagLeavers(supabase, removed, held, dryRun);
+  } catch (e) {
+    flagError = (e as Error).message;
+    console.error('[hygiene] flagging', flagError);
+  }
+
   const byRating: Record<string, number> = {};
   for (const r of best.values()) byRating[r.rating_label] = (byRating[r.rating_label] ?? 0) + 1;
 
@@ -165,5 +236,7 @@ export async function refreshHygiene({ dryRun }: { dryRun: boolean }): Promise<H
     byRating,
     changed: changed.length,
     removed: removed.length,
+    flagged,
+    ...(flagError ? { flagError } : {}),
   };
 }

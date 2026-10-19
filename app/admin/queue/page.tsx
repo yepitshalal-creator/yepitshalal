@@ -2,8 +2,16 @@ import Link from 'next/link';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/require-admin';
 import { ArrowRightIcon } from '@/components/icons';
-import { AdminPage, Panel, List, Row, Tag, QueueStatusTag } from '@/components/admin/ui';
+import { AdminPage, Panel, List, Row, Tag, QueueStatusTag, BUTTON_SECONDARY } from '@/components/admin/ui';
 import { SectionTabs } from '@/components/admin/SectionTabs';
+import { resolvePlaceFlag } from '@/lib/admin-actions';
+
+interface PlaceFlag {
+  id: string;
+  detail: string | null;
+  flagged_at: string;
+  restaurants: { id: string; name: string; slug: string } | null;
+}
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Check requests' };
@@ -32,7 +40,7 @@ export default async function AdminQueuePage() {
   const monthStart = new Date();
   monthStart.setUTCDate(1);
 
-  const [{ data: requests }, { data: voteData }] = await Promise.all([
+  const [{ data: requests }, { data: voteData }, { data: flagData }] = await Promise.all([
     supabase
       .from('verification_requests')
       .select('id, queue_type, status, entered_queue_at, contact_email, restaurants(name, slug)')
@@ -40,7 +48,16 @@ export default async function AdminQueuePage() {
       .order('queue_type', { ascending: false })
       .order('entered_queue_at', { ascending: true }),
     supabase.from('area_votes').select('borough').eq('month', monthStart.toISOString().slice(0, 10)),
+    // Raised by the Tuesday hygiene job (lib/hygiene/refresh.ts). Before
+    // migration 0055 there is no table, and this reads as none.
+    supabase
+      .from('place_flags')
+      .select('id, detail, flagged_at, restaurants(id, name, slug)')
+      .is('resolved_at', null)
+      .order('flagged_at', { ascending: true })
+      .limit(100),
   ]);
+  const flags = (flagData ?? []) as unknown as PlaceFlag[];
 
   // Supporters were promised the area they vote for goes to the top of the
   // queue, so whoever works this page has to be able to see it from here.
@@ -84,6 +101,44 @@ export default async function AdminQueuePage() {
           requests={free}
           empty="No free requests waiting."
         />
+        <Panel title="Left the hygiene register" action={<Tag>{flags.length}</Tag>}>
+          <p className="border-b border-line px-5 py-3 text-xs leading-relaxed text-muted">
+            Listed places whose food hygiene registration was not in the FSA&apos;s files this week. It can mean
+            closed, new owners or a move. Nothing has changed on the site. Ring or look, then close the place on its
+            page if it has gone, and press Done.
+          </p>
+          <List empty="No places to look at.">
+            {flags.map((f) => (
+              <Row key={f.id}>
+                <span className="min-w-0">
+                  {f.restaurants ? (
+                    <Link href={`/admin/restaurants/${f.restaurants.id}`} className="block truncate font-medium text-ink hover:underline">
+                      {f.restaurants.name}
+                    </Link>
+                  ) : (
+                    <span className="block truncate font-medium text-ink">Unknown restaurant</span>
+                  )}
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {daysWaiting(f.flagged_at) === 'today' ? 'Flagged today' : `Flagged ${daysWaiting(f.flagged_at)} ago`}
+                    {f.detail ? ` · ${f.detail}` : ''}
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {f.restaurants && (
+                    <Link href={`/restaurant/${f.restaurants.slug}`} className="text-sm font-semibold text-accent-ink hover:underline">
+                      Page
+                    </Link>
+                  )}
+                  <form action={resolvePlaceFlag.bind(null, f.id)}>
+                    <button type="submit" className={BUTTON_SECONDARY}>
+                      Done
+                    </button>
+                  </form>
+                </span>
+              </Row>
+            ))}
+          </List>
+        </Panel>
       </div>
     </AdminPage>
   );

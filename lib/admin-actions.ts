@@ -186,3 +186,19 @@ export async function deleteOffer(offerId: string) {
   await supabase.from('offers').delete().eq('id', offerId);
   revalidateAdminPath('/admin/offers');
 }
+
+/**
+ * Close a flag raised by a job (place_flags, migration 0055) once a person has
+ * looked. Closing changes nothing else: if the place has closed, that is
+ * recorded on its own admin page, as before.
+ */
+export async function resolvePlaceFlag(flagId: string) {
+  const adminUser = await requireAdmin();
+  const supabase = createAdminSupabase();
+  await supabase
+    .from('place_flags')
+    .update({ resolved_at: new Date().toISOString(), resolved_by: adminUser.id })
+    .eq('id', flagId)
+    .is('resolved_at', null);
+  revalidateAdminPath('/admin/queue');
+}
