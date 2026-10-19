@@ -7,8 +7,8 @@ import { LOCALES } from '@/lib/locales';
 
 export const revalidate = 3600;
 
-// Only pages worth landing on. Search results and Discover (still a holding
-// page) are left out.
+// Only pages worth landing on. Search results are left out. Discover has been
+// the Browse page since 2026-10-18, no longer a holding page, so it is in.
 //
 // Every place in search has an "Is it halal?" page here, and every chain with a
 // page: rebuilt from the database every hour, so a place added later is listed
@@ -46,7 +46,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     { url: `${siteUrl}/halal-restaurants/cuisine`, lastModified: CONTENT_UPDATED, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${siteUrl}/prayer-spaces`, lastModified: CONTENT_UPDATED, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${siteUrl}/discover`, lastModified: new Date('2026-10-18'), changeFrequency: 'weekly', priority: 0.7 },
     { url: `${siteUrl}/how-we-check`, lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${siteUrl}/how-we-check/hmc-and-hfa`, lastModified: new Date('2026-10-19'), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${siteUrl}/image-credits`, lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.2 },
     // Worth crawling even though nobody searches for them: an owner looking for
     // a way to dispute a label often arrives from a search engine, not the site.

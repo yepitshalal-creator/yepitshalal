@@ -163,7 +163,10 @@ export default function HowWeCheckPage() {
               Standards differ. Some people only eat hand-slaughtered meat, some avoid places that
               serve alcohol, and restaurants change suppliers. A label is a starting point built from
               the evidence we can see. The kitchen is the only one who can tell you for certain, so
-              ask them.
+              ask them.{' '}
+              <Link href="/how-we-check/hmc-and-hfa" className={inlineLink}>
+                What HMC and HFA each allow
+              </Link>
             </p>
             <p className={bodyText}>
               Restaurant locations and details come from the Food Standards Agency food hygiene

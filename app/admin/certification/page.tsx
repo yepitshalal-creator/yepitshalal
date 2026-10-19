@@ -42,7 +42,8 @@ interface ClaimRow {
 /** Which body the restaurant names, when it names one at all. */
 function certifierIn(text: string): { name: string; lookup: string } | null {
   if (/\bhmc\b|halal monitoring committee/i.test(text)) {
-    return { name: 'HMC', lookup: 'https://halalhmc.org/certified-outlets/' };
+    // /certified-outlets/ answered 404 by 2026-10-19; its shop finder moved here.
+    return { name: 'HMC', lookup: 'https://halalhmc.org/outlets/' };
   }
   if (/\bhfa\b|halal food authority/i.test(text)) {
     return { name: 'HFA', lookup: 'https://halalfoodauthority.com/' };

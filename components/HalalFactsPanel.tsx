@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import Link from 'next/link';
 import { CheckIcon, WarningIcon, InfoIcon } from './icons';
 import { CheckFreshness } from './CheckFreshness';
 import { formatCheckedDate } from './HalalEvidencePanel';
@@ -59,6 +60,20 @@ function certificationRow(said: TriState, listing: HalalEvidence | null): { valu
   return { value: triLabel(said, 'Certified', 'Not certified'), tone: toneFor(said, false) };
 }
 
+/** HMC and HFA disagree on stunning, and /how-we-check/hmc-and-hfa sets out
+ *  each one's rules in its own words. Shown beside either name. */
+function RulesLink({ name }: { name: string | null }) {
+  if (!name || !/\bhmc\b|halal monitoring|\bhfa\b|halal food authority/i.test(name)) return null;
+  return (
+    <>
+      {' '}
+      <Link href="/how-we-check/hmc-and-hfa" className="font-medium text-accent-ink underline underline-offset-2">
+        What HMC and HFA each allow
+      </Link>
+    </>
+  );
+}
+
 function CertificationNote({ body, listing }: { body: string | null; listing: HalalEvidence | null }) {
   if (listing) {
     const list = `${listing.source_name}'s list`;
@@ -79,6 +94,7 @@ function CertificationNote({ body, listing }: { body: string | null; listing: Ha
           list
         )}{' '}
         on <time dateTime={listing.checked_at}>{formatCheckedDate(listing.checked_at)}</time>.
+        <RulesLink name={listing.source_name} />
       </p>
     );
   }
@@ -87,6 +103,7 @@ function CertificationNote({ body, listing }: { body: string | null; listing: Ha
       {body
         ? `The restaurant says it is certified by ${body}. We have not checked ${body}'s list.`
         : 'The restaurant says it is certified. It did not tell us who by, so we have not checked.'}
+      <RulesLink name={body} />
     </p>
   );
 }

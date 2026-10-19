@@ -22,6 +22,7 @@ const OUT = compile(
     './CheckFreshness': './stub-freshness',
     './HalalEvidencePanel': './stub-evidence-panel',
     'next/cache': './stub-next-cache',
+    'next/link': './stub-next-link',
     '@/lib/supabase/admin': './stub-supabase',
     './supabase/admin': './stub-supabase',
     '@/lib/require-admin': './stub-admin',
@@ -39,6 +40,10 @@ const OUT = compile(
     'stub-icons': 'exports.CheckIcon = exports.WarningIcon = exports.InfoIcon = () => null;',
     'stub-freshness': 'exports.CheckFreshness = () => null;',
     'stub-evidence-panel': "exports.formatCheckedDate = () => '19 Oct 2026';",
+    // A plain <a>, so the panel's link to /how-we-check/hmc-and-hfa renders.
+    'stub-next-link': `const React = require(${JSON.stringify(require.resolve('react'))});
+exports.__esModule = true;
+exports.default = ({ href, className, children }) => React.createElement('a', { href, className }, children);`,
   }
 );
 const { saveCheck } = require(path.join(OUT, 'save-check.js'));
@@ -203,6 +208,7 @@ const checks = [
         assert.match(words, /Halal certification They say so/, method);
         assert.match(words, /The restaurant says it is certified by HMC\. We have not checked HMC's list\./, method);
         assert.doesNotMatch(words, /Certified by|Halal certification Certified/, method);
+        assert.match(panel(told).html, /href="\/how-we-check\/hmc-and-hfa"/, method);
       }
 
       const byRegister = fixtures();
@@ -212,6 +218,7 @@ const checks = [
       assert.match(words, /Halal certification Certified/);
       assert.match(words, /Certified by HMC\. We checked HMC's list \(opens in a new tab\) on 19 Oct 2026\./);
       assert.match(html, /href="https:\/\/halalhmc\.org\/outlet"/);
+      assert.match(html, /href="\/how-we-check\/hmc-and-hfa"/);
 
       // A later phone call replaces the register check, so "Certified" goes
       // with it. The fake database has no column defaults, so the rows just

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PhoneIcon } from './icons';
 import { formatUkPhone } from '@/lib/phone';
 
@@ -28,6 +29,12 @@ export function AskBeforeYouOrder({ phone }: { phone: string | null }) {
           </li>
         ))}
       </ul>
+      <Link
+        href="/how-we-check/hmc-and-hfa"
+        className="mt-3 block w-fit text-sm font-medium text-accent-ink underline decoration-accent-ink/30 underline-offset-2 hover:decoration-accent-ink"
+      >
+        What HMC and HFA each allow
+      </Link>
       {phone && (
         <a
           href={`tel:${phone}`}
