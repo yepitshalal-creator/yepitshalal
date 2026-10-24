@@ -10,8 +10,13 @@
 -- the reason on each evidence row ("The same website also mentions alcohol.",
 -- "The website says diners may bring their own alcohol."), so the summary now
 -- uses it: "The restaurant says it serves halal food. The same website also
--- mentions alcohol". A row with no reason keeps the old words, which are true
--- of a site that only says it has halal options.
+-- mentions alcohol".
+--
+-- Only a reason about alcohol. The other reasons ("The same website also
+-- mentions pork.") come from word matches nobody has read, and no visitor has
+-- ever been shown them; publishing them would be a new claim about some 400
+-- places that was never asked for. "Some of its food is halal" stays true for
+-- those places, so they keep it.
 --
 -- Everything else is 0031's function unchanged. Summaries carry no final full
 -- stop; the site adds it.
@@ -82,7 +87,7 @@ begin
     when 'first_party_statement' then case v_best.claim
       when 'fully_halal' then 'The restaurant says all its meat is halal'
       when 'halal_options' then case
-        when nullif(btrim(v_best.notes), '') is not null
+        when v_best.notes ilike '%alcohol%'
           then 'The restaurant says it serves halal food. ' || rtrim(btrim(v_best.notes), '.')
         else 'The restaurant says some of its food is halal' end
       else 'The restaurant''s website mentions halal food' end
@@ -113,5 +118,5 @@ where r.halal_classification = 'halal_options'
     select 1 from public.restaurant_halal_evidence e
     where e.restaurant_id = r.id and e.is_current
       and e.kind = 'first_party_statement' and e.claim = 'halal_options'
-      and nullif(btrim(e.notes), '') is not null
+      and e.notes ilike '%alcohol%'
   );
