@@ -297,6 +297,23 @@ export async function errorPages(days: RangeDays, limit = 6): Promise<Ranked[] |
   return rows?.map((r) => ({ label: str(r[0]), value: num(r[1]) })) ?? null;
 }
 
+export type StillRightAnswers = { yes: number; changed: number; closed: number };
+
+/** How visitors answered "Is this still right?" under a place's label
+ *  (components/StillRight.tsx). The last two also reach the inbox as edits. */
+export async function stillRightAnswers(days: RangeDays): Promise<StillRightAnswers | null> {
+  const rows = await hogql(`
+    select
+      countIf(properties.answer = 'yes'),
+      countIf(properties.answer = 'changed'),
+      countIf(properties.answer = 'closed')
+    from events
+    where event = 'place_still_right' and timestamp >= now() - interval ${days} day
+  `);
+  if (!rows) return null;
+  return { yes: num(rows[0]?.[0]), changed: num(rows[0]?.[1]), closed: num(rows[0]?.[2]) };
+}
+
 export type RecordingAnswers = { yes: number; no: number };
 
 /** How visitors answered the recording question (lib/analytics/posthog.ts). */

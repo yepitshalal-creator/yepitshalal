@@ -87,6 +87,10 @@ function start() {
       before_send: scrubEvent,
     });
     started = true;
+    // Saved to a home screen (app/manifest.ts), one of the 2026-10-12 plan's
+    // numbers to watch. Chrome and Edge say when it happens; Safari on an
+    // iPhone does not, so this counts low.
+    window.addEventListener('appinstalled', () => posthog.capture('app_installed'));
   } catch {
     // Analytics must never be the reason a page fails to load.
   }

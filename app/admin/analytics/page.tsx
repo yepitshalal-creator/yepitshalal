@@ -21,6 +21,7 @@ import {
   webVitals,
   type Vitals,
   recordingAnswers,
+  stillRightAnswers,
 } from '@/lib/admin/posthog';
 import { SectionTabs } from '@/components/admin/SectionTabs';
 
@@ -52,6 +53,11 @@ const EVENT_LABELS: Record<string, string> = {
   founders_application_result: 'Was told their Founders result',
   founders_application_accepted: 'Founders sign-up saved',
   founders_capacity_reached: 'Took the last Founder spot',
+  place_still_right: 'Answered "Is this still right?"',
+  place_saved: 'Saved a place',
+  place_unsaved: 'Took a place off their saved list',
+  browse_fully_halal_near_me: 'Tapped Fully Halal near me',
+  app_installed: 'Added the site to their home screen',
 };
 
 const SOURCE_NAMES: [RegExp, string][] = [
@@ -108,7 +114,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
     );
   }
 
-  const [traffic, sum, pages, sources, devicesList, events, vitals, errors, answers] = await Promise.all([
+  const [traffic, sum, pages, sources, devicesList, events, vitals, errors, answers, stillRight] = await Promise.all([
     trafficByDay(range),
     totals(range),
     topPages(range, 10),
@@ -118,6 +124,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
     webVitals(range),
     errorPages(range, 6),
     recordingAnswers(range),
+    stillRightAnswers(range),
   ]);
 
   const versus = `on the ${range} days before`;
@@ -287,6 +294,24 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
             >
               <PlayIcon className="h-4 w-4" /> Replays in PostHog
             </a>
+          </Card>
+
+          {/* One of the 2026-10-12 plan's numbers to watch: how fresh people
+              find the listings. */}
+          <Card title="Is this still right?" note="Answers under a place's halal label">
+            {stillRight ? (
+              <p className="text-sm text-ink">
+                <span className="font-semibold tabular-nums">{stillRight.yes}</span> said yes,{' '}
+                <span className="font-semibold tabular-nums">{stillRight.changed}</span> said something changed,{' '}
+                <span className="font-semibold tabular-nums">{stillRight.closed}</span> said it has closed, in the last{' '}
+                {range} days.
+              </p>
+            ) : (
+              <EmptyNote>PostHog did not answer just now. It tries again in a few minutes.</EmptyNote>
+            )}
+            <p className="mt-2 text-xs leading-relaxed text-subtle">
+              The last two open the edit form. Any that are sent arrive in the inbox.
+            </p>
           </Card>
         </div>
       </div>
