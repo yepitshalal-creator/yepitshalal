@@ -34,12 +34,12 @@ const GROUPS: { classification: HalalClassification; heading: string; blurb: str
   {
     classification: 'fully_halal',
     heading: 'Fully Halal',
-    blurb: 'Strong evidence that all the meat is halal.',
+    blurb: 'Strong evidence that all the meat is halal, and no sign of alcohol.',
   },
   {
     classification: 'halal_options',
     heading: 'Halal food available',
-    blurb: 'Halal food is available, but not everything is halal. Check before you order.',
+    blurb: 'Halal food is available, but not everything is halal, or alcohol is served. Check before you order.',
   },
   {
     classification: 'unverified',

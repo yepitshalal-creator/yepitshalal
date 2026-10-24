@@ -73,6 +73,12 @@ export async function saveCheck({
     return null;
   }
 
+  // A place that serves alcohol is never Fully Halal (Shabir, 2026-10-24).
+  // Refused before anything is written, so the old label stays as it was.
+  if (outcome === 'fully_halal' && tri('serves_alcohol') === true) {
+    throw new Error('A place that serves alcohol is Halal food available, not Fully Halal. Choose that instead.');
+  }
+
   const now = new Date().toISOString();
   const certificationBody = String(formData.get('certification_body') ?? '').trim() || null;
   const facts = {

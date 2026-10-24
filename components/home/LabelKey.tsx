@@ -29,8 +29,8 @@ import type { HalalStatus } from '@/lib/types';
 type Row = { status: HalalStatus; Mark: typeof HalalFullMark; ink: string; body: string };
 
 const SHOWN: Row[] = [
-  { status: 'fully_halal', Mark: HalalFullMark, ink: 'text-halal-fullInk', body: 'Strong evidence that all the meat is halal.' },
-  { status: 'halal_options', Mark: HalalPartialMark, ink: 'text-halal-partialInk', body: 'Halal food is available, but not everything is halal. Check before you order.' },
+  { status: 'fully_halal', Mark: HalalFullMark, ink: 'text-halal-fullInk', body: 'Strong evidence that all the meat is halal, and no sign of alcohol.' },
+  { status: 'halal_options', Mark: HalalPartialMark, ink: 'text-halal-partialInk', body: 'Halal food is available, but not everything is halal, or alcohol is served. Check before you order.' },
 ];
 
 const OPEN: Row[] = [

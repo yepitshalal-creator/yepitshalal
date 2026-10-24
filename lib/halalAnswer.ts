@@ -38,12 +38,14 @@ export function halalAnswerFor(options: {
     case 'fully_halal':
       return {
         verdict: 'Yes',
-        sentence: `Yes. There is strong evidence that all the meat served at ${name} is halal. ${because}${checked} Confirm it with them when you order.`.replace(/\s+/g, ' '),
+        sentence: `Yes. There is strong evidence that all the meat served at ${name} is halal, and no sign of alcohol. ${because}${checked} Confirm it with them when you order.`.replace(/\s+/g, ' '),
       };
     case 'halal_options':
       return {
         verdict: 'Partly',
-        sentence: `Partly. Halal food is available at ${name}, but not everything on the menu is halal. ${because}${checked} Ask which items are halal when you order.`.replace(/\s+/g, ' '),
+        // "Or alcohol is served": since 2026-10-24 a place whose food is all
+        // halal but which sells alcohol is here too.
+        sentence: `Partly. Halal food is available at ${name}, but not everything there is halal, or alcohol is served. ${because}${checked} Ask before you order.`.replace(/\s+/g, ' '),
       };
     case 'unverified':
       return {

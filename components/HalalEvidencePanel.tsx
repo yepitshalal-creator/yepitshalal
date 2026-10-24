@@ -13,8 +13,9 @@ import type { EvidenceStrength, HalalClassification, HalalEvidence } from '@/lib
 // more than Unverified.
 
 export const LABEL_MEANING: Record<HalalClassification, string> = {
-  fully_halal: 'Strong evidence that all the meat served here is halal.',
-  halal_options: 'Halal food is available here, but not everything is halal.',
+  // A place that serves alcohol is never Fully Halal (Shabir, 2026-10-24).
+  fully_halal: 'Strong evidence that all the meat served here is halal, and no sign of alcohol.',
+  halal_options: 'Halal food is available here, but not everything is halal, or alcohol is served.',
   unverified: "There are signs this place is halal, but we haven't checked.",
 };
 

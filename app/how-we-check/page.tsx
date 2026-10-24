@@ -19,13 +19,13 @@ export const metadata: Metadata = {
 const LABELS = [
   {
     classification: 'fully_halal' as const,
-    needs: 'Strong evidence that all the meat served is halal.',
-    examples: 'Halal certification we have confirmed, our own check, or the restaurant clearly saying all its meat is halal with nothing on its site suggesting otherwise.',
+    needs: 'Strong evidence that all the meat served is halal, and no sign of alcohol.',
+    examples: 'Halal certification we have confirmed, our own check, or the restaurant clearly saying all its meat is halal with nothing on its site suggesting otherwise. A place that serves alcohol, or lets you bring your own, is never Fully Halal.',
   },
   {
     classification: 'halal_options' as const,
-    needs: 'Halal food is available, but not everything is halal. Check before you order.',
-    examples: 'The restaurant says it has halal options or a halal menu, or its site mentions halal food alongside pork or non-halal meat.',
+    needs: 'Halal food is available, but not everything is halal, or alcohol is served. Check before you order.',
+    examples: 'The restaurant says it has halal options or a halal menu, or its site mentions halal food alongside pork, non-halal meat or alcohol.',
   },
   {
     classification: 'unverified' as const,
@@ -160,8 +160,8 @@ export default function HowWeCheckPage() {
         <PageSection id="limits" title={<>What a label can&apos;t tell you</>}>
           <div className="space-y-3">
             <p className={bodyText}>
-              Standards differ. Some people only eat hand-slaughtered meat, some avoid places that
-              serve alcohol, and restaurants change suppliers. A label is a starting point built from
+              Standards differ. Some people only eat hand-slaughtered meat, and restaurants change
+              suppliers. A label is a starting point built from
               the evidence we can see. The kitchen is the only one who can tell you for certain, so
               ask them.{' '}
               <Link href="/how-we-check/hmc-and-hfa" className={inlineLink}>

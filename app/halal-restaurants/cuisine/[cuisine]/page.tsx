@@ -35,8 +35,8 @@ export async function generateMetadata({ params }: { params: { cuisine: string }
 }
 
 const GROUPS: { classification: HalalClassification; heading: string; blurb: string }[] = [
-  { classification: 'fully_halal', heading: 'Fully Halal', blurb: 'Strong evidence that all the meat is halal.' },
-  { classification: 'halal_options', heading: 'Halal food available', blurb: 'Halal food is available, but not everything is halal. Check before you order.' },
+  { classification: 'fully_halal', heading: 'Fully Halal', blurb: 'Strong evidence that all the meat is halal, and no sign of alcohol.' },
+  { classification: 'halal_options', heading: 'Halal food available', blurb: 'Halal food is available, but not everything is halal, or alcohol is served. Check before you order.' },
   {
     classification: 'unverified',
     heading: 'Unverified',

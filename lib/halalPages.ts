@@ -242,10 +242,10 @@ export function chainAnswer(name: string, branches: Branch[]): { verdict: string
   const where = `the ${n} ${name} branches in London we know of`;
   const answer = (verdict: string, detail: string) => ({ verdict, detail, sentence: `${verdict}. ${detail}` });
   if (all('fully_halal')) {
-    return answer('Yes', `At all ${where}, there is strong evidence that all the meat served is halal. Confirm it with the branch when you order.`);
+    return answer('Yes', `At all ${where}, there is strong evidence that all the meat served is halal, and no sign of alcohol. Confirm it with the branch when you order.`);
   }
   if (all('halal_options')) {
-    return answer('Partly', `At all ${where}, halal food is available, but not everything on the menu is halal. Ask which items are halal when you order.`);
+    return answer('Partly', `At all ${where}, halal food is available, but not everything is halal, or alcohol is served. Ask the branch before you order.`);
   }
   if (all('unverified')) {
     return answer('Not confirmed', `There are signs ${where} are halal, but we haven't checked. Ask the branch before you order. Unverified never means not halal.`);

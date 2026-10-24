@@ -64,8 +64,8 @@ export function CheckForm({
             <option value="" disabled>
               Choose one
             </option>
-            <option value="fully_halal">Fully Halal: all the meat is halal</option>
-            <option value="halal_options">Halal food available: some of it is halal</option>
+            <option value="fully_halal">Fully Halal: all the meat is halal, and no alcohol</option>
+            <option value="halal_options">Halal food available: some of it is halal, or alcohol is served</option>
             <option value="not_halal">They told us it is not halal</option>
             <option value="unverified">Couldn&apos;t confirm either way</option>
           </select>

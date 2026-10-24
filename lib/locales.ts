@@ -80,8 +80,8 @@ export const LOCALES: LocaleCopy[] = [
     ctaHow: 'كيف نصنّف الأماكن',
     labelsHeading: 'ماذا تعني التصنيفات',
     labels: [
-      { en: 'Fully Halal', name: 'حلال بالكامل', body: 'أدلة قوية على أن كل اللحوم حلال.' },
-      { en: 'Halal food available', name: 'خيارات حلال', body: 'يقدّم طعامًا حلالًا إلى جانب طعام غير حلال.' },
+      { en: 'Fully Halal', name: 'حلال بالكامل', body: 'أدلة قوية على أن كل اللحوم حلال، ولا أثر للكحول.' },
+      { en: 'Halal food available', name: 'خيارات حلال', body: 'يقدّم طعامًا حلالًا إلى جانب طعام غير حلال أو كحول.' },
       {
         en: 'Unverified',
         name: 'غير مؤكد',
@@ -125,8 +125,8 @@ export const LOCALES: LocaleCopy[] = [
     ctaHow: 'ہم جگہوں کو کیسے لیبل کرتے ہیں',
     labelsHeading: 'لیبل کا مطلب کیا ہے',
     labels: [
-      { en: 'Fully Halal', name: 'مکمل حلال', body: 'مضبوط ثبوت کہ سارا گوشت حلال ہے۔' },
-      { en: 'Halal food available', name: 'حلال آپشنز', body: 'یہاں حلال کھانا بھی ملتا ہے اور غیر حلال بھی۔' },
+      { en: 'Fully Halal', name: 'مکمل حلال', body: 'مضبوط ثبوت کہ سارا گوشت حلال ہے، اور شراب کا کوئی نشان نہیں۔' },
+      { en: 'Halal food available', name: 'حلال آپشنز', body: 'یہاں حلال کھانا ملتا ہے، مگر ساتھ غیر حلال کھانا یا شراب بھی۔' },
       {
         en: 'Unverified',
         name: 'غیر تصدیق شدہ',
@@ -170,11 +170,11 @@ export const LOCALES: LocaleCopy[] = [
     ctaHow: 'আমরা কীভাবে লেবেল দিই',
     labelsHeading: 'লেবেলগুলোর মানে কী',
     labels: [
-      { en: 'Fully Halal', name: 'সম্পূর্ণ হালাল', body: 'শক্ত প্রমাণ আছে যে সব মাংস হালাল।' },
+      { en: 'Fully Halal', name: 'সম্পূর্ণ হালাল', body: 'শক্ত প্রমাণ আছে যে সব মাংস হালাল, আর মদের কোনো চিহ্ন নেই।' },
       {
         en: 'Halal food available',
         name: 'হালাল অপশন',
-        body: 'এখানে হালাল খাবারের পাশাপাশি হালাল নয় এমন খাবারও দেওয়া হয়।',
+        body: 'এখানে হালাল খাবারের পাশাপাশি হালাল নয় এমন খাবার বা মদও দেওয়া হয়।',
       },
       {
         en: 'Unverified',
@@ -219,11 +219,11 @@ export const LOCALES: LocaleCopy[] = [
     ctaHow: 'Mekanları nasıl etiketliyoruz',
     labelsHeading: 'Etiketler ne anlama geliyor',
     labels: [
-      { en: 'Fully Halal', name: 'Tamamen helal', body: 'Bütün etin helal olduğuna dair güçlü kanıt var.' },
+      { en: 'Fully Halal', name: 'Tamamen helal', body: 'Bütün etin helal olduğuna dair güçlü kanıt var ve alkol izi yok.' },
       {
         en: 'Halal food available',
         name: 'Helal seçenekler',
-        body: 'Burada helal yiyeceklerin yanında helal olmayanlar da var.',
+        body: 'Burada helal yiyeceklerin yanında helal olmayanlar ya da alkol de var.',
       },
       {
         en: 'Unverified',
@@ -268,11 +268,11 @@ export const LOCALES: LocaleCopy[] = [
     ctaHow: 'Comment nous étiquetons',
     labelsHeading: 'Ce que signifient les étiquettes',
     labels: [
-      { en: 'Fully Halal', name: 'Entièrement halal', body: 'Preuve solide que toute la viande est halal.' },
+      { en: 'Fully Halal', name: 'Entièrement halal', body: "Preuve solide que toute la viande est halal, et aucun signe d'alcool." },
       {
         en: 'Halal food available',
         name: 'Options halal',
-        body: "On y sert du halal à côté de plats qui ne le sont pas.",
+        body: "On y sert du halal, mais aussi des plats qui ne le sont pas, ou de l'alcool.",
       },
       {
         en: 'Unverified',
@@ -317,12 +317,12 @@ export const LOCALES: LocaleCopy[] = [
       {
         en: "Fully Halal",
         name: "Xalaal buuxa",
-        body: "Caddayn adag oo muujinaysa in hilibka oo dhan xalaal yahay."
+        body: "Caddayn adag oo muujinaysa in hilibka oo dhan xalaal yahay, oo aan khamri laga helin."
       },
       {
         en: "Halal food available",
         name: "Doorasho xalaal ah",
-        body: "Halkan waxaa laga helaa cunto xalaal ah iyo cunto aan xalaal ahayn labadaba."
+        body: "Halkan waxaa laga helaa cunto xalaal ah, iyo cunto aan xalaal ahayn ama khamri."
       },
       {
         en: "Unverified",
@@ -367,12 +367,12 @@ export const LOCALES: LocaleCopy[] = [
       {
         en: "Fully Halal",
         name: "کاملاً حلال",
-        body: "مدرک محکمی هست که تمام گوشت حلال است."
+        body: "مدرک محکمی هست که تمام گوشت حلال است، و نشانه‌ای از مشروب الکلی نیست."
       },
       {
         en: "Halal food available",
         name: "گزینه‌های حلال",
-        body: "اینجا هم غذای حلال سرو می‌شود و هم غذایی که حلال نیست."
+        body: "اینجا غذای حلال سرو می‌شود، اما غذای غیرحلال یا مشروب الکلی هم هست."
       },
       {
         en: "Unverified",
@@ -417,12 +417,12 @@ export const LOCALES: LocaleCopy[] = [
       {
         en: "Fully Halal",
         name: "Plotësisht hallall",
-        body: "Provë e fortë se i gjithë mishi është hallall."
+        body: "Provë e fortë se i gjithë mishi është hallall dhe nuk ka shenja alkooli."
       },
       {
         en: "Halal food available",
         name: "Opsione hallall",
-        body: "Këtu shërbehet ushqim hallall krahas ushqimit që nuk është hallall."
+        body: "Këtu shërbehet ushqim hallall, por edhe ushqim që nuk është hallall ose alkool."
       },
       {
         en: "Unverified",
@@ -467,12 +467,12 @@ export const LOCALES: LocaleCopy[] = [
       {
         en: "Fully Halal",
         name: "Halal sepenuhnya",
-        body: "Ada bukti kuat bahwa semua dagingnya halal."
+        body: "Ada bukti kuat bahwa semua dagingnya halal, dan tidak ada tanda alkohol."
       },
       {
         en: "Halal food available",
         name: "Ada pilihan halal",
-        body: "Di sini disajikan makanan halal berdampingan dengan makanan yang tidak halal."
+        body: "Di sini disajikan makanan halal berdampingan dengan makanan yang tidak halal atau alkohol."
       },
       {
         en: "Unverified",
