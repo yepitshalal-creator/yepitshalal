@@ -5,9 +5,9 @@
 -- enforces is a false statement about personal data, which is exactly what the
 -- page exists to avoid. This makes both numbers true.
 --
--- Written 2026-09-21, applied the same day. Every table below had 0 rows when
--- it was written, so the first run that deletes anything is roughly
--- September 2027.
+-- Written 2026-09-21, applied live on 2026-10-24 (not the same day, as this
+-- once said). Every table below had 0 rows on both dates, so the first run
+-- that clears anything is late 2027.
 --
 -- Why most rules clear columns instead of deleting rows:
 --
