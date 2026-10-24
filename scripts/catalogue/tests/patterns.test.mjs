@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs';
-import { CONTRADICTIONS } from '../page-text.mjs';
+import { alcoholMentions, CONTRADICTIONS } from '../page-text.mjs';
 
 // Line endings made even: a Windows checkout has CRLF, and pick() ends each
 // pattern at a semicolon followed by LF.
 const src = readFileSync(new URL('../classify-evidence.mjs', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const pick = (name) => {
   const start = src.indexOf(`const ${name} = `);
-  const end = src.indexOf(';\n', start);
+  // A Windows checkout ends its lines in \r\n.
+  const end = start + src.slice(start).search(/;\r?\n/);
   return new Function(`return ${src.slice(start + `const ${name} = `.length, end)};`)();
 };
 const NEGATIVE = pick('NEGATIVE');
@@ -18,6 +19,8 @@ const POSITIVE = pick('POSITIVE');
 const TESTIMONIAL = pick('TESTIMONIAL');
 const REVIEW_WIDGET = pick('REVIEW_WIDGET');
 const any = (re, x) => [].concat(re).some((r) => r.test(x));
+// True when the text says alcohol is served, not merely named.
+const ALCOHOL_SERVED = { test: (x) => alcoholMentions(x).some((m) => m.served) };
 
 const cases = [
   ['NEGATIVE', NEGATIVE, 'Our dishes are not Halal.', true],
@@ -55,6 +58,48 @@ const cases = [
   ['POSITIVE', POSITIVE, 'As one of the top halal restaurants in Wood Green, we serve fresh dishes', true],
   ['REVIEW_WIDGET', REVIEW_WIDGET, 'Nice halal pizza takeaway. Posted on Google. KD. Trustindex verifies that the original source of the review is Google.', true],
   ['REVIEW_WIDGET', REVIEW_WIDGET, 'All our meat is halal and we serve it fresh every day.', false],
+  // 2026-09-28: alcohol served is a contradiction of fully halal.
+  ['ALCOHOL', ALCOHOL_SERVED, 'Our bar serves a wide range of cocktails, wines and beers.', true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Please note that alcohol is served on the premises.', true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Fully licensed. Halal meat only.', true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Why not try our cocktail menu?', true],
+  ['ALCOHOL', ALCOHOL_SERVED, "Don't miss our wine list", true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Gin & tonic 8.50', true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'We do not serve alcohol.', false],
+  ['ALCOHOL', ALCOHOL_SERVED, '100% halal, no pork, no alcohol', false],
+  ['ALCOHOL', ALCOHOL_SERVED, "We don't serve pork or alcohol", false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'An alcohol-free family restaurant', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Alcohol is not served here.', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Alcohol: No', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Non-alcoholic cocktails and fresh juices', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Virgin mojito 4.50', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Alcohol free beer 0.0%', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Ginger beer, lemonade, mango lassi', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Prawn cocktail starter', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'dressed with red wine vinegar', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Wine and dine with the family', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Fresh ginger and garlic, rump steak', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Kale salad on sale, for the sake of taste', false],
+  // From the 2026-09-28 re-read of the Fully Halal sites.
+  ['ALCOHOL', ALCOHOL_SERVED, 'We don’t use any alcohol in any of our cakes', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Do you serve alcohol? No. We are a completely alcohol-free restaurant.', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'DO YOU SERVE ALCOHOL? Yes. Gallio serves wine with its food.', true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Is your food halal? Can we have alcohol on the premises? Can I order for', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Who needs alcohol when you can enjoy one of our mocktails', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'paired with our signature none alcohol cocktails', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Rare teas and sophisticated dry cocktails', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'garlic, chilli, cocktail sauce and more', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'be it a cocktail reception or sit down dinner', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Sulphites Found in dried fruits, wine, beer, and soft drinks.', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Now we are serving alcohol', true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Is the food halal at Blacklist? Does Blacklist sell alcohol? How long', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Our entire restaurant is strictly and proudly free of alcohol.', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Cocktail Samosa, Onion Bhaji', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Cocktail Shrimps with a Marie Rose sauce', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Allergen Info + ALCOHOL £5.25 Birra Moretti Can', true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Are you fully licensed? Yes we are fully licensed, wine, beer.', true],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Can we have alcohol on the premises? ❌ No, we don’t have an alcohol license, so alcohol is not permitted on-site.', false],
+  ['ALCOHOL', ALCOHOL_SERVED, 'Do you serve alcohol? ✅ Yes, a full wine list.', true],
 ];
 
 let failed = 0;

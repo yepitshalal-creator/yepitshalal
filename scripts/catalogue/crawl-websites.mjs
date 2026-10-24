@@ -19,7 +19,7 @@
 
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { cachePath, readJsonl } from './lib.mjs';
-import { allowedByRobots, CERTIFIER, CONTRADICTIONS, excerptsAround, parseRobots } from './page-text.mjs';
+import { allowedByRobots, CERTIFIER, contradictionsIn, DRINKS_LINK, excerptsAround, parseRobots } from './page-text.mjs';
 
 const USER_AGENT =
   'YepItsHalalBot/1.0 (+https://yepitshalal.com; reads restaurant sites for halal information)';
@@ -206,11 +206,7 @@ async function crawlHost(host, startUrl) {
     for (const ex of excerptsAround(text, /\bhalal\b/gi)) {
       if (record.halal.length < 12) record.halal.push({ url: finalUrl, excerpt: ex });
     }
-    for (const [flag, re] of Object.entries(CONTRADICTIONS)) {
-      if (re.test(text)) {
-        record.flags[flag] = record.flags[flag] || { url: finalUrl, excerpt: excerptsAround(text, new RegExp(re.source, 'gi'), 80, 1)[0] };
-      }
-    }
+    for (const [flag, v] of Object.entries(contradictionsIn(text, finalUrl))) record.flags[flag] = record.flags[flag] || v;
     if (CERTIFIER.test(text)) record.certifierMention = true;
 
     // Only on the first page: pick the internal links most likely to say what
@@ -228,6 +224,7 @@ async function crawlHost(host, startUrl) {
         if (/halal/.test(label)) score += 5;
         if (/menu|food|eat|dish/.test(label)) score += 3;
         if (/faq|allergen|dietary|about|our-story|story/.test(label)) score += 2;
+        if (DRINKS_LINK.test(label)) score += 3;
         if (score) scored.push({ url: href.origin + href.pathname, score });
       }
       scored.sort((a, b) => b.score - a.score);

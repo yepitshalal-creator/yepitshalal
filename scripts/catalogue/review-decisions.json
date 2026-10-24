@@ -3,7 +3,11 @@
   "chennaispice.com": "confirm",
   "masalazone.com": "confirm",
   "villamamas.co.uk": "reject",
-  "rasa.co.uk": "confirm",
+  "rasa.co.uk": {
+    "decision": "options_forced",
+    "note": "Bring your own: \"We do not serve alcohol. However, BYO (Bring Your Own) is allowed\". Halal Options, as alcohol is drunk there (2026-09-28 alcohol review).",
+    "shown": "The website says diners may bring their own alcohol."
+  },
   "lalapeshawari.co.uk": "reject",
   "mumbaisquare.co.uk": "confirm",
   "buffalo-greenwich.co.uk": "confirm",
@@ -12,7 +16,13 @@
   "icco.co.uk": "confirm",
   "themantl.com": "confirm",
   "franzeevans.com": "confirm",
-  "lordrobertsonthegreen.com": "confirm",
+  "lordrobertsonthegreen.com": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "Drinks menu headings run together (\"MOCKTAILSNON ALCOHOLIC WHITES\"): every section is non-alcoholic. Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "roofeast.com": "confirm",
   "nedsnoodlebar.com": "confirm",
   "frenchtacos.co.uk": "confirm",
@@ -23,9 +33,19 @@
   "arabicalondon.com": "reject",
   "nakhonthai.co.uk": "confirm",
   "boulangeriebonmatin.co.uk": "confirm",
-  "guanabanarestaurant.com": "confirm",
+  "guanabanarestaurant.com": {
+    "decision": "options_forced",
+    "note": "Bring your own: \"We are a BOYB restaurant. This applies to alcohol only\", corkage £10 per person. Halal Options, as alcohol is drunk there (2026-09-28 alcohol review).",
+    "shown": "The website says diners may bring their own alcohol."
+  },
   "balabaya.co.uk": "reject",
-  "franzos.co.uk": "confirm",
+  "franzos.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "The mojitos are on its mocktail list: \"Who needs alcohol when you can enjoy one of our refreshing mocktails\". Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "pearllemoncafe.com": "reject",
   "tkrc.co.uk": "confirm",
   "beyzadeturkishkitchen.com": "confirm",
@@ -42,10 +62,22 @@
   "yenburger.co.uk": "confirm",
   "royalnawaab.com": "confirm",
   "halwapoorihouse.com": "confirm",
-  "mahal.co.uk": "confirm",
+  "mahal.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "Strawberry Mojito sits in the soft drinks next to Virgin Mojito and Blue Lagoon Mocktail. Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "itsallgreektome.london": "confirm",
   "watanrestaurant.co.uk": "confirm",
-  "hyderabadibawarchi.co.uk": "confirm",
+  "hyderabadibawarchi.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "The only mention is filler text on its drinks page describing what a glass can hold, not a drink it sells. Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "riospiripiri.co.uk": "confirm",
   "grandbazaarlondon.uk": "confirm",
   "bim-s.co.uk": "confirm",
@@ -61,8 +93,20 @@
   "tallikitchen.com": "options",
   "asadorbargrill.co.uk": "confirm",
   "alba-ldn.uk": "reject",
-  "grilago.net": "confirm",
-  "penangcityuk.com": "confirm",
+  "grilago.net": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "The only mention is an allergen list: \"Sulphites Found in dried fruits, wine, beer\". Kept Fully Halal (2026-09-28 alcohol review)."
+  },
+  "penangcityuk.com": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "Its menu PDF drinks page is headed \"Cocktail Non-Alcoholic\"; the mojitos sit with a Virgin Mojito and soft drinks. Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "thebankrestaurant.com": "confirm",
   "toca.social": "confirm",
   "espress-mo.co.uk": "confirm",
@@ -75,7 +119,13 @@
   "soukrestaurant.co.uk": "confirm",
   "hsandco.co.uk": "confirm",
   "sholakitchen.com": "confirm",
-  "thegreatchase.co.uk": "confirm",
+  "thegreatchase.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "Says \"Our entire restaurant is strictly and proudly free of alcohol\" and \"No alcohol\". The \"botanical cocktail\" is from that alcohol-free menu. Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "fabcakes.co.uk": "confirm",
   "gallio.uk": "confirm",
   "ruyarestaurant.co.uk": "confirm",
@@ -94,10 +144,22 @@
   "jungleesburgers.co.uk": "confirm",
   "seaweed-food.co.uk": "confirm",
   "tinseltown.co.uk": "confirm",
-  "brudis-db.co.uk": "confirm",
+  "brudis-db.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "\"cocktail\" is one of its house sauces: \"garlic, chilli, curry, cocktail, and exclusive Brudis sauces\". Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "bonata.co.uk": "confirm",
   "peninsula-london.co.uk": "confirm",
-  "sugaholics.co.uk": "confirm",
+  "sugaholics.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "\"Moet Champagne Square Birthday Cake\" is a cake design name. The site says \"We don’t use any alcohol in any of our cakes or sweets\". Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "heavenlydelights.com": "confirm",
   "twerknjerkuk.com": "confirm",
   "camberwellrestaurant.co.uk": "confirm",
@@ -110,7 +172,13 @@
   "anarestaurant.co.uk": "confirm",
   "tiffinplanet.co.uk": "confirm",
   "indian-villa.co.uk": "confirm",
-  "indianrasoi.co.uk": "confirm",
+  "indianrasoi.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "\"Our Food and Wine will make you Happy\" is unfinished theme text (the same page still has \"Consec tetur adipi elit\" filler), not a drink it sells. Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "dayaan772.wixsite.com": "confirm",
   "parisscafe.co.uk": "confirm",
   "thaichilli.co.uk": "confirm",
@@ -120,15 +188,31 @@
   "saltsmokehouse.com": "reject",
   "zabihah.com": "reject",
   "jollofkingdom.com": "confirm",
-  "greedysheep.co.uk": "confirm",
+  "greedysheep.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "Says \"We don't serve alcohol\" and \"We are a completely alcohol-free restaurant\". \"no need to remove alcohol\" is about Hui cooking. Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "thedatery.co.uk": "confirm",
   "sushicrunch.co.uk": "confirm",
-  "standardbricklane.co.uk": "confirm",
+  "standardbricklane.co.uk": {
+    "decision": "options_forced",
+    "note": "Bring your own: \"Buy your drinks on premises or bring your own Alcohol\". Halal Options, as alcohol is drunk there (2026-09-28 alcohol review).",
+    "shown": "The website says diners may bring their own alcohol."
+  },
   "emberandcork.co.uk": "confirm",
   "hassosdoner.co.uk": "confirm",
   "wranglerburger.co.uk": "confirm",
   "flavoursofpanasia.co.uk": "confirm",
-  "tikkas.com": "confirm",
+  "tikkas.com": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "Says \"Fully halal & alcohol-free\" and \"Tikkas is fully alcohol-free\". Kept Fully Halal (2026-09-28 alcohol review)."
+  },
   "sambalsim.com": "reject",
   "urumchi.co.uk": "confirm",
   "dessertavenue.uk": "confirm",
@@ -234,11 +318,19 @@
   "namastelounge.com": "confirm",
   "regencyclub.co.uk": "confirm",
   "secretofmari.co.uk": "confirm",
-  "blacklist-lounge.com": "confirm",
+  "blacklist-lounge.com": {
+    "decision": "options_forced",
+    "note": "Bring your own: \"We do not serve any alcoholic beverages, however you are welcome to bring your own bottle\". Its mojitos are fruit and lemonade. Halal Options, as alcohol is drunk there (2026-09-28 alcohol review).",
+    "shown": "The website says diners may bring their own alcohol."
+  },
   "jimmystheo2.co.uk": "confirm",
   "maozuk.com": "confirm",
   "yazrestaurant.co.uk": "confirm",
-  "virundhurestaurant.com": "confirm",
+  "virundhurestaurant.com": {
+    "decision": "options_forced",
+    "note": "Its menu page says \"From our most Intsagrammable cocktails to our extensive wine menu\" and lists a COCKTAILS/MOCKTAILS drinks menu. The crawler kept only \"be it a cocktail reception\", which no longer counts, so this is recorded by hand. Halal Options, as alcohol is served (2026-09-28 alcohol review).",
+    "shown": "The same website also mentions alcohol."
+  },
   "thebbq-express.co.uk": "confirm",
   "patri.co.uk": "confirm",
   "yokosorestaurant.co.uk": "confirm",
@@ -292,5 +384,87 @@
   "halalfoodauthority.com": {
     "decision": "exclude",
     "note": "The certifier's office at 109 Fulham Palace Road, W6 8JA, not a place to eat; map data had it as a halal restaurant. Shabir, 2026-09-24: 'yes perhaps remove the halal food authority'."
+  },
+  "halarestaurant.co.uk": "confirm",
+  "khansofkensington.co.uk": "confirm",
+  "jaflongtandoori.com": "confirm",
+  "haweliofealing.com": "confirm",
+  "delhibrasserie.com": "confirm",
+  "incorestaurant.com": "confirm",
+  "stroudley.co.uk": "confirm",
+  "hiba-express.co.uk": "confirm",
+  "wrapchic.co.uk": "confirm",
+  "west-kebab.co.uk": "confirm",
+  "oldchangkee.co.uk": "confirm",
+  "gupshupchitchatchai.com": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "The only mention is \"Strawberry Mojito ... Non alcoholic\" on its drinks menu. Kept Fully Halal (2026-10-24 alcohol review)."
+  },
+  "zata.uk": "confirm",
+  "wokandfire.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "Its halal page says \"PORK & ALCOHOL None\" and \"No pork and no alcohol\". The match was the word, not a drink. Kept Fully Halal (2026-10-24 alcohol review)."
+  },
+  "woodhouse-tandoori.com": "confirm",
+  "thespicebox.uk": "confirm",
+  "ramoramen.com": "confirm",
+  "nurikbbq.co.uk": "confirm",
+  "periperichickene6.co.uk": "confirm",
+  "steakandbun.co.uk": "confirm",
+  "anteplioglu.co.uk": "confirm",
+  "chicking.uk.com": "confirm",
+  "grab-a-bite.co.uk": "confirm",
+  "bandofburgers.co.uk": "confirm",
+  "shrimpshackco.com": "confirm",
+  "553london.co.uk": "confirm",
+  "gugsu.co.uk": "confirm",
+  "bgirlskitchen.online": "confirm",
+  "flakeycrustbakery.co.uk": {
+    "decision": "confirm",
+    "ignoreFlags": [
+      "alcohol"
+    ],
+    "note": "The only mention is \"Cocktail patties\", party-sized patties, not a drink. Kept Fully Halal (2026-10-24 alcohol review)."
+  },
+  "hainaultbbqkebab.co.uk": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "expressfishbar.com": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "delightkebab.co.uk": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "laramezzegrill.com": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "turkishdonerkebabse3.co.uk": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "tobalondon.co.uk": {
+    "decision": "reject",
+    "note": "The sentence sits inside a customer review, credited to \"Alex Bjerkholt Customer\". A diner saying the menu is halal is not the restaurant saying it.",
+    "url": "https://tobalondon.co.uk/"
+  },
+  "ldn.celavi.com": {
+    "decision": "options",
+    "note": "Its own FAQ: \"Most of our meat is halal, with some exceptions.\"",
+    "url": "https://ldn.celavi.com/faq"
+  },
+  "titurestaurant.com": {
+    "decision": "options",
+    "note": "The menu says all the meat is halal and in the same breath \"Some dishes may contain alcohol\". Alcohol in the food is an exception to the halal statement, unlike alcohol served as a drink alongside it.",
+    "url": "https://www.titurestaurant.com/titu-mayfair"
   }
 }

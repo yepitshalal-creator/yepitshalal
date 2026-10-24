@@ -38,7 +38,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { cachePath, hostMatchesName, normaliseName, readJsonl } from './lib.mjs';
-import { CONTRADICTIONS } from './page-text.mjs';
+import { alcoholMentions, CONTRADICTIONS } from './page-text.mjs';
 
 const TODAY = new Date().toISOString();
 
@@ -51,7 +51,10 @@ for (const r of readJsonl(cachePath('crawl.jsonl'))) crawl.set(r.host, r);
 // do the pages of the rendered pass (crawl-rendered.mjs), which read in a real
 // browser the sites the plain passes found empty or could not read, and of its
 // sitemap-led second pass (SITEMAP=1, crawl-rendered-2.jsonl).
-for (const pass of ['crawl-deep.jsonl', 'crawl-rendered.jsonl', 'crawl-rendered-2.jsonl'].filter((f) => existsSync(cachePath(f)))) {
+// crawl-rendered-3.jsonl and -4.jsonl are the 2026-10-01 passes: -3 over sites
+// that had a halal signal but whose own site we had barely read, -4 over sites
+// no plain fetch ever got a page from.
+for (const pass of ['crawl-deep.jsonl', 'crawl-rendered.jsonl', 'crawl-rendered-2.jsonl', 'crawl-rendered-3.jsonl', 'crawl-rendered-4.jsonl'].filter((f) => existsSync(cachePath(f)))) {
   // Blog, news and event pages are left out: "Best halal food in London" on a
   // marketing post is not a statement about what this kitchen serves.
   const EDITORIAL = /\/(blog|blogs|news|post|posts|article|articles|events?|whats-?on|journal|stories|recipes?|press|magazine|guides?)(\/|$)/i;
@@ -66,6 +69,28 @@ for (const pass of ['crawl-deep.jsonl', 'crawl-rendered.jsonl', 'crawl-rendered-
     if (d.halal.length) r.crawledAt = d.crawledAt;
   }
 }
+// The alcohol pass (2026-09-28) read again, drinks pages first, the sites
+// behind every Fully Halal label. It adds what contradicts a claim, never a
+// claim: its halal mentions are left out, so no label can gain from it.
+// A site that has moved is read at its new address (waterfrontputney.co.uk
+// now opens darya.london), so what is found there goes back to every place
+// whose own website opens it.
+const movedTo = new Map();
+for (const r of crawl.values()) {
+  let to;
+  try {
+    to = new URL(r.pages?.[0]?.finalUrl || '').hostname.replace(/^www\./, '');
+  } catch {
+    continue;
+  }
+  if (to && to !== r.host && !crawl.has(to)) movedTo.set(to, [...(movedTo.get(to) || []), r]);
+}
+for (const pass of ['crawl-alcohol.jsonl'].filter((f) => existsSync(cachePath(f)))) {
+  for (const d of readJsonl(cachePath(pass))) {
+    if (!d.pages.length) continue;
+    for (const r of crawl.has(d.host) ? [crawl.get(d.host)] : movedTo.get(d.host) || []) r.flags = { ...d.flags, ...r.flags };
+  }
+}
 
 const hostCount = new Map();
 for (const e of entities) if (e.websiteHost) hostCount.set(e.websiteHost, (hostCount.get(e.websiteHost) || 0) + 1);
@@ -77,7 +102,10 @@ for (const e of entities) if (e.websiteHost) hostCount.set(e.websiteHost, (hostC
 //   exclude  not a place to eat, or not this place: no evidence from the site
 //   skip, fully, options_forced, mention  see below
 // Kept in version control next to this script, so every human decision that
-// shapes a label has a record. Object form: { decision, note?, excerpt?, url? }.
+// shapes a label has a record. Object form: { decision, note?, excerpt?, url?,
+// ignoreFlags?, shown? }. `note` is the reviewer's record; `shown` is the
+// sentence the listing shows with the evidence ("The website says diners may
+// bring their own alcohol.").
 const reviewPath = new URL('./review-decisions.json', import.meta.url);
 const decisions = existsSync(reviewPath) ? JSON.parse(readFileSync(reviewPath, 'utf8')) : {};
 
@@ -151,6 +179,20 @@ const FULLY = [
   /\b(we\s+)?only\s+(serve|use|sell|source|buy|cook with)\s+(fresh\s+)?halal\b/i,
   /\ball\s+(of\s+)?our\s+(food|dishes|products|ingredients)\s+(is|are)\s+(100\s?%\s*)?halal\b/i,
   /\b(a|an|our)\s+(fully\s+)?halal\s+(restaurant|kitchen|takeaway|establishment)\b/i,
+  // The same claim in the words London restaurants actually use. Added on
+  // 2026-10-01 after reading the crawled text: each of these was a kitchen
+  // saying all of its meat is halal, in a phrasing the rules above walked
+  // past. They widen what is recognised, not what qualifies. A match still
+  // needs nothing on the site contradicting it, and a person's confirmation
+  // in review-decisions.json, before it can be strong.
+  /\bstrictly\s+halal\b|\bhalal[- ]only\b/i,
+  /\b100\s+per\s?cent\s+halal\b/i,
+  /\b(our\s+|the\s+)?(entire|whole|full)\s+menu\s+(is|are)\s+(100\s?%\s*)?halal\b/i,
+  // "All meat served is halal", "all meats used in his restaurants are halal",
+  // "All the meat is halal": the first rule with a verb or an article in the way.
+  /\ball\s+(of\s+)?(our\s+|the\s+)?(meat|meats)\b[^.,;!?]{0,40}?\bhalal\b/i,
+  // "Is the meat halal? Yes, the meat is halal."
+  /\b(our|the)\s+(meat|meats)\s+(is|are)\s+(all\s+)?(100\s?%\s*)?halal\b/i,
 ];
 
 const CERT_CLAIM = /\b(hmc|hfa|halal monitoring committee|halal food authority)\b[^.]{0,60}\b(certified|approved|accredited|certification|registered)\b|\b(certified|approved|accredited)\b[^.]{0,40}\b(hmc|hfa|halal monitoring committee|halal food authority)\b|\bhalal certificate\b|\bhalal[- ]certified\s+(meat|meats|chicken|lamb|beef|restaurant|kitchen|takeaway|supplier|suppliers|butcher)\b/i;
@@ -313,7 +355,8 @@ const platformSites = new Set(
 const platformShared = sitesPerSentence(platformSites, 1);
 const platformFlagCount = new Map();
 for (const host of platformSites) {
-  for (const v of Object.values(crawl.get(host).flags || {})) {
+  for (const [flag, v] of Object.entries(crawl.get(host).flags || {})) {
+    if (flag === 'alcohol_denied') continue;
     const k = norm(v.excerpt).toLowerCase();
     platformFlagCount.set(k, (platformFlagCount.get(k) || 0) + 1);
   }
@@ -462,20 +505,28 @@ function websiteEvidence(entity) {
   if (!mentions.length) return { skip: true, reason: 'screened_out' };
   // A flag recorded by an earlier crawl is read again with today's rules, so a
   // rule fixed since (Francis Bacon) does not wait for the next crawl.
+  // "alcohol_denied" is a "no alcohol" sentence kept for checking, not a flag.
   const flags = Object.fromEntries(
     Object.entries(rec.flags || {})
-      .filter(([, v]) => !onScreenedPath(v.url))
+      .filter(([k, v]) => k !== 'alcohol_denied' && !onScreenedPath(v.url))
       .map(([k, v]) => [k, { ...v, excerpt: norm(v.excerpt) }])
-      .filter(([k, v]) => !CONTRADICTIONS[k] || CONTRADICTIONS[k].test(v.excerpt))
+      .filter(([k, v]) => (k === 'alcohol' ? alcoholMentions(v.excerpt).some((m) => m.served) : !CONTRADICTIONS[k] || CONTRADICTIONS[k].test(v.excerpt)))
       .filter(([, v]) => !platformsFlag(entity.websiteHost, v.excerpt))
   );
-  const liveFlags = Object.entries(flags).filter(([, v]) => !NEGATED.test(v.excerpt)).map(([k]) => k);
+  const decisionRaw = decisions[entity.websiteHost];
+  const decision = typeof decisionRaw === 'object' && decisionRaw ? decisionRaw.decision : decisionRaw;
+  // A person read a flag and found it wrong: "ignoreFlags": ["alcohol"] with a
+  // note saying why ("the only mention is 'ginger wine' in a sauce").
+  const ignored = new Set((typeof decisionRaw === 'object' && decisionRaw?.ignoreFlags) || []);
+  // NEGATED is about pork; alcohol carries its own reading of "no alcohol".
+  const liveFlags = Object.entries(flags)
+    .filter(([k, v]) => !ignored.has(k) && (k === 'alcohol' || !NEGATED.test(v.excerpt)))
+    .map(([k]) => k);
   const contradicted = liveFlags.length > 0;
   const chain = (hostCount.get(entity.websiteHost) || 0) > 3;
   const base = { kind: 'first_party_statement', source_name: "The restaurant's website", checked_at: rec.crawledAt || TODAY };
-
-  const decisionRaw = decisions[entity.websiteHost];
-  const decision = typeof decisionRaw === 'object' && decisionRaw ? decisionRaw.decision : decisionRaw;
+  const ALSO = { pork: 'pork', bacon: 'bacon', cured_pork: 'cured pork', non_halal: 'non-halal food', alcohol: 'alcohol' };
+  const alsoMentions = () => `The same website also mentions ${liveFlags.map((f) => ALSO[f]).join(' and ')}.`;
   // A person reading the site found it is not a place to eat, or not this place.
   if (decision === 'exclude') return { skip: true, exclude: true, reason: 'excluded_in_review' };
   // The site's wording, read by a person, says nothing usable about this place's food.
@@ -497,7 +548,15 @@ function websiteEvidence(entity) {
     const x = review?.excerpt
       ? { url: review.url || mentions[0].url, s: review.excerpt }
       : pool.find((p) => POSITIVE.test(p.s)) || pool[0];
-    if (x) return { ...base, claim, strength, source_url: x.url, excerpt: x.s, reason: `forced_${decision}` };
+    // Every "fully" here was decided before alcohol was read for (2026-09-28).
+    // Alcohol found since takes it to options, unless a person has ruled on it.
+    // The note names alcohol only: the person who decided "fully" had already
+    // read the other flags and overruled them (Thunderbird's "Not halal
+    // options" is not non-halal food).
+    if (x && decision === 'fully' && liveFlags.includes('alcohol')) {
+      return { ...base, claim: 'halal_options', strength: 'moderate', source_url: x.url, excerpt: x.s, notes: 'The same website also mentions alcohol.', reason: 'forced_fully_alcohol' };
+    }
+    if (x) return { ...base, claim, strength, source_url: x.url, excerpt: x.s, ...(review?.shown ? { notes: review.shown } : {}), reason: `forced_${decision}` };
   }
 
   // Statements only. A question ("Is your food halal?") says nothing on its own,
@@ -614,11 +673,14 @@ function websiteEvidence(entity) {
     return { ...record('fully_halal', 'moderate', cert, { kind: 'certification_claim', notes: 'Not confirmed with the certifier.' }), reason: 'cert_claim' };
   }
 
-  if (options) return { ...record('halal_options', 'moderate', options), reason: 'options' };
+  // A site that also says all of it is halal is options for what it lists, so
+  // the listing says what that is.
+  if (options) return { ...record('halal_options', 'moderate', options, fully && contradicted ? { notes: alsoMentions() } : {}), reason: 'options' };
 
-  if (positive && contradicted) {
-    const also = liveFlags.map((f) => ({ pork: 'pork', bacon: 'bacon', cured_pork: 'cured pork', non_halal: 'non-halal food' })[f]).join(' and ');
-    return { ...record('halal_options', 'moderate', positive, { notes: `The same website also mentions ${also}.` }), reason: 'mixed' };
+  // A statement that all of it is halal counts as positive here, so a site
+  // that says so and also lists wine is options, not left without a label.
+  if ((positive || fully) && contradicted) {
+    return { ...record('halal_options', 'moderate', positive || fully, { notes: alsoMentions() }), reason: 'mixed' };
   }
 
   if (positive) {

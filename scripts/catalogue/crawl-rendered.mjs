@@ -40,7 +40,7 @@
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { cachePath, websiteHost } from './lib.mjs';
-import { allowedByRobots, CERTIFIER, CONTRADICTIONS, excerptsAround, parseRobots } from './page-text.mjs';
+import { allowedByRobots, CERTIFIER, contradictionsIn, DRINKS_LINK, excerptsAround, parseRobots } from './page-text.mjs';
 
 const { chromium } = await import(process.env.PLAYWRIGHT_PATH ? pathToFileURL(process.env.PLAYWRIGHT_PATH).href : 'playwright');
 
@@ -209,11 +209,7 @@ async function renderHost(browser, host, startUrl, urls = null) {
       for (const ex of excerptsAround(got.text, /\bhalal\b/gi, 150, Math.max(8, HALAL_CAP))) {
         if (record.halal.length < HALAL_CAP) record.halal.push({ url: got.finalUrl, excerpt: ex });
       }
-      for (const [flag, re] of Object.entries(CONTRADICTIONS)) {
-        if (re.test(got.text)) {
-          record.flags[flag] = record.flags[flag] || { url: got.finalUrl, excerpt: excerptsAround(got.text, new RegExp(re.source, 'gi'), 80, 1)[0] };
-        }
-      }
+      for (const [flag, v] of Object.entries(contradictionsIn(got.text, got.finalUrl))) record.flags[flag] = record.flags[flag] || v;
       if (CERTIFIER.test(got.text)) record.certifierMention = true;
 
       // From the first page only: the internal links most likely to say what is
@@ -231,6 +227,7 @@ async function renderHost(browser, host, startUrl, urls = null) {
           if (/halal/.test(label)) score += 5;
           if (/menu|food|eat|dish/.test(label)) score += 3;
           if (/faq|allergen|dietary|about|our-story|story/.test(label)) score += 2;
+          if (DRINKS_LINK.test(label)) score += 3;
           if (score) scored.push({ url: href.origin + href.pathname, score });
         }
         scored.sort((a, b) => b.score - a.score);
