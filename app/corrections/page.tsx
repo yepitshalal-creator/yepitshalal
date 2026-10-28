@@ -11,7 +11,7 @@ import { blockTitle, bodyText, inlineLink, panel } from '@/components/prose';
 export const metadata: Metadata = {
   title: 'Something wrong? Tell us',
   description:
-    'How to correct a halal label, a detail, or a photo on YepItsHalal, and what we promise to do about it.',
+    'How to tell us a halal label, a detail or a photo is wrong. And what we promise to do about it.',
   alternates: { canonical: '/corrections' },
 };
 
@@ -33,19 +33,19 @@ export const metadata: Metadata = {
 const STEPS: [string, string][] = [
   [
     'Tell us what is wrong',
-    'Email us with the restaurant name and what we have got wrong. A link to the page helps. You do not need to prove anything to start this off, and you do not need to be the owner.',
+    'Email us with the restaurant name and what we have got wrong. A link to the page helps. You do not need to prove anything to start this off. And you do not need to be the owner.',
   ],
   [
     'We take it seriously the same day',
-    'If the complaint is that we have called a place halal when it is not, or implied it is not when it is, we remove the label first and work it out afterwards. Nobody should eat something because of a mistake of ours while we deliberate.',
+    'Maybe we have called a place halal when it is not. Or hinted it is not halal when it is. Either way, we take the label down first, and work it out afterwards. Nobody should eat something because of a mistake of ours while we think it over.',
   ],
   [
     'We check it properly',
-    'Against the restaurant itself wherever possible, using the same method as everything else on the site.',
+    'We check with the restaurant itself where we can. Same method as everything else on the site.',
   ],
   [
     'We tell you what we did',
-    'Within five working days, whether we changed it or not, and why. If we were wrong, the page says when it was corrected.',
+    'Within five working days. We say whether we changed it or not, and why. If we were wrong, the page says when we fixed it.',
   ],
 ];
 
@@ -71,7 +71,7 @@ export default function CorrectionsPage() {
     <>
       <PageHero
         title="Something wrong? Tell us"
-        lede="We publish what we know and say when we have not checked. That only works if it is easy to tell us we have got something wrong, so this is the page for it."
+        lede="We publish what we know, and say when we have not checked. That only works if it is easy to tell us we are wrong. So this is the page for it."
       />
 
       <PageBody aside={<EmailCard />} asideOnPhone="hide">
@@ -84,9 +84,9 @@ export default function CorrectionsPage() {
               If we have the halal status wrong, we take the label down first
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-ink/80">
-              We do not leave a disputed halal label up while we investigate. It comes down,
-              the page says it is being checked, and it only goes back up when we are sure.
-              You do not need to send evidence to get that far.
+              We do not leave a disputed halal label up while we look into it. It comes down.
+              The page says it is being checked. It only goes back up when we are sure.
+              You do not need to send proof to get that far.
             </p>
           </section>
           {/* On a phone the address comes straight after the promise. */}
@@ -116,8 +116,8 @@ export default function CorrectionsPage() {
         <PageSection id="remove" title="If you would rather not be listed at all">
           <p className={bodyText}>
             Say so and we will remove the listing. We will ask you to confirm you speak for
-            the restaurant, because otherwise anyone could remove anyone. We will not argue
-            with you about it, and we will not ask you to buy anything to make it happen.
+            the restaurant. Otherwise anyone could remove anyone. We will not argue
+            with you about it. And we will not ask you to buy anything to make it happen.
           </p>
         </PageSection>
 
@@ -125,8 +125,8 @@ export default function CorrectionsPage() {
           <ul className="list-disc space-y-1.5 pl-5 text-[15px] leading-relaxed text-muted marker:text-subtle">
             <li>A wrong address, phone number, or opening hours.</li>
             <li>
-              A photo that is yours and should not be here, or one labelled as an example
-              photo that is being taken for the real thing.
+              A photo that is yours and should not be here. Or an example
+              photo that people are taking for the real thing.
             </li>
             <li>A place that has closed, moved, or changed hands.</li>
             <li>Two listings for the same place.</li>
@@ -140,7 +140,7 @@ export default function CorrectionsPage() {
             <Link href="/submit-restaurant" className={inlineLink}>
               claim it here
             </Link>
-            . And if you want to understand how a label gets set before you dispute it,{' '}
+            . And if you want to know how a label gets set before you dispute it,{' '}
             <Link href="/how-we-check" className={inlineLink}>
               this is how we check
             </Link>

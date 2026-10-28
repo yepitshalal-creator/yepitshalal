@@ -61,6 +61,29 @@ export const INBOX = {
 
 export type Inbox = keyof typeof INBOX;
 
+/**
+ * Where form mail is actually delivered, from 2026-10-03.
+ *
+ * INBOX above is what a visitor sees. This is where the message lands. The two
+ * are deliberately separate: the published addresses stay on the domain,
+ * because a privacy notice naming a gmail.com address is the first thing an ICO
+ * complaint checks, and yepitshalal.com is what is verified in Resend.
+ *
+ * The +tag carries the routing INBOX used to carry on its own. Gmail delivers
+ * yepitshalal+help@gmail.com to yepitshalal@gmail.com, and a Gmail filter can
+ * match on the tag, so support mail and business mail can still be told apart
+ * in one inbox.
+ *
+ * This only covers mail the site sends. Mail a visitor writes to hello@, info@
+ * or help@ still goes through the Namecheap forwarding, which is a setting on
+ * the domain, not in this repo.
+ */
+export const NOTIFY_TO = {
+  hello: 'yepitshalal+hello@gmail.com',
+  info: 'yepitshalal+info@gmail.com',
+  help: 'yepitshalal+help@gmail.com',
+} as const satisfies Record<Inbox, string>;
+
 /** Where somebody writes about a wrong label or a wrong detail. */
 export const CORRECTIONS_EMAIL = INBOX.help;
 

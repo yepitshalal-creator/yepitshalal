@@ -39,7 +39,7 @@ const GROUPS: { classification: HalalClassification; heading: string; blurb: str
   {
     classification: 'halal_options',
     heading: 'Halal Options',
-    blurb: 'Halal food is served, alongside food that is not halal.',
+    blurb: 'Halal food is served, alongside food that is not halal. That can include pork or alcohol.',
   },
   {
     classification: 'unverified',
@@ -184,8 +184,8 @@ export default async function AreaPage({ params }: { params: { borough: string }
         <Link href="/corrections" className={inlineLink}>
           Tell us
         </Link>
-        . Locations come from the Food Standards Agency food hygiene register, OpenStreetMap
-        contributors and the Overture Maps Foundation.
+        . Locations come from three open sources. The Food Standards Agency food hygiene register. OpenStreetMap
+        contributors. And the Overture Maps Foundation.
       </p>
       </div>
       </div>

@@ -78,7 +78,7 @@ export default async function SubmitRestaurantPage({ searchParams }: { searchPar
           ) : (
             <>
               Know a halal place we&apos;re missing, or run one? Adding it is <Free tone="dark">free</Free>,
-              and every place added makes the catalogue more useful for the next person looking. We check
+              and every place added helps the next person looking. We check
               each one before it goes live, and show where its halal information came from.
             </>
           )
@@ -103,7 +103,7 @@ function WhatHappensNext({ editing }: { editing: boolean }) {
       ? 'We check every suggestion before it changes a listing.'
       : 'We check every restaurant before it appears on YepItsHalal.',
     'How we check: we ring and ask.',
-    'A listing that rests on a form alone never shows as more than Unverified until something stronger arrives.',
+    'A listing built on a form alone never shows as more than Unverified. Not until something stronger arrives.',
     'If you left an email, we may get in touch with a question.',
   ];
   return (

@@ -13,7 +13,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: 'Halal food in London, by kind of food',
   description:
-    'Halal kebab, biryani, fried chicken, burgers and more across London, each with the evidence behind its label and the date it was checked.',
+    'Halal kebab, biryani, fried chicken, burgers and more across London. Every label shows where it came from, and the date we checked.',
   alternates: { canonical: '/halal-restaurants/cuisine' },
 };
 

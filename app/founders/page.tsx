@@ -58,13 +58,13 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'A private invitation',
   description:
-    'For the London food businesses Shabir met at the Halal Food Festival: the YepItsHalal 100 Founders Club, free for life.',
+    'For the London food businesses Shabir met at the Halal Food Festival. The YepItsHalal 100 Founders Club, free for life.',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
   // Seen when the link is shared in WhatsApp or a DM. The site's own picture,
   // set here because a page that sets its own openGraph loses the inherited one.
   openGraph: {
     title: 'The YepItsHalal 100 Founders Club',
-    description: 'A private invitation from Shabir Ahmed: free lifetime perks for the first 100 London halal food businesses.',
+    description: 'A private invite from Shabir Ahmed. Free perks for life, for the first 100 London halal food businesses.',
     images: [{ url: '/opengraph-image.jpg', width: 1200, height: 630, alt: 'The YepItsHalal logo' }],
   },
 };
@@ -153,7 +153,7 @@ function Hero({ full }: { full: boolean }) {
             <span className="mt-2 block text-[2rem] min-[390px]:text-[2.15rem] sm:text-[2.85rem] lg:text-[3.2rem]">
               {full
                 ? 'Founder spots are now full. Your restaurant can still join for free.'
-                : 'Let’s put your restaurant on the map, without the corporate fees.'}
+                : 'Let’s put your restaurant on the map, without the big fees.'}
             </span>
           </h1>
 
@@ -166,9 +166,9 @@ function Hero({ full }: { full: boolean }) {
               </>
             ) : (
               <>
-                Welcome to the YepItsHalal 100 Founders Club. I&apos;m reserving{' '}
+                Welcome to the YepItsHalal 100 Founders Club. I&apos;m keeping{' '}
                 <Free tone="dark">free lifetime perks</Free>, 3 video reel slots and direct access to
-                me for 100 London halal vendors, before we open paid tiers to the public.
+                me for 100 London halal food businesses. Before we open paid plans to everyone.
               </>
             )}
           </p>
@@ -276,18 +276,16 @@ function Letter() {
 
           <div className="mt-5 space-y-4 font-display text-[1.07rem] leading-[1.65] text-ink/85 sm:space-y-5 sm:text-[1.22rem] sm:leading-[1.7]">
             <p>
-              Delivery giants and traditional food directories are taking advantage of independent
-              halal businesses. Between delivery apps taking up to 30% or more of every order and
-              paying extra just to be seen, restaurant owners are working harder than ever for
-              smaller cuts.
+              The big delivery apps and the old food sites take advantage of small halal
+              businesses. The apps take up to 30% or more of every order. Then you pay again just to
+              be seen. You work harder than ever, and you keep less.
             </p>
             <p className="text-[1.5rem] font-semibold leading-snug text-forest sm:text-[1.75rem]">We&apos;re changing that.</p>
             <p>
-              YepItsHalal started with a simple mission: help local Londoners find halal food
-              instantly, with the evidence behind every label, while giving food businesses a platform
-              that doesn&apos;t bleed their profits dry. We&apos;re building a video-first discovery
-              directory today, with low-commission collection ordering next and ethical delivery after
-              that.
+              YepItsHalal started with one simple aim. Help Londoners find halal food fast, and show
+              the evidence behind every label. And do it without eating into your profits. Today we
+              are building a directory built around video. Next comes collection ordering, with a
+              much smaller cut. Then local delivery, done fairly.
             </p>
             <p>Because you met me at the festival, I want you in our first 100 Founding Partners.</p>
           </div>
@@ -386,12 +384,12 @@ function Benefits({ full }: { full: boolean }) {
               <Free>Free</Free> lifetime directory profile
             </>
           }
-          title="Complete listing control and halal transparency"
+          title="You control your listing, and your halal details"
           visual={<DirectoryVisual />}
         >
-          Get your location, opening hours, menu and exact halal details into our live London
-          directory, each one shown with where it came from. Need something changed? Send it from
-          your phone, straight to me. No middleman.
+          Put your address, opening hours, menu and exact halal details on our live London site.
+          Each one shows where it came from. Need a change? Send it from your phone, straight to me.
+          Nobody in between.
         </Benefit>
 
         <Benefit
@@ -401,14 +399,13 @@ function Benefits({ full }: { full: boolean }) {
               3 <Free>free</Free> video reel slots
             </>
           }
-          title="Video-first food reels on our upcoming Discover feed"
+          title="Food videos on our new Discover feed"
           visual={<ReelVisual />}
           flip
         >
-          Static pictures don&apos;t sell food. Video does. When our TikTok-style Discover page opens,
-          standard free profiles get 1 reel. Founders get 3 permanent reel slots,{' '}
-          <Free>free forever</Free>, to show your best dishes to hungry people nearby, and your reels
-          are reviewed first when it opens.
+          Still pictures don&apos;t sell food. Video does. When our TikTok-style Discover page opens, a
+          free listing gets 1 reel. Founders get 3 reel slots, <Free>free forever</Free>. Show your
+          best dishes to hungry people nearby. And your reels are checked first when it opens.
         </Benefit>
 
         <Benefit
@@ -418,23 +415,23 @@ function Benefits({ full }: { full: boolean }) {
               <Free>Free</Free> social promotion
             </>
           }
-          title="We promote your content to our London audience"
+          title="We show your videos to our London followers"
           visual={<CollabVisual />}
         >
-          Send us your existing food videos, or tag us. We&apos;ll repost, collaborate and
-          co-promote your content across YepItsHalal and our social channels, to help bring hungry
-          people straight to your door.
+          Send us your food videos, or just tag us. We&apos;ll repost them, post them together with
+          you, and share them across YepItsHalal and our social pages. All to bring hungry people
+          straight to your door.
         </Benefit>
 
         <Benefit
           n={4}
           tag="VIP direct access"
-          title="A direct WhatsApp and Instagram line to the founder"
+          title="A direct WhatsApp and Instagram line to me"
           visual={<DirectLineVisual />}
           flip
         >
-          No support tickets and no chatbots. You get direct access to me, @{FOUNDER.instagramHandle},
-          to update your page, ask for a feature or sort out a problem, usually in minutes.
+          No support tickets. No chatbots. You get me, @{FOUNDER.instagramHandle}. Message me to
+          update your page, ask for something new, or sort out a problem. Usually in minutes.
         </Benefit>
       </ol>
     </section>
@@ -474,8 +471,8 @@ function Trade() {
                 <h3 className="font-display text-xl font-semibold text-ink">Content permission</h3>
               </div>
               <p className="mt-2 text-[15px] leading-relaxed text-muted">
-                Permission to use, repost or collaborate on your video reels and food footage, to show
-                off your business across the directory and our social channels.
+                Let us use, repost and post together with you on your food videos. We show off your
+                business across the directory and our social pages.
               </p>
             </Reveal>
             <Reveal as="li" delay={120} className="rounded-2xl bg-white p-5 ring-1 ring-sand-line sm:p-6">
@@ -486,8 +483,8 @@ function Trade() {
                 <h3 className="font-display text-xl font-semibold text-ink">Honest details</h3>
               </div>
               <p className="mt-2 text-[15px] leading-relaxed text-muted">
-                Accurate information about your menu and your halal setup, so the people deciding
-                where to eat always get the full picture.
+                True details about your menu and your halal setup. So people choosing where to eat
+                get the full picture.
               </p>
             </Reveal>
           </ol>
@@ -495,7 +492,7 @@ function Trade() {
             <SealCheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-accent-ink" />
             <span>
               Being a Founder never buys a halal label. Your label comes from your evidence, the same
-              way as every restaurant&apos;s.{' '}
+              as every other restaurant.{' '}
               <a href="/how-we-check" className={inlineLink}>
                 How we label places
               </a>
@@ -514,19 +511,19 @@ const PHASES = [
     state: 'live' as const,
     label: 'Active now',
     title: 'The free directory and search engine',
-    body: 'Connecting London foodies directly to your restaurant, with your halal details, hours and menu. The video-first Discover feed is being built on top of it.',
+    body: 'We send London food lovers straight to your restaurant, with your halal details, hours and menu. The Discover feed for video is being built on top of it.',
   },
   {
     state: 'next' as const,
     label: 'Coming next',
     title: 'Online collection ordering',
-    body: 'Direct ordering through the site for collection, built to take a far smaller cut than the delivery apps.',
+    body: 'Order through the site and collect it yourself. Built to take a much smaller cut than the delivery apps.',
   },
   {
     state: 'later' as const,
     label: 'Future vision',
     title: 'Local delivery',
-    body: 'Delivery infrastructure built to compete with Just Eat, Uber Eats and Deliveroo, on lower commission.',
+    body: 'Our own delivery, built to take on Just Eat, Uber Eats and Deliveroo. On a smaller cut.',
   },
 ];
 
@@ -609,7 +606,7 @@ function Claim({ full }: { full: boolean }) {
 
         <div className="min-w-0 lg:sticky lg:top-24 lg:order-1">
           <h2 id="claim-title" className="text-balance font-display text-[1.85rem] font-semibold leading-[1.1] sm:text-[2.4rem]">
-            {full ? 'The first 100 are in' : 'Strictly capped at 100 Founders'}
+            {full ? 'The first 100 are in' : 'Only 100 Founders, ever'}
           </h2>
           <p className="mt-3 max-w-md text-[16px] leading-relaxed text-white/75">
             {full

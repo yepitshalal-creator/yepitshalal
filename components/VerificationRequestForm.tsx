@@ -110,8 +110,8 @@ export function VerificationRequestForm({
             Priority Verification, £30
           </h3>
           <p className="mt-1 flex-1 text-xs leading-relaxed text-muted">
-            Moves you ahead of the free queue. Target: reviewed within 48 working hours. Payment
-            purchases priority, not a favourable outcome.
+            Moves you ahead of the free queue. We aim to review it within 48 working hours. Paying
+            moves you up the queue. It never changes the answer.
           </p>
           <button
             type="button"

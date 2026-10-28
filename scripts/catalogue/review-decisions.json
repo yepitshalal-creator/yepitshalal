@@ -292,5 +292,69 @@
   "halalfoodauthority.com": {
     "decision": "exclude",
     "note": "The certifier's office at 109 Fulham Palace Road, W6 8JA, not a place to eat; map data had it as a halal restaurant. Shabir, 2026-09-24: 'yes perhaps remove the halal food authority'."
+  },
+  "halarestaurant.co.uk": "confirm",
+  "khansofkensington.co.uk": "confirm",
+  "jaflongtandoori.com": "confirm",
+  "haweliofealing.com": "confirm",
+  "delhibrasserie.com": "confirm",
+  "incorestaurant.com": "confirm",
+  "stroudley.co.uk": "confirm",
+  "hiba-express.co.uk": "confirm",
+  "wrapchic.co.uk": "confirm",
+  "west-kebab.co.uk": "confirm",
+  "oldchangkee.co.uk": "confirm",
+  "gupshupchitchatchai.com": "confirm",
+  "zata.uk": "confirm",
+  "wokandfire.co.uk": "confirm",
+  "woodhouse-tandoori.com": "confirm",
+  "thespicebox.uk": "confirm",
+  "ramoramen.com": "confirm",
+  "nurikbbq.co.uk": "confirm",
+  "periperichickene6.co.uk": "confirm",
+  "steakandbun.co.uk": "confirm",
+  "anteplioglu.co.uk": "confirm",
+  "chicking.uk.com": "confirm",
+  "grab-a-bite.co.uk": "confirm",
+  "bandofburgers.co.uk": "confirm",
+  "shrimpshackco.com": "confirm",
+  "553london.co.uk": "confirm",
+  "gugsu.co.uk": "confirm",
+  "bgirlskitchen.online": "confirm",
+  "flakeycrustbakery.co.uk": "confirm",
+  "hainaultbbqkebab.co.uk": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "expressfishbar.com": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "delightkebab.co.uk": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "laramezzegrill.com": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "turkishdonerkebabse3.co.uk": {
+    "decision": "reject",
+    "note": "The sentence \"To achieve this, our meat is Halal\" appears word for word on five unrelated takeaway sites, under a Halal heading in the same template. Nothing shows whether the shop wrote it or the website builder supplied it, and no rule covers the case, so it is not treated as the shop speaking. Worth a phone call to settle. Reviewed 2026-10-01."
+  },
+  "tobalondon.co.uk": {
+    "decision": "reject",
+    "note": "The sentence sits inside a customer review, credited to \"Alex Bjerkholt Customer\". A diner saying the menu is halal is not the restaurant saying it.",
+    "url": "https://tobalondon.co.uk/"
+  },
+  "ldn.celavi.com": {
+    "decision": "options",
+    "note": "Its own FAQ: \"Most of our meat is halal, with some exceptions.\"",
+    "url": "https://ldn.celavi.com/faq"
+  },
+  "titurestaurant.com": {
+    "decision": "options",
+    "note": "The menu says all the meat is halal and in the same breath \"Some dishes may contain alcohol\". Alcohol in the food is an exception to the halal statement, unlike alcohol served as a drink alongside it.",
+    "url": "https://www.titurestaurant.com/titu-mayfair"
   }
 }

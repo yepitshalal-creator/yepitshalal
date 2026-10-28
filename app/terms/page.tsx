@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PageHero } from '@/components/PageHero';
 import { PageBody } from '@/components/PageLayout';
-import { inlineLink, noteWarm, sectionTitle } from '@/components/prose';
+import { CheckIcon } from '@/components/icons';
+import { inlineLink, noteWarm, panel, sectionTitle } from '@/components/prose';
 import { CONTACT_EMAIL } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -30,6 +31,15 @@ export const metadata: Metadata = {
  * trading address and company number, if there is one.
  */
 
+const SHORT_VERSION = [
+  'Searching and reading is free, signed in or not. Please do not copy the whole site or resell our data.',
+  'Our label is a starting point, not a halal certificate. Always ask the restaurant. That one matters most, so it has its own note below.',
+  'We never make up a halal fact. If we do not know, we say we do not know.',
+  'Yep+ is support, not access. Finding halal food never goes behind a paywall.',
+  'Paying for a priority check buys a faster look, never a particular answer.',
+  'Tell us a label is wrong and we take it down while we check.',
+];
+
 export default function TermsPage() {
   return (
     <>
@@ -37,14 +47,35 @@ export default function TermsPage() {
       <PageBody>
       <div>
 
+      {/* The short version first, then the halal warning keeps its own warm
+          surface right under it. Two surfaces on purpose: the second one is a
+          warning a reader must not miss, which is what a surface is for. The
+          summary has to stay true to the sections below it, so change one and
+          check the other. */}
+      <div className={`${panel} mb-4 p-5 sm:p-6`}>
+        <h2 className="font-display text-lg font-semibold text-ink">The short version</h2>
+        <ul className="mt-3 space-y-2 text-sm leading-relaxed text-ink/80">
+          {SHORT_VERSION.map((line) => (
+            <li key={line} className="flex items-start gap-2.5">
+              <CheckIcon className="mt-0.5 h-[18px] w-[18px] shrink-0 text-accent-ink" strokeWidth={2} />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 border-t border-line pt-3 text-sm leading-relaxed text-subtle">
+          That is the deal, in plain words. Below is the same thing in full, in the longer
+          words these pages usually come in. Help yourself.
+        </p>
+      </div>
+
       <div className={noteWarm}>
         <h2 className="font-display text-lg font-semibold text-ink">
           The most important thing on this page
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-ink/80">
-          YepItsHalal tells you what we have found out about a restaurant. It is not a
-          halal certification, and we are not a certifying body. We can be wrong, sources
-          go out of date, and a kitchen can change its supplier the day after we check.
+          YepItsHalal tells you what we have found out about a restaurant. It is not a halal
+          certificate, and we are not a certifying body. We can be wrong. Sources go out of
+          date. And a kitchen can change where it buys its meat the day after we check.
           <span className="font-semibold text-ink">
             {' '}
             Ask the restaurant.
@@ -55,10 +86,9 @@ export default function TermsPage() {
 
       <h2 className={`mt-12 ${sectionTitle}`}>Using the site</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        Search, browse and read as much as you like, signed in or not, for free. You may
-        not scrape the site wholesale, resell the data, or use it to build a competing
-        listing. Some of what we show comes from open data that carries its own licence
-        terms, credited on{' '}
+        Search, browse and read as much as you like, signed in or not, for free. You may not
+        copy the site wholesale, resell the data, or use it to build a rival directory. Some of
+        what we show comes from open data with its own licence terms. Those are credited on{' '}
         <Link href="/how-we-check" className={inlineLink}>
           how we check
         </Link>{' '}
@@ -75,8 +105,8 @@ export default function TermsPage() {
       <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-muted">
         <li>We never invent a halal fact. If we do not know, the page says we do not know.</li>
         <li>
-          Unverified and Not checked yet mean we have not checked. Neither means a place is
-          not halal.
+          Unverified and Worth asking mean we have not checked. Neither means a place is not
+          halal.
         </li>
         <li>Every label says where the evidence came from and when we last looked.</li>
         <li>
@@ -99,10 +129,10 @@ export default function TermsPage() {
         If you add something
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        Submissions, feedback and photos are reviewed by a person before anything is
-        listed. Send only things that are true and that are yours to send. By uploading a
-        photo you confirm you have the right to it and let us show it on the listing. We
-        can remove anything, and we will remove anything we find is wrong.
+        A person reads every form, every bit of feedback and every photo before anything
+        goes live. Send only things that are true, and that are yours to send. When you upload a
+        photo, you tell us you have the right to it, and you let us show it on the listing. We
+        can take anything down, and we will take down anything we find is wrong.
       </p>
 
       <h2 className={`mt-12 ${sectionTitle}`}>Supporting us</h2>
@@ -111,15 +141,15 @@ export default function TermsPage() {
         <span className="font-medium text-ink">
           We don&apos;t put finding halal food behind a paywall, and we never will
         </span>
-        . Not the listings, not the labels, not how far you can look. What you get is a
-        meal donated every month through ShareTheMeal, a vote on the area we check next, a
-        supporter badge, early access to new things, and no sponsored messages.
+        . Not the listings, not the labels, not how far you can look. Here is what you get. We
+        donate a meal every month through ShareTheMeal. A vote on the area we check next. A
+        supporter badge. Early access to new things. And no sponsored messages.
       </p>
       <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-muted">
         <li>It renews monthly or yearly until you cancel, at the price shown when you join.</li>
         <li>
-          You can cancel any time from your account, in a couple of clicks, and keep the
-          benefits until the period you have paid for ends.
+          You can cancel any time from your account, in a couple of clicks. You keep the
+          perks until the time you have paid for runs out.
         </li>
         <li>
           The meal donation is us giving to ShareTheMeal. We are not partnered with, or
@@ -134,25 +164,24 @@ export default function TermsPage() {
         Priority verification
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        Paying for a priority verification buys a place at the front of the queue and a
-        prompt, careful check.{' '}
-        <span className="font-medium text-ink">It does not buy a particular result.</span>{' '}
-        If we check and cannot confirm a place is halal, the page will say so, and the fee
-        is not refundable for that reason. If we fail to review it within the time we
-        promised, through our own fault, you can have your money back.
+        Paying for a priority verification buys a place at the front of the queue, and a quick,
+        careful check.{' '}
+        <span className="font-medium text-ink">It does not buy a particular answer.</span>{' '}
+        If we check and cannot confirm a place is halal, the page will say so. We do not refund
+        the fee for that. But if we miss the time we promised, and it is our fault, you can have
+        your money back.
       </p>
 
       <h2 className={`mt-12 ${sectionTitle}`}>Where we stand</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
         We are in Beta and we say so on the site. Things break, coverage is uneven, and
-        London is the only city so far. We are not liable for a decision you make about
-        where to eat, beyond what the law does not let us exclude, which includes anything
-        caused by our own negligence. Nothing here affects your statutory rights as a
-        consumer.
+        London is the only city so far. We are not responsible for a decision you make about
+        where to eat. Some things the law will not let us sign away, though, and harm caused
+        by our own negligence is one of them. Nothing here changes your rights as a consumer.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-muted">
-        These terms are governed by the law of England and Wales, and the courts of
-        England and Wales have jurisdiction.
+        These terms follow the law of England and Wales. The courts of England and Wales
+        settle any dispute.
       </p>
 
       <h2 className={`mt-12 ${sectionTitle}`}>Reaching us</h2>

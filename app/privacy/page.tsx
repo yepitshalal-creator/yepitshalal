@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PageHero } from '@/components/PageHero';
 import { PageBody } from '@/components/PageLayout';
+import { CheckIcon } from '@/components/icons';
 import { inlineLink, noteWarm, sectionTitle } from '@/components/prose';
 import { CONTACT_EMAIL } from '@/lib/site';
 
@@ -33,12 +34,12 @@ export const metadata: Metadata = {
 const COLLECTED: [string, string, string][] = [
   [
     'Your email address',
-    'If you sign in, ask to be told when we reach your area, send feedback and leave an address, ask for a language, submit a restaurant, or request a verification.',
+    'Only if you do one of these. Sign in. Ask to be told when we reach your area. Send feedback and leave an address. Ask for a language. Add a restaurant. Or ask for a verification.',
     'Kept while your account exists, or until you ask us to remove it.',
   ],
   [
     'What you write to us',
-    'Feedback, language requests, restaurant details you submit, and anything you send about your own restaurant.',
+    'Feedback, language requests, restaurant details you send us, and anything you tell us about your own restaurant.',
     'Kept for two years, so we can see whether we fixed the thing you told us about.',
   ],
   [
@@ -53,7 +54,7 @@ const COLLECTED: [string, string, string][] = [
   ],
   [
     'Payment details',
-    'Handled entirely by Stripe. We never see or store your card. We keep the Stripe customer and subscription identifiers so we know you are a supporter.',
+    'Handled entirely by Stripe. We never see or store your card. We keep the Stripe customer and subscription IDs, so we know you are a supporter.',
     'Kept while your support is active, then as long as tax rules require.',
   ],
   [
@@ -65,9 +66,18 @@ const COLLECTED: [string, string, string][] = [
 
 const PROCESSORS: [string, string, string][] = [
   ['Supabase', 'Database, sign in, and photo storage.', 'https://supabase.com/privacy'],
-  ['Vercel', 'Hosting, and privacy friendly visitor analytics.', 'https://vercel.com/legal/privacy-policy'],
+  ['Vercel', 'Hosting, and visitor counts that do not follow you.', 'https://vercel.com/legal/privacy-policy'],
   ['Stripe', 'Payments, if you support us or buy a priority verification.', 'https://stripe.com/gb/privacy'],
-  ['Resend', 'Delivering what you send through a form on this site to our own inbox, so a person reads it.', 'https://resend.com/legal/privacy-policy'],
+  ['Resend', 'Sending what you type in a form here to our own inbox, so a person reads it.', 'https://resend.com/legal/privacy-policy'],
+];
+
+const SHORT_VERSION = [
+  'You can use the whole site without telling us who you are.',
+  'Search, the map, restaurant pages and prayer spaces all work signed out.',
+  'When you search near you, we use your location to find food close by, then throw it away. We do not keep a history of it.',
+  'We only ask for your email if you do something that needs it. Like signing in, or sending us a note.',
+  'We never sell your data, and we never share it for ads. No ad cookies, so no cookie banner.',
+  `Want a copy of what we hold, or want it deleted? Email ${CONTACT_EMAIL}. You do not have to say why.`,
 ];
 
 const RIGHTS = [
@@ -86,15 +96,22 @@ export default function PrivacyPage() {
       <PageBody>
       <div>
 
+      {/* The short version, in plain words, on the page's one surface. The long
+          version below is the same promises with the detail the law wants, so
+          this card has to stay true to it: change one, check the other. */}
       <div className={noteWarm}>
-        <h2 className="font-display text-lg font-semibold text-ink">
-          You can use the whole site without telling us who you are
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink/80">
-          Search, the map, every restaurant page and the prayer spaces work signed out.
-          When you search near yourself, your location is sent to our server to find what
-          is nearby and is then thrown away. We do not store it, and we do not build a
-          history of where you have searched.
+        <h2 className="font-display text-lg font-semibold text-ink">The short version</h2>
+        <ul className="mt-3 space-y-2 text-sm leading-relaxed text-ink/80">
+          {SHORT_VERSION.map((line) => (
+            <li key={line} className="flex items-start gap-2.5">
+              <CheckIcon className="mt-0.5 h-[18px] w-[18px] shrink-0 text-accent-ink" strokeWidth={2} />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 border-t border-sand-line pt-3 text-sm leading-relaxed text-subtle">
+          That is the lowdown. Below is the same thing in full detail, with the longer words
+          the law likes. Read on if that is your idea of fun.
         </p>
       </div>
 
@@ -129,18 +146,18 @@ export default function PrivacyPage() {
             Because we have a legitimate interest.
           </span>{' '}
           Hashing an IP address to stop the forms being flooded, and counting visits so we
-          know which pages are worth keeping. Both are the least intrusive way we could
-          think of to do those things.
+          know which pages are worth keeping. Both are the gentlest way we could think of to
+          do those things.
         </li>
       </ul>
 
       <h2 className={`mt-12 ${sectionTitle}`}>Cookies</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        We do not use advertising or tracking cookies, and there is no cookie banner
-        because there is nothing to ask you about. Our visitor analytics, from Vercel,
-        does not use cookies and does not follow you between sites. If you sign in,
-        Supabase sets a cookie that keeps you signed in. That is the only one, and it is
-        there because you asked to be signed in.
+        We use no advertising cookies and no tracking cookies. There is no cookie banner
+        because there is nothing to ask you about. Our visitor counts come from Vercel. They
+        use no cookies and do not follow you between sites. If you sign in, Supabase sets one
+        cookie that keeps you signed in. That is the only one, and it is there because you
+        asked to be signed in.
       </p>
 
       <h2 className={`mt-12 ${sectionTitle}`}>Who else sees it</h2>
@@ -164,8 +181,8 @@ export default function PrivacyPage() {
         ))}
       </ul>
       <p className="mt-3 text-sm leading-relaxed text-muted">
-        Some of them run servers outside the UK. Where that happens, the transfer relies
-        on the safeguards in their agreements with us.
+        Some of them keep servers outside the UK. When that happens, our written agreement
+        with them is what keeps your data safe.
       </p>
 
       <h2 className={`mt-12 ${sectionTitle}`}>What you can ask for</h2>

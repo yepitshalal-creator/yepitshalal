@@ -16,7 +16,7 @@ import { EVIDENCE, NOTES, STREET_WIDE, TABLE } from '@/lib/media';
 export const metadata: Metadata = {
   title: 'Support YepItsHalal',
   description:
-    'Finding out whether your dinner is halal is free for everyone, everywhere in London, and stays that way. Supporters pay for the checking that builds the catalogue, and we donate a meal through ShareTheMeal for every month of support. From £2.99 a month.',
+    'Finding out whether your dinner is halal is free. For everyone, everywhere in London, and it stays that way. Supporters pay for the checking that builds the catalogue. For every month of support, we donate a meal through ShareTheMeal. From £2.99 a month.',
   alternates: { canonical: '/yep-plus' },
 };
 
@@ -78,8 +78,8 @@ function SupportAsk({ ready }: { ready: boolean }) {
   return (
     <div className="space-y-4">
       <p>
-        You can use the catalogue without paying, and you always will. Supporting it helps us keep building
-        and maintaining it.
+        You can use the catalogue without paying, and you always will. Supporting it helps us keep it going,
+        and keep it growing.
       </p>
 
       <p className="flex flex-wrap items-baseline gap-x-2 text-ink">
@@ -168,8 +168,8 @@ export default async function YepPlusPage({ searchParams }: { searchParams: { ch
       // was charged. Says what happened rather than blaming the card, and
       // does not repeat a number we have just admitted we cannot honour.
       <Notice tone="warn">
-        We stopped that before anything was charged: our payment setup doesn&apos;t match the price on this
-        page, and we won&apos;t take money on a number we haven&apos;t got right. It is being fixed. Nothing left
+        We stopped that before anything was charged. Our payment setup does not match the price on this
+        page. We will not take money on a number we have not got right. It is being fixed. Nothing left
         your account.
       </Notice>
     ) : null;
@@ -182,8 +182,8 @@ export default async function YepPlusPage({ searchParams }: { searchParams: { ch
       title: <>A &ldquo;halal&rdquo; sign is a claim, not an answer.</>,
       body: (
         <p>
-          Finding somewhere to eat is the easy part. Knowing what its label actually means is harder: who says
-          so, what that rests on, and when anyone last checked.
+          Finding somewhere to eat is the easy part. Knowing what its halal sign means is harder. Who says
+          so? What is that based on? And when did anyone last check?
         </p>
       ),
       art: STREET_WIDE,
@@ -195,8 +195,8 @@ export default async function YepPlusPage({ searchParams }: { searchParams: { ch
       title: <>So we&apos;re building a catalogue that shows its working.</>,
       body: (
         <p>
-          Every place on YepItsHalal shows its label, where that came from and when it was checked, and says so
-          plainly when we don&apos;t know. Searching it is <Free>free</Free> for everyone, anywhere in London,
+          Every place on YepItsHalal shows its label. It shows where that came from, and when we checked. And it says so
+          plainly when we do not know. Searching is <Free>free</Free> for everyone, anywhere in London,
           with no account.
         </p>
       ),
@@ -223,7 +223,7 @@ export default async function YepPlusPage({ searchParams }: { searchParams: { ch
             ))}
           </ul>
           <p className="mt-3 text-sm">
-            No place has had all of this yet: every label so far comes from what places publish, and from
+            No place has had all of this yet. Every label so far comes from what places publish, and from
             open data. Support is what pays for the rest.
           </p>
         </>
@@ -276,8 +276,8 @@ export default async function YepPlusPage({ searchParams }: { searchParams: { ch
       title: <>Because &ldquo;where can we eat?&rdquo; deserves a straight answer.</>,
       body: (
         <p>
-          With family, friends or colleagues, nobody should have to guess, or take a sticker in a window on
-          trust. A catalogue that says what it knows, and what it doesn&apos;t, helps the whole table decide.
+          With family, friends or workmates, nobody should have to guess. Nobody should take a sticker in a window on
+          trust. A catalogue that says what it knows, and what it does not, helps the whole table decide.
         </p>
       ),
       art: TABLE,
@@ -344,8 +344,8 @@ export default async function YepPlusPage({ searchParams }: { searchParams: { ch
               <a href="https://sharethemeal.org" target="_blank" rel="noopener noreferrer" className={inlineLink}>
                 ShareTheMeal
               </a>
-              , the UN World Food Programme&apos;s hunger app, for every month of support we receive. That is us
-              giving to them. They have not partnered with us and have not endorsed us.
+              , the UN World Food Programme&apos;s hunger app. We do this for every month of support we receive. That is us
+              giving to them. They have not partnered with us, and they have not endorsed us.
             </span>
           </p>
           <p className="mt-3 text-sm leading-relaxed text-muted">
@@ -361,7 +361,7 @@ export default async function YepPlusPage({ searchParams }: { searchParams: { ch
             <Link href="/submit-restaurant" className={inlineLink}>
               Add a place we&apos;re missing
             </Link>{' '}
-            or tell us when we have something wrong, using the feedback box at the bottom of any page. That is
+            or tell us when we have something wrong. Use the feedback box at the bottom of any page. That is
             worth as much as the money.
           </p>
           <Link href="/how-we-check" className={`${ctaGhost} group -ml-4 mt-2`}>

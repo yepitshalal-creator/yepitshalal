@@ -9,7 +9,7 @@ import { isUnsplash, skipOptimiser, thumbUrl, unsplashSized } from '@/lib/imageU
 
 export const metadata: Metadata = {
   title: 'Image credits',
-  description: 'Who took the example food photos shown on YepItsHalal, and the licence each is used under.',
+  description: 'Who took the example food photos on YepItsHalal, and the licence we use each one under.',
   alternates: { canonical: '/image-credits' },
 };
 
@@ -43,17 +43,17 @@ export default function ImageCreditsPage() {
       <PageHero
         tone="sand"
         title="Image credits"
-        lede="When a restaurant hasn't sent us its own photos, we show one of these pictures of the kind of food it serves, marked as an example. None of them shows a particular restaurant's food. Thank you to everyone who shared them."
+        lede="Sometimes a restaurant has not sent us its own photos. Then we show one of these pictures of the kind of food it serves, marked as an example. None of them shows a particular restaurant's food. Thank you to everyone who shared them."
       />
       <div className={`${pageShell} pb-4 pt-10 sm:pt-14`}>
       <div className={`max-w-2xl ${noteWarm}`}>
         <h2 className="font-display text-lg font-semibold text-ink">Photos of the restaurants themselves</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-muted">
-          A listing shows the restaurant&apos;s own picture when it publishes one: the image it puts
-          in its website&apos;s preview tag, the same one that appears when somebody shares a link to
-          it. Those are credited on the listing with a link back to the site they came from, and we
-          only ever take them from a restaurant&apos;s own website, never from Google, Tripadvisor or
-          a delivery app.
+          A listing shows the restaurant&apos;s own picture when it publishes one. That is the image
+          it puts in its website&apos;s preview tag, the same one you see when somebody shares a link
+          to it. We credit it on the listing, with a link back to the site it came from. We only ever
+          take these from a restaurant&apos;s own website. Never from Google, Tripadvisor or a
+          delivery app.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-muted">
           If you own one of those pictures and would rather we did not show it, tell us and it comes
@@ -71,9 +71,9 @@ export default function ImageCreditsPage() {
           Pictures made for this site
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          A few pictures on the site were generated for YepItsHalal with Higgsfield, an image and
-          video tool. They show no real restaurant, mosque or person, and none of them
-          is ever used as a photo of a listed place.
+          A few pictures on the site were made for YepItsHalal with Higgsfield, an image and video
+          tool. They show no real restaurant, mosque or person. We never use one as a photo of a
+          listed place.
         </p>
         <ul className="mt-4 border-b border-line text-sm">
           {MADE_FOR_SITE.map(([what, where]) => (
@@ -86,9 +86,9 @@ export default function ImageCreditsPage() {
       </section>
 
       <p className="mt-10 max-w-2xl border-t border-line pt-8 text-sm leading-relaxed text-muted">
-        The example photos below are used when a restaurant publishes nothing of its own. Those from
-        Wikimedia Commons are resized and used under the licence shown, which links to its terms;
-        follow the title for the original. Photos from Unsplash are used under the{' '}
+        We use the example photos below when a restaurant publishes nothing of its own. The ones from
+        Wikimedia Commons are resized. Each is used under the licence shown, and that links to its
+        terms. Follow the title for the original. Photos from Unsplash are used under the{' '}
         <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer" className={inlineLink}>
           Unsplash licence
         </a>

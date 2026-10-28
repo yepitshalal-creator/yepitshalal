@@ -243,8 +243,8 @@ export function SubmitRestaurantForm({
         <div>
           <h2 className="font-display text-lg font-semibold text-ink">Halal information</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted">
-            Tell us what you know. We show where information came from, so a listing that rests on
-            a form alone can never show as more than Unverified until something stronger arrives.
+            Tell us what you know. We always show where information came from. So a listing built on
+            a form alone never shows as more than Unverified, until something stronger arrives.
           </p>
         </div>
         <Choice
@@ -278,7 +278,7 @@ export function SubmitRestaurantForm({
           <h2 className="font-display text-lg font-semibold text-ink">Somewhere to pray</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted">
             If you&apos;ve been, this is the thing nobody else will tell you. It goes on the listing
-            as something a visitor said, with the date, and it never affects the halal label.
+            as something a visitor said, with the date. It never affects the halal label.
           </p>
         </div>
         <Choice

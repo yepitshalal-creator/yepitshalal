@@ -29,7 +29,7 @@ type Row = { status: HalalStatus; Mark: typeof HalalFullMark; ink: string; body:
 
 const SHOWN: Row[] = [
   { status: 'fully_halal', Mark: HalalFullMark, ink: 'text-halal-fullInk', body: 'Strong evidence that all the meat is halal.' },
-  { status: 'halal_options', Mark: HalalPartialMark, ink: 'text-halal-partialInk', body: "Halal food is served, and so is food that isn't." },
+  { status: 'halal_options', Mark: HalalPartialMark, ink: 'text-halal-partialInk', body: "Halal food is served, and so is food that isn't. That can include pork or alcohol." },
 ];
 
 const OPEN: Row[] = [

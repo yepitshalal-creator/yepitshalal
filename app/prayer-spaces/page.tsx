@@ -27,7 +27,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: 'Mosques and prayer spaces in London',
   description:
-    'Mosques across London, from OpenStreetMap, with how far each one is to walk and what hours anyone has recorded. Separate from the halal listings: a place to pray, not a claim about food.',
+    'Mosques across London, from OpenStreetMap. Each one shows how far it is to walk, and any hours people have recorded. Separate from the halal listings: a place to pray, not a claim about food.',
   alternates: { canonical: '/prayer-spaces' },
 };
 
@@ -206,14 +206,14 @@ export default async function PrayerSpacesPage({ searchParams }: Props) {
 
         <p className="text-pretty text-sm leading-relaxed text-muted">
           This is separate from the halal listings on purpose. A mosque being near a restaurant says
-          nothing about that restaurant&apos;s food, and a halal label says nothing about the mosque.
+          nothing about that restaurant&apos;s food. And a halal label says nothing about the mosque.
         </p>
       </div>
 
       <PageSection
         id="by-borough"
         title="By borough"
-        lede="Pick a borough to see its halal places; each restaurant page carries the nearest prayer space."
+        lede="Pick a borough to see its halal places. Every restaurant page shows the nearest prayer space."
       >
         <ul className="flex flex-wrap gap-2">
           {boroughs.map((b) => (

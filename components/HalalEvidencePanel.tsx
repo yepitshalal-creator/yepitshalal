@@ -13,7 +13,7 @@ import type { EvidenceStrength, HalalClassification, HalalEvidence } from '@/lib
 
 export const LABEL_MEANING: Record<HalalClassification, string> = {
   fully_halal: 'Strong evidence that all the meat served here is halal.',
-  halal_options: 'Halal food is served here, alongside food that is not halal.',
+  halal_options: 'Halal food is served here, alongside food that is not halal. That can include pork or alcohol.',
   unverified: "There are signs halal food is served here, but it hasn't been confirmed.",
 };
 

@@ -28,8 +28,9 @@ import { ArrowRightIcon, GlobeIcon, MapPinIcon, NavigationIcon, PhoneIcon, Warni
 
 const LINK = 'font-semibold text-accent-ink hover:underline';
 
+// The title carries the same word as the badge on the page. When there is no
+// status at all, there is no badge either, so the title says Not known.
 function verdictWord(status: ReturnType<typeof statusFor>): string {
-  if (status === 'unknown') return 'Not checked yet';
   return status ? halalLabel(status) : 'Not known';
 }
 
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     description: answer.sentence.slice(0, 300),
     alternates: { canonical: `/is-it-halal/${r.slug}` },
     // Every place in search, including the ones nobody has checked: somebody
-    // asking about one deserves our honest "not checked yet" and the places
+    // asking about one deserves our honest "worth asking" and the places
     // nearby that do have evidence. A place out of search stays out of Google.
     robots: r.isSearchable ? undefined : { index: false, follow: true },
     openGraph: { title: `Is ${title} halal?`, description: answer.sentence.slice(0, 300), url: `/is-it-halal/${r.slug}` },

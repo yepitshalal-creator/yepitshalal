@@ -1,4 +1,4 @@
-import { INBOX, type Inbox } from './site';
+import { NOTIFY_TO, type Inbox } from './site';
 
 // Email to one of the three YepItsHalal inboxes when a form is sent.
 //
@@ -9,8 +9,9 @@ import { INBOX, type Inbox } from './site';
 //   RESEND_API_KEY      from resend.com, "Sending access" is enough
 //   NOTIFY_FROM_EMAIL   optional, overrides the sender below
 //
-// Which inbox a form lands in is decided by the caller, from INBOX in
-// lib/site.ts. Every submission is stored before this runs, so a failed or
+// Which route a form takes is decided by the caller, and NOTIFY_TO in
+// lib/site.ts turns that into a +tagged Gmail address, so one inbox still shows
+// which form it was. Every submission is stored before this runs, so a failed or
 // unconfigured email never fails the request that triggered it: the row is in
 // the database and visible in /admin either way.
 
@@ -95,7 +96,7 @@ export async function notifyInbox(n: Notice): Promise<NotifyResult> {
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: process.env.NOTIFY_FROM_EMAIL || DEFAULT_FROM,
-        to: [INBOX[n.inbox]],
+        to: [NOTIFY_TO[n.inbox]],
         subject: n.subject.slice(0, 200),
         text: renderText(n, rows),
         html: renderHtml(n, rows),

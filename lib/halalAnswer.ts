@@ -13,12 +13,15 @@ import { foodKind } from './whyListed';
  * It never says more than the evidence does. "Yes" only appears for a place
  * with strong evidence that all its meat is halal; everything else says what is
  * actually known, and every answer ends by pointing at the restaurant itself.
+ *
+ * Written short on purpose. Every sentence is one idea, because this text is
+ * read on a phone, translated by browsers and spoken aloud by assistants.
  */
 
 export interface HalalAnswer {
   /** "Yes", "Partly", "Not confirmed", "Worth asking". The short answer. */
   verdict: string;
-  /** A full sentence, 20 to 40 words, safe to publish anywhere. */
+  /** Several short sentences, safe to publish anywhere. */
   sentence: string;
 }
 
@@ -38,17 +41,17 @@ export function halalAnswerFor(options: {
     case 'fully_halal':
       return {
         verdict: 'Yes',
-        sentence: `Yes. There is strong evidence that all the meat served at ${name} is halal. ${because}${checked} Confirm it with them when you order.`.replace(/\s+/g, ' '),
+        sentence: `Yes. There is strong evidence that all the meat at ${name} is halal. ${because}${checked} Ask them when you order.`.replace(/\s+/g, ' '),
       };
     case 'halal_options':
       return {
         verdict: 'Partly',
-        sentence: `Partly. ${name} serves halal food alongside food that is not halal. ${because}${checked} Ask for the halal items when you order.`.replace(/\s+/g, ' '),
+        sentence: `Partly. ${name} serves halal food, and food that is not halal. ${because}${checked} Ask for the halal dishes when you order.`.replace(/\s+/g, ' '),
       };
     case 'unverified':
       return {
         verdict: 'Not confirmed',
-        sentence: `We cannot confirm it. There are signs that ${name} serves halal food, but nobody has verified it. ${because}${checked} Unverified never means not halal: ask the restaurant.`.replace(/\s+/g, ' '),
+        sentence: `We cannot confirm it. There are signs that ${name} serves halal food, but nobody has checked. ${because}${checked} Unverified never means not halal. Ask them when you order.`.replace(/\s+/g, ' '),
       };
     case 'unknown': {
       // Lead with the reason it is on a halal site, because the reader's real
@@ -58,13 +61,13 @@ export function halalAnswerFor(options: {
         : 'It serves a kind of food that is often halal in London.';
       return {
         verdict: 'Worth asking',
-        sentence: `Worth asking. ${why} Nobody has checked ${name}, and we have found nothing it or anyone else has said about its meat. That is a reason to ask, not an answer.`,
+        sentence: `Worth asking. ${why} Nobody has checked ${name}. We have not found anything said about its meat, by them or by anyone else. That is a reason to ask, not an answer.`,
       };
     }
     default:
       return {
         verdict: 'Not known',
-        sentence: `We have no evidence either way about ${name}. That does not mean it is not halal. It means we cannot tell you.`,
+        sentence: `We have nothing either way about ${name}. That does not mean it is not halal. It means we cannot tell you.`,
       };
   }
 }

@@ -31,7 +31,7 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Discover',
-  description: 'A better way to discover halal places across London is on its way. Meanwhile: prayer spaces near where you eat, and every borough and kind of food.',
+  description: 'A better way to find halal places across London is on its way. For now: prayer spaces near where you eat, plus every borough and kind of food.',
   // A holding page is not something to send searchers to.
   robots: { index: false, follow: true },
 };
@@ -45,7 +45,7 @@ const NOW = [
   {
     Icon: SealCheckIcon,
     title: 'Evidence behind every label',
-    body: 'Showing where each halal label came from and when it was checked, and saying so when we are not sure.',
+    body: 'We show where each halal label came from, and when we checked it. And we say so when we are not sure.',
   },
   {
     Icon: SearchIcon,

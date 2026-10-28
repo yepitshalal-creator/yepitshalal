@@ -51,7 +51,10 @@ for (const r of readJsonl(cachePath('crawl.jsonl'))) crawl.set(r.host, r);
 // do the pages of the rendered pass (crawl-rendered.mjs), which read in a real
 // browser the sites the plain passes found empty or could not read, and of its
 // sitemap-led second pass (SITEMAP=1, crawl-rendered-2.jsonl).
-for (const pass of ['crawl-deep.jsonl', 'crawl-rendered.jsonl', 'crawl-rendered-2.jsonl'].filter((f) => existsSync(cachePath(f)))) {
+// crawl-rendered-3.jsonl and -4.jsonl are the 2026-10-01 passes: -3 over sites
+// that had a halal signal but whose own site we had barely read, -4 over sites
+// no plain fetch ever got a page from.
+for (const pass of ['crawl-deep.jsonl', 'crawl-rendered.jsonl', 'crawl-rendered-2.jsonl', 'crawl-rendered-3.jsonl', 'crawl-rendered-4.jsonl'].filter((f) => existsSync(cachePath(f)))) {
   // Blog, news and event pages are left out: "Best halal food in London" on a
   // marketing post is not a statement about what this kitchen serves.
   const EDITORIAL = /\/(blog|blogs|news|post|posts|article|articles|events?|whats-?on|journal|stories|recipes?|press|magazine|guides?)(\/|$)/i;
@@ -151,6 +154,20 @@ const FULLY = [
   /\b(we\s+)?only\s+(serve|use|sell|source|buy|cook with)\s+(fresh\s+)?halal\b/i,
   /\ball\s+(of\s+)?our\s+(food|dishes|products|ingredients)\s+(is|are)\s+(100\s?%\s*)?halal\b/i,
   /\b(a|an|our)\s+(fully\s+)?halal\s+(restaurant|kitchen|takeaway|establishment)\b/i,
+  // The same claim in the words London restaurants actually use. Added on
+  // 2026-10-01 after reading the crawled text: each of these was a kitchen
+  // saying all of its meat is halal, in a phrasing the rules above walked
+  // past. They widen what is recognised, not what qualifies. A match still
+  // needs nothing on the site contradicting it, and a person's confirmation
+  // in review-decisions.json, before it can be strong.
+  /\bstrictly\s+halal\b|\bhalal[- ]only\b/i,
+  /\b100\s+per\s?cent\s+halal\b/i,
+  /\b(our\s+|the\s+)?(entire|whole|full)\s+menu\s+(is|are)\s+(100\s?%\s*)?halal\b/i,
+  // "All meat served is halal", "all meats used in his restaurants are halal",
+  // "All the meat is halal": the first rule with a verb or an article in the way.
+  /\ball\s+(of\s+)?(our\s+|the\s+)?(meat|meats)\b[^.,;!?]{0,40}?\bhalal\b/i,
+  // "Is the meat halal? Yes, the meat is halal."
+  /\b(our|the)\s+(meat|meats)\s+(is|are)\s+(all\s+)?(100\s?%\s*)?halal\b/i,
 ];
 
 const CERT_CLAIM = /\b(hmc|hfa|halal monitoring committee|halal food authority)\b[^.]{0,60}\b(certified|approved|accredited|certification|registered)\b|\b(certified|approved|accredited)\b[^.]{0,40}\b(hmc|hfa|halal monitoring committee|halal food authority)\b|\bhalal certificate\b|\bhalal[- ]certified\s+(meat|meats|chicken|lamb|beef|restaurant|kitchen|takeaway|supplier|suppliers|butcher)\b/i;

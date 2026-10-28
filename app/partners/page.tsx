@@ -22,15 +22,15 @@ export const metadata: Metadata = {
 const FREE = [
   'Your listing, with halal information',
   '1 reel, live on your page',
-  'That reel can surface in Discover',
+  'That reel can show up in Discover',
   'Request verification',
 ];
 
 const PARTNER = [
-  'More reels: signature dishes, prep, atmosphere, new menu items',
-  'Every reel can surface in Discover on its own',
+  'More reels: your best dishes, the prep, the room, new menu items',
+  'Every reel can show up in Discover on its own',
   'A "Latest from you" section on your restaurant page',
-  'Seasonal and promotional content, swapped whenever you like',
+  'Seasonal and offer videos, swapped whenever you like',
 ];
 
 // The page used to end its partner card on "Get in touch" with nowhere to get
@@ -45,7 +45,7 @@ export default function PartnersPage() {
       <PageHero
         label={{ text: 'For restaurants', icon: <SparkleIcon className="h-3.5 w-3.5" /> }}
         title="Show people what you actually serve."
-        lede="A photo tells someone a restaurant exists. A reel shows them the food coming out of your kitchen, which is what people are really deciding on."
+        lede="A photo tells someone a restaurant exists. A reel shows them the food coming out of your kitchen. That is what people really decide on."
         art={KITCHEN}
       >
         <div className="flex flex-wrap gap-3">
@@ -101,8 +101,8 @@ export default function PartnersPage() {
                   one on a live site would be a commitment nobody has made. */}
               <div className="mt-6 border-t border-white/15 pt-4 text-sm leading-relaxed text-white/85">
                 <p>
-                  Partnerships are being set up restaurant by restaurant while we get this right. Get in
-                  touch and we will talk it through.
+                  We are setting up partnerships one restaurant at a time while we get this right.
+                  Get in touch and we will talk it through.
                 </p>
                 <a
                   href={MAILTO}
@@ -120,10 +120,10 @@ export default function PartnersPage() {
           <p className={`${noteWarm} flex max-w-2xl items-start gap-3 text-sm leading-relaxed text-ink/80`}>
             <SealCheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-accent-ink" aria-hidden="true" />
             <span>
-              It has no effect on your halal label, on whether you get verified, or on how
-              quickly your verification is reviewed. Those work the same way for every restaurant
-              here, paying or not. Reels are reviewed before they go live either way. Paying
-              buys room to market yourself, and nothing about how we describe your food.
+              It does nothing to your halal label. It does nothing to whether you get verified, or
+              how fast that happens. Those work the same for every restaurant here, paying or not.
+              We check reels before they go live either way. Paying buys room to market yourself.
+              It buys nothing about how we describe your food.
             </span>
           </p>
         </PageSection>

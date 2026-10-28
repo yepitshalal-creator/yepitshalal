@@ -12,45 +12,45 @@ import { EVIDENCE } from '@/lib/media';
 export const metadata: Metadata = {
   title: 'How we label halal places',
   description:
-    'What Fully Halal, Halal Options, Unverified and Worth asking mean on YepItsHalal, where the evidence comes from, and what we do not know.',
+    'What Fully Halal, Halal Options, Unverified and Worth asking mean on YepItsHalal. Where our facts come from, and what we do not know.',
   alternates: { canonical: '/how-we-check' },
 };
 
 const LABELS = [
   {
     classification: 'fully_halal' as const,
-    needs: 'Strong evidence that all the meat served is halal.',
-    examples: 'Halal certification we have confirmed, our own check, or the restaurant clearly saying all its meat is halal with nothing on its site suggesting otherwise.',
+    needs: 'Strong evidence that all the meat is halal.',
+    examples: 'A halal certificate we checked with the people who gave it. Or our own visit. Or the restaurant saying plainly that all its meat is halal, with nothing on its site to suggest otherwise.',
   },
   {
     classification: 'halal_options' as const,
-    needs: 'Halal food is served, but so is food that is not halal.',
-    examples: 'The restaurant says it has halal options or a halal menu, or its site mentions halal food alongside pork or non-halal meat.',
+    needs: 'They serve halal food. They also serve food that is not halal. That can include pork or alcohol.',
+    examples: 'The restaurant says it has halal options or a halal menu. Or its site mentions halal food next to pork, or next to meat that is not halal.',
   },
   {
     classification: 'unverified' as const,
-    needs: 'There are signs of halal food, but not enough to say more.',
-    examples: 'A mention of halal on its website, "halal" in its name, a community tag on OpenStreetMap, or a halal category in public place data.',
+    needs: 'There are signs of halal food. Not enough to say more.',
+    examples: 'The word halal on its website. Or "halal" in its name. Or a tag from someone who mapped it on OpenStreetMap. Or a halal tag in open place data.',
   },
   {
     classification: 'unknown' as const,
-    needs: 'It serves a kind of food often halal in London, and nobody has checked it.',
-    examples: 'A kebab shop, a Pakistani grill, a peri peri chicken shop. It is why the place is here at all, and it is a reason to ask, not an answer. Places that say they are not halal are never shown.',
+    needs: 'They serve a kind of food that is often halal in London. Nobody has checked.',
+    examples: 'A kebab shop. A Pakistani grill. A peri peri chicken shop. That is why the place is here at all. It is a reason to ask, not an answer. Places that say they are not halal are never shown.',
   },
 ];
 
 const SOURCES = [
-  ["The restaurant's own website", 'We read what restaurants publish about themselves and quote it, with a link and the date we read it.'],
-  ['Certification', 'Only shown as certification when it has been confirmed with the certifier. A restaurant saying it is certified is shown as exactly that.'],
-  ['Our own checks', 'When we have checked a place ourselves, the page says how and when.'],
-  ['OpenStreetMap', 'Community mappers sometimes tag places as halal. Useful, but it counts as weak evidence.'],
-  ['Public place data', 'Datasets from the Overture Maps Foundation sometimes categorise places as halal. Also weak evidence.'],
-  ['People who tell us', 'Owners and customers can send us details. We review every submission, and a listing that rests on one alone stays Unverified until something stronger arrives.'],
+  ["The restaurant's own website", 'We read what a restaurant says about itself, then quote it. With a link, and the date we read it.'],
+  ['Halal certificates', 'We only call it a certificate once we have checked it with the people who gave it. If a restaurant says it is certified, we show that as exactly what it is: the restaurant saying so.'],
+  ['Our own checks', 'When we have been to a place ourselves, the page says how and when.'],
+  ['OpenStreetMap', 'People who map places sometimes tag one as halal. That helps, but it counts as weak evidence.'],
+  ['Open place data', 'Data sets from the Overture Maps Foundation sometimes list a place as halal. Also weak evidence.'],
+  ['People who tell us', 'Owners and customers can send us details. We read every one. A listing built on one message alone stays Unverified. It stays that way until something stronger arrives.'],
 ];
 
 const CONTENTS = [
   { id: 'labels', label: 'What each label means' },
-  { id: 'evidence', label: 'Where the evidence comes from' },
+  { id: 'evidence', label: 'Where our facts come from' },
   { id: 'photos', label: 'Photos' },
   { id: 'pray', label: 'Somewhere to pray' },
   { id: 'limits', label: "What a label can't tell you" },
@@ -63,7 +63,7 @@ export default function HowWeCheckPage() {
         title="How we label halal places"
         lede={
           <>
-            Every place tells you what we know, how we know it, and when it was checked. If we
+            Every place tells you what we know, how we know it, and when we checked. If we
             don&apos;t know something, we say so.
           </>
         }
@@ -79,17 +79,17 @@ export default function HowWeCheckPage() {
             We haven&apos;t visited any of these restaurants yet
           </h2>
           <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
-            Everything on this site so far comes from what restaurants publish about themselves and
-            from open data: their own websites, OpenStreetMap, and the Food Standards Agency&apos;s
-            hygiene register. Nobody from YepItsHalal has walked into a kitchen, rung a manager or
-            read a certificate. We are starting with what can be gathered honestly at scale, and
-            saying exactly where it came from.
+            Everything here comes from two places. What restaurants say about themselves on their
+            own websites. And open data: OpenStreetMap, and the Food Standards Agency&apos;s hygiene
+            register. Nobody from YepItsHalal has walked into a kitchen, rung a manager or read a
+            certificate. We started with what we can gather honestly at scale, and we say exactly
+            where each fact came from.
           </p>
           <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
-            When that changes for a place, you will see it. A listing we have checked ourselves
-            carries a <span className="font-semibold text-accent-ink">Checked by us</span> badge in
-            search results and on its page, with the date and what we did. No badge means no visit,
-            however confident the label above it looks.
+            When that changes for a place, you will see it. A place we have checked ourselves gets a{' '}
+            <span className="font-semibold text-accent-ink">Checked by us</span> badge, in search and
+            on its page, with the date and what we did. No badge means no visit, however sure the
+            label above it looks.
           </p>
         </section>
 
@@ -108,12 +108,13 @@ export default function HowWeCheckPage() {
             ))}
           </dl>
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            Unverified and Worth asking never mean a place isn&apos;t halal. When a restaurant, or a
-            person who mapped it, says it doesn&apos;t serve halal food, we don&apos;t show it at all.
+            Unverified and Worth asking never mean a place isn&apos;t halal. If a restaurant says it
+            doesn&apos;t serve halal food, or someone who mapped it says so, we don&apos;t show it at
+            all.
           </p>
         </PageSection>
 
-        <PageSection id="evidence" title="Where the evidence comes from">
+        <PageSection id="evidence" title="Where our facts come from">
           {/* Six sources, one list. A box around each one said "six separate
               things"; they are one question answered six ways. */}
           <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
@@ -128,9 +129,9 @@ export default function HowWeCheckPage() {
 
         <PageSection id="photos" title="Photos">
           <p className={bodyText}>
-            When a restaurant hasn&apos;t sent us its own photos, we show a picture of the kind of food it
-            serves, marked as an example. It is never the restaurant&apos;s own dish. Who took each one,
-            and its licence, is on the{' '}
+            When a restaurant hasn&apos;t sent us its own photos, we show a picture of the kind of
+            food it serves, marked as an example. It is never that restaurant&apos;s own dish. Who
+            took each photo, and its licence, is on the{' '}
             <Link href="/image-credits" className={inlineLink}>
               image credits
             </Link>{' '}
@@ -144,19 +145,19 @@ export default function HowWeCheckPage() {
           <div className="space-y-3">
             <p className={bodyText}>
               Mosques and prayer spaces come from OpenStreetMap, the same open source as much of the
-              restaurant data, and none of it touches a halal label: a mosque being near a restaurant
-              says nothing about that restaurant&apos;s food. Hardly any of them carry opening times, a
-              mosque listed as open may still be locked, and the doors being open is not the same as
-              jamaat, so ring ahead for a particular prayer.{' '}
+              restaurant data. None of it touches a halal label. A mosque being near a restaurant
+              says nothing about that restaurant&apos;s food. Hardly any of them carry opening times,
+              a mosque listed as open may still be locked, and open doors are not the same as jamaat.
+              So ring ahead for a particular prayer.{' '}
               <Link href="/prayer-spaces" className={inlineLink}>
                 All prayer spaces
               </Link>
             </p>
             <p className={bodyText}>
-              Whether a restaurant has somewhere to pray inside comes from the people who go, through
-              the same form as everything else. It shows who told us and when, and it is never
-              confirmed by us unless the page says so. Nobody having told us is shown as exactly that,
-              never as a no.
+              Whether a restaurant has somewhere to pray inside comes from the people who go.
+              They tell us through the same form as everything else. It shows who told us and when. We have not
+              confirmed it unless the page says so. If nobody has told us, we show exactly that.
+              Never a no.
             </p>
           </div>
         </PageSection>
@@ -164,14 +165,14 @@ export default function HowWeCheckPage() {
         <PageSection id="limits" title={<>What a label can&apos;t tell you</>}>
           <div className="space-y-3">
             <p className={bodyText}>
-              Standards differ. Some people only eat hand-slaughtered meat, some avoid places that
-              serve alcohol, and restaurants change suppliers. A label is a starting point built from
-              the evidence we can see. The kitchen is the only one who can tell you for certain, so
-              ask them.
+              Standards differ. Some people only eat hand-slaughtered meat. Some avoid places that
+              serve alcohol. And restaurants change where they buy their meat. A label is a starting
+              point, built from what we can see. Only the kitchen can tell you for certain, so ask
+              them.
             </p>
             <p className={bodyText}>
-              Restaurant locations and details come from the Food Standards Agency food hygiene
-              register (Open Government Licence), OpenStreetMap contributors (ODbL) and the Overture
+              Restaurant names, places and details come from three open sources. The Food Standards
+              Agency food hygiene register (Open Government Licence). OpenStreetMap contributors (ODbL). And the Overture
               Maps Foundation.
             </p>
           </div>
