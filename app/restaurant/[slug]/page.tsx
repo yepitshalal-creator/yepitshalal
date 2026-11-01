@@ -11,6 +11,7 @@ import { CheckedByUsBadge } from '@/components/CheckedByUsBadge';
 import { HalalFactsPanel } from '@/components/HalalFactsPanel';
 import { HalalEvidencePanel } from '@/components/HalalEvidencePanel';
 import { AtAGlance } from '@/components/AtAGlance';
+import { distanceWords, nearestStation, stationWords } from '@/lib/nearestStation';
 import { OpenStatusBadge } from '@/components/OpenStatusBadge';
 import { HeroPhotos } from '@/components/HeroPhotos';
 import { ReelShowcase } from '@/components/ReelShowcase';
@@ -127,6 +128,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
   const closed = restaurant.catalogueStatus === 'permanently_closed' || restaurant.catalogueStatus === 'temporarily_closed';
   const realPhotos = restaurant.photos.filter((p) => !isStockPhoto(p.storage_path));
   const hasGenuineCheck = restaurant.evidence.some((e) => e.kind === 'yepitshalal_check');
+  const station = nearestStation(restaurant.lat, restaurant.lng);
   const phones = splitPhones(restaurant.phone);
   const price = priceSigns(restaurant.priceRange);
   const websiteHost = restaurant.website_url ? hostOf(restaurant.website_url) : null;
@@ -273,6 +275,12 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
             {tidyAddress(restaurant.address)}
           </span>
         </p>
+        {station && (
+          <p className="mt-0.5 pl-[1.375rem] text-sm text-muted">
+            Nearest station: <span className="font-medium text-ink/80">{stationWords(station)}</span>,{' '}
+            <span className="whitespace-nowrap">{distanceWords(station.metres)}</span>
+          </p>
+        )}
         {/* Small facts: open now and somewhere to pray as pills, when someone
             has told us, and the kitchen's hygiene rating as quiet grey words
             after them. Unknown is left off. */}
@@ -565,6 +573,7 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
                 {[...new Set(restaurant.sources.map((s) => SOURCE_CREDIT[s.source] ?? s.source))].join('; ')}.{' '}
               </>
             )}
+            {station && <>Nearest station from {SOURCE_CREDIT.osm}. </>}
             <Link href={editHref} className="font-medium text-accent-ink hover:underline">
               Something wrong or out of date?
             </Link>
