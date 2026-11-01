@@ -52,14 +52,17 @@
 // A chain is a brand with 2 or more searchable branches. One head office row
 // covers every branch (brand_id set, restaurant_id empty), so OSM emails of
 // chain branches are left out. The chain's site is brands.website_url, or else
-// a site at least two of its branches list that carries the chain's name.
+// a site at least two of its branches list that carries the chain's name. A
+// site that will not answer stays on the row for a person to open; a chain
+// with nothing at all to reach it by gets a phone row per branch instead.
 //
 // --apply reads a CSV this script wrote (after you have checked it), checks
-// every row against the rule again, skips any email already in
-// outreach_contacts (any case), any place or chain that already has a contact,
-// and anything on outreach_stop_list, then inserts the rest: status 'ready'
-// for email rows, 'new' for the others. Sending stays off until it is switched
-// on in /admin/outreach.
+// every row against the rule again, skips any place or chain that already has
+// a contact and anything on outreach_stop_list, then inserts the rest: status
+// 'ready' for email rows, 'new' for the others. An email already in
+// outreach_contacts (any case) is left off the new row, which goes in as phone
+// or contact form, so no inbox is asked twice and no place drops out. Sending
+// stays off until it is switched on in /admin/outreach.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -657,16 +660,24 @@ async function applyCsv(path) {
     const wantsEmail = r.channel === 'email';
     row.channel = wantsEmail && emailAllowed(row) ? 'email' : r.channel === 'contact_form' ? 'contact_form' : phoneDigits(row.phone) ? 'phone' : 'contact_form';
     if (wantsEmail && row.channel !== 'email') counts.downgraded++;
-    if (!row.email && !phoneDigits(row.phone) && !row.found_at_url) { counts.nothingToContact++; continue; }
-    if (email && haveEmail.has(email)) { counts.alreadyEmail++; continue; }
     const target = row.restaurant_id || row.brand_id;
     if (haveTarget.has(target)) { counts.alreadyTarget++; continue; }
     if ((email && stopEmail.has(email)) || stopPhone.has(phoneDigits(row.phone)) || stopTarget.has(row.restaurant_id) || stopTarget.has(row.brand_id)) {
       counts.stopList++;
       continue;
     }
-    if ((email && inFile.has(email)) || inFile.has(target)) { counts.repeatedInFile++; continue; }
-    if (email) inFile.add(email);
+    // An address already on another contact is never asked twice, but the
+    // place or chain stays reachable by phone or its page. Dropping the whole
+    // row left a chain's other branches with no contact (2026-11-01: Naan Staap).
+    if (email && (haveEmail.has(email) || inFile.has(email))) {
+      counts.alreadyEmail++;
+      row.email = null;
+      row.notes = [row.notes, 'its email is already on another contact, so not used here'].filter(Boolean).join('; ');
+      if (row.channel === 'email') row.channel = phoneDigits(row.phone) ? 'phone' : 'contact_form';
+    }
+    if (!row.email && !phoneDigits(row.phone) && !row.found_at_url) { counts.nothingToContact++; continue; }
+    if (inFile.has(target)) { counts.repeatedInFile++; continue; }
+    if (row.email) inFile.add(row.email);
     inFile.add(target);
     row.status = row.channel === 'email' ? 'ready' : 'new';
     insert.push(row);
@@ -690,8 +701,8 @@ async function applyCsv(path) {
   console.log('\nInserted into outreach_contacts:');
   console.log(`  ${counts.emailRows} email rows, status 'ready' (they wait until sending is switched on)`);
   console.log(`  ${counts.otherRows} phone or contact form rows, status 'new'`);
+  console.log(`  ${counts.alreadyEmail} rows had an email already on another contact; it was left off them`);
   console.log('Skipped:');
-  console.log(`  ${counts.alreadyEmail} email already in outreach_contacts`);
   console.log(`  ${counts.alreadyTarget} place or chain already has a contact`);
   console.log(`  ${counts.stopList} on the stop list`);
   console.log(`  ${counts.repeatedInFile} repeated in this file`);
@@ -904,13 +915,17 @@ async function dryRun() {
   // --- 4. With --uncovered, every other place we can ring: one row per number -------------------
   // A place with no website we could read still has the number the map data
   // gives. Two places sharing a number get one row, naming the other.
+  // A branch is left to its head office row only when that row can reach
+  // someone; a chain with no website, email or number of its own (or not read
+  // this run) gets a row per branch instead.
   if (UNCOVERED) {
     const byPhone = new Map();
     for (const row of rows.values()) if (phoneDigits(row.phone)) byPhone.set(phoneDigits(row.phone), row);
+    const reaches = (row) => Boolean(row && (row.email || phoneDigits(row.phone) || row.found_at_url));
     let added = 0;
     let shared = 0;
     for (const r of restaurants) {
-      if (isBranch(r) && !NO_CHAINS) continue;
+      if (isBranch(r) && !NO_CHAINS && reaches(rows.get(`brand:${r.brand_id}`))) continue;
       const key = phoneDigits(r.phone);
       if (rows.has(`place:${r.id}`) || !key) continue;
       const first = byPhone.get(key);
@@ -997,6 +1012,13 @@ function applySite(row, site, names, blockedSites, start) {
     row.found_at_url = site.contactUrl || site.homeUrl;
     row.found_how = 'own_website';
     if (site.homeUrl) row.notes.push(site.contactUrl ? 'no email published; contact page linked' : 'no email published in the page HTML');
+  } else if (!row.email && !row.found_at_url) {
+    // A site that would not answer, or asked bots to stay out, is still where
+    // a person can find their contact form. Without it the row has nothing to
+    // contact them by and --apply drops it (2026-11-01: KFC, Pizza Hut, Dixy).
+    row.found_at_url = start;
+    row.found_how = 'other';
+    row.notes.push('their website, for a person to open: this search could not read it');
   }
   if (pick.others.length) row.notes.push(`also published: ${pick.others.slice(0, 4).join(' ')}`);
   if (pick.role.length) row.notes.push(`passed over (not for this): ${pick.role.slice(0, 3).join(' ')}`);
