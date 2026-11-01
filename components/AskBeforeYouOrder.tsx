@@ -44,6 +44,12 @@ export function AskBeforeYouOrder({ phone }: { phone: string | null }) {
           Call {formatUkPhone(phone)}
         </a>
       )}
+      {/* Owners ask for proof that a site brings them customers (the
+          2026-10-12 plan). HalalaGo asks diners to say where they found a
+          place; a place that hears our name is easier to ask for its photos. */}
+      <p className="mt-4 border-t border-line pt-3 text-sm text-muted">
+        When you call or go in, tell them you found them on YepItsHalal. It helps more places share their halal facts with us.
+      </p>
     </section>
   );
 }

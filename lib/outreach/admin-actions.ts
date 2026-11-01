@@ -6,6 +6,7 @@ import {
   CONTACT_COLUMNS,
   OWNER_BUCKET,
   isStopped,
+  longDate,
   normEmail,
   outreachDb,
   phoneDigits,
@@ -15,6 +16,7 @@ import {
   type Contact,
 } from './data';
 import { publishOwnerPhoto, removeOwnerContent, type OwnerUpload } from './content';
+import { ATTEMPT, type Attempt } from './labels';
 
 // Everything /admin/outreach can do. Each action checks the admin itself:
 // a server action is a public endpoint, whatever page it sits on.
@@ -137,6 +139,30 @@ export async function markReplied(id: string) {
 export async function markStop(id: string, how: 'said_no' | 'asked_by_email' | 'asked_by_phone') {
   await requireAdmin();
   await stopContact(outreachDb(), await contact(id), how);
+  revalidateAdminPath(PATH);
+}
+
+/** A call made or a contact form sent, kept in the contact's history. A phone
+ *  number only once it has been checked against the TPS. */
+export async function logAttempt(id: string, attempt: Attempt) {
+  await requireAdmin();
+  const a = ATTEMPT[attempt];
+  if (!a) throw new Error('Unknown outcome.');
+  const c = await contact(id);
+  if (c.channel !== a.channel) throw new Error('That does not fit how we reach this contact.');
+  if (c.channel === 'phone' && !c.tps_checked_at) throw new Error('Check the TPS before calling.');
+  const now = new Date();
+  const line = `${longDate(now)}: ${a.words}.`;
+  const { error } = await outreachDb()
+    .from('outreach_contacts')
+    .update({
+      last_event: a.event,
+      last_event_at: now.toISOString(),
+      updated_at: now.toISOString(),
+      notes: c.notes ? `${c.notes}\n${line}` : line,
+    })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
   revalidateAdminPath(PATH);
 }
 

@@ -10,6 +10,7 @@ import { halalLabel, HalalBadge } from '@/components/HalalBadge';
 import { CheckedByUsBadge } from '@/components/CheckedByUsBadge';
 import { HalalFactsPanel } from '@/components/HalalFactsPanel';
 import { HalalEvidencePanel } from '@/components/HalalEvidencePanel';
+import { AtAGlance } from '@/components/AtAGlance';
 import { OpenStatusBadge } from '@/components/OpenStatusBadge';
 import { HeroPhotos } from '@/components/HeroPhotos';
 import { ReelShowcase } from '@/components/ReelShowcase';
@@ -367,6 +368,10 @@ export default async function RestaurantPage({ params }: { params: { slug: strin
           name={title}
           checkedByUs={hasGenuineCheck}
         />
+
+        {status && status !== 'unknown' && (
+          <AtAGlance status={status} facts={hasGenuineCheck ? restaurant.halalFacts : null} evidence={restaurant.evidence} />
+        )}
 
         {restaurant.isSearchable && (
           <p className="mt-2 px-1 text-sm">

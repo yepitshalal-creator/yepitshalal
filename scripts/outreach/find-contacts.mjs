@@ -5,6 +5,9 @@
 //   node scripts/outreach/find-contacts.mjs --limit 40          consider at most 40 chains or places (default 40)
 //   node scripts/outreach/find-contacts.mjs --places            also read single places' own websites
 //   node scripts/outreach/find-contacts.mjs --places=osm-email  only the places that already have an OSM email
+//   node scripts/outreach/find-contacts.mjs --uncovered --places --limit 2000
+//                                                               only listed places no contact reaches yet,
+//                                                               with a phone row for each one that has no site
 //   node scripts/outreach/find-contacts.mjs --apply out/contacts-....csv
 //                                                               insert a CSV you have checked (writes to live)
 //
@@ -88,6 +91,10 @@ const PLACES = PLACES_ARG === undefined ? null : PLACES_ARG === true || PLACES_A
 if (PLACES && PLACES !== 'all' && PLACES !== 'osm-email') fail('--places takes nothing, "all" or "osm-email"');
 const NO_CHAINS = ARGS.includes('--no-chains');
 const NO_OSM = ARGS.includes('--no-osm');
+// Since 2026-11-01 ("reach out to every restaurant we have"): only places in
+// search that no outreach contact reaches, directly or through their chain's
+// head office row. 951 of 2,150 that day, nearly all of them Unverified.
+const UNCOVERED = ARGS.includes('--uncovered');
 const DELAY_MS = Math.max(1000, Number(arg('delay') ?? 1000) || 1000);
 const OUT_ARG = arg('out');
 
@@ -699,7 +706,16 @@ async function applyCsv(path) {
 // =================================================================================================
 async function dryRun() {
   console.log('Dry run. Reads only; writes a CSV, never the database.\n');
-  const restaurants = await readAll('restaurants', 'id, name, slug, brand_id, website_url, phone', ['id'], (q) => q.eq('is_searchable', true));
+  let restaurants = await readAll('restaurants', 'id, name, slug, brand_id, website_url, phone, is_listed', ['id'], (q) => q.eq('is_searchable', true));
+  if (UNCOVERED) {
+    const have = await readAll('outreach_contacts', 'id, restaurant_id, brand_id', ['id']);
+    const placesHave = new Set(have.map((c) => c.restaurant_id).filter(Boolean));
+    const brandsHave = new Set(have.map((c) => c.brand_id).filter(Boolean));
+    const before = restaurants.length;
+    restaurants = restaurants.filter((r) => r.is_listed && !placesHave.has(r.id) && !(r.brand_id && brandsHave.has(r.brand_id)));
+    console.log(`--uncovered: ${restaurants.length} of ${before} searchable places are listed and reached by no contact yet.
+`);
+  }
   const brands = await readAll('brands', 'id, name, slug, website_url', ['id']);
   const byId = new Map(restaurants.map((r) => [r.id, r]));
   const branchesOf = new Map();
@@ -883,6 +899,33 @@ async function dryRun() {
       applySite(row, site, places.map((p) => p.name), blockedSites, url);
       console.log(`[${i + 1}/${todo.length}] ${first.name} ${host}: ${site.blocked ? 'blocked, ' + site.blocked : site.error ? 'no answer, ' + site.error : `${site.pagesRead} pages, ${row.email ? mask(row.email) : 'no email'}${row.business_kind === 'limited_company' ? ', names a limited company' : ''}`}`);
     }
+  }
+
+  // --- 4. With --uncovered, every other place we can ring: one row per number -------------------
+  // A place with no website we could read still has the number the map data
+  // gives. Two places sharing a number get one row, naming the other.
+  if (UNCOVERED) {
+    const byPhone = new Map();
+    for (const row of rows.values()) if (phoneDigits(row.phone)) byPhone.set(phoneDigits(row.phone), row);
+    let added = 0;
+    let shared = 0;
+    for (const r of restaurants) {
+      if (isBranch(r) && !NO_CHAINS) continue;
+      const key = phoneDigits(r.phone);
+      if (rows.has(`place:${r.id}`) || !key) continue;
+      const first = byPhone.get(key);
+      if (first) {
+        first.notes.push(`same number as ${r.slug}`);
+        shared++;
+        continue;
+      }
+      const row = placeRow(r);
+      row.notes.push(r.website_url ? 'own website not read this run' : 'no website on record; number from the map data');
+      byPhone.set(key, row);
+      added++;
+    }
+    console.log(`
+Phone rows for the rest: ${added} added, ${shared} shared a number with another row.`);
   }
 
   // --- Decide the channel, and keep each address on one row only --------------------------------

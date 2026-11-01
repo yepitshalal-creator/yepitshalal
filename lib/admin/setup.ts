@@ -6,6 +6,7 @@ import { readyTopups } from '@/lib/deals/topups';
 import { posthogConfigured, totals } from './posthog';
 import { adminCached } from './cache';
 import { getStripe } from '@/lib/stripe';
+import { lastRun, lastRunWords } from '@/lib/outreach/last-run';
 
 // The list of small jobs that switch the site's parts on: keys, prices, DNS
 // and dashboard settings. Shabir, 2026-10-10: build the backend first and
@@ -137,7 +138,7 @@ function byHand(id: string, marks: Record<string, string>): Pick<SetupItem, 'sta
 }
 
 export const setupItems = cache(async (): Promise<SetupItem[]> => {
-  const [marks, yepPlusReady, topups, posthogWorks, retention, stripeAcct, priorityReady] = await Promise.all([
+  const [marks, yepPlusReady, topups, posthogWorks, retention, stripeAcct, priorityReady, outreachRun] = await Promise.all([
     setupMarks().catch(() => ({}) as Record<string, string>),
     supporterPaymentsReady().catch(() => false),
     readyTopups().catch(() => [] as number[]),
@@ -145,6 +146,7 @@ export const setupItems = cache(async (): Promise<SetupItem[]> => {
     hasFunction('purge_expired_personal_data'),
     stripeAccount(),
     priorityPriceReady(),
+    lastRun().catch(() => null),
   ]);
   const onNewStripe = stripeAcct?.id === STRIPE_ACCOUNT;
 
@@ -194,6 +196,21 @@ export const setupItems = cache(async (): Promise<SetupItem[]> => {
       state: bool(has('RESEND_API_KEY')),
       seen: has('RESEND_API_KEY') ? 'RESEND_API_KEY is set.' : 'RESEND_API_KEY is not set.',
       link: { href: 'https://vercel.com/yepitshalal-9131/yepitshalal/settings/environment-variables', label: 'Vercel settings' },
+    },
+    {
+      id: 'outreach-sending',
+      group: 'Sign in and email',
+      title: 'Restaurant emails go out',
+      why: 'The weekday emails asking places for their photos only go out when the site can also read what happened to each one, so it can stop on a bounce or a spam report. A key that can only send never lets one through.',
+      who: 'Shabir',
+      state: outreachRun ? bool(outreachRun.canWatch && !outreachRun.error) : 'todo',
+      seen: outreachRun ? lastRunWords(outreachRun) : 'No weekday run has been written down yet.',
+      steps: [
+        'In Resend, in the yepitshalal team, open API Keys and press Create API key.',
+        'Name it "yepitshalal.com full" and choose Full access.',
+        'In Vercel, put it in RESEND_API_KEY in place of the old one (Production, Sensitive), then redeploy.',
+      ],
+      link: { href: 'https://resend.com/api-keys', label: 'Open Resend' },
     },
     {
       id: 'resend-domain',

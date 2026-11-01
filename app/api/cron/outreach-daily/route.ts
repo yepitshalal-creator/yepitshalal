@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cronRefusal } from '@/lib/deals/cron';
 import { runOutreachDay } from '@/lib/outreach/job';
+import { recordRun } from '@/lib/outreach/last-run';
 
 // Weekdays at 9am UTC from vercel.json: 10am in London in summer, 9am in
 // winter. Watches for bounces and complaints, then sends follow ups and first
@@ -20,11 +21,14 @@ export async function GET(request: Request) {
   const dryRun = new URL(request.url).searchParams.get('dry') === '1';
   try {
     const result = await runOutreachDay({ dryRun });
-    // One line in the function logs each run, so a stopped run can be seen.
+    // One line in the function logs each run, and the outcome where the admin
+    // can read it, so a stopped run can be seen.
     console.log('[cron] outreach', JSON.stringify({ ...result, skipped: Object.keys(result.skipped).length }));
+    if (!dryRun) await recordRun(result);
     return NextResponse.json(result);
   } catch (e) {
     console.error('[cron] outreach', (e as Error).message);
+    if (!dryRun) await recordRun({ error: (e as Error).message });
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

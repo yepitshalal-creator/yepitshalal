@@ -3,10 +3,12 @@ import { requireAdmin } from '@/lib/require-admin';
 import { CONTACT_COLUMNS, OWNER_BUCKET, longDate, outreachDb, type Contact, type ContactStatus, type Permission } from '@/lib/outreach/data';
 import type { OwnerUpload } from '@/lib/outreach/content';
 import { previewRun } from '@/lib/outreach/job';
+import { lastRun, lastRunWords, keyCannotRead } from '@/lib/outreach/last-run';
 import { foundWhere, TAKE_DOWN_DAYS, yesUrl } from '@/lib/outreach/words';
 import { PRICE_RANGES } from '@/lib/price';
 import {
   clearPause,
+  logAttempt,
   markReady,
   markRemoved,
   markReplied,
@@ -19,7 +21,7 @@ import {
   setSending,
 } from '@/lib/outreach/admin-actions';
 import { AddContactForm } from '@/components/admin/outreach/AddContactForm';
-import { CHANNEL_LABEL, CONTACT_STATUS as STATUS } from '@/lib/outreach/labels';
+import { ATTEMPT, CHANNEL_LABEL, CONTACT_STATUS as STATUS, type Attempt } from '@/lib/outreach/labels';
 import { SectionTabs } from '@/components/admin/SectionTabs';
 import { AdminPage, Panel, List, Row, Tag, FIELD, BUTTON, BUTTON_SECONDARY } from '@/components/admin/ui';
 
@@ -81,6 +83,37 @@ export default async function AdminOutreachPage({
     if (filter.channel) q = q.eq('channel', filter.channel);
     return q.then((r) => r.count ?? 0);
   };
+
+  // What has been tried so far, kept in last_event (labels.ts, ATTEMPT).
+  const countEvent = (pattern: string) =>
+    db
+      .from('outreach_contacts')
+      .select('id', { count: 'exact', head: true })
+      .like('last_event', pattern)
+      .then((r) => r.count ?? 0);
+  const ATTEMPT_KEYS = Object.keys(ATTEMPT) as Attempt[];
+  // The whole list, whatever the filters below show.
+  const countStatus = (statuses: ContactStatus[]) =>
+    db
+      .from('outreach_contacts')
+      .select('id', { count: 'exact', head: true })
+      .in('status', statuses)
+      .then((r) => r.count ?? 0);
+  const [attemptCounts, callsMade, tpsChecked, run, emailed, saidYes, saidNo] = await Promise.all([
+    Promise.all(ATTEMPT_KEYS.map((k) => countEvent(ATTEMPT[k].event))),
+    countEvent('call:%'),
+    db
+      .from('outreach_contacts')
+      .select('id', { count: 'exact', head: true })
+      .eq('channel', 'phone')
+      .not('tps_checked_at', 'is', null)
+      .then((r) => r.count ?? 0),
+    lastRun().catch(() => null),
+    countStatus(['sent', 'followed_up', 'replied']),
+    countStatus(['said_yes']),
+    countStatus(['said_no', 'stopped']),
+  ]);
+  const tried = new Map<Attempt, number>(ATTEMPT_KEYS.map((k, i) => [k, attemptCounts[i]]));
 
   const [{ data: settings, error: settingsError }, statusCounts, channelCounts, total, list, { data: perms }, { data: uploadRows }] = await Promise.all([
     db.from('outreach_settings').select('*').eq('id', true).maybeSingle(),
@@ -165,6 +198,23 @@ export default async function AdminOutreachPage({
         >
           <div className="space-y-4 px-5 py-4">
             <p className="text-sm text-ink/80">{sendingLine}</p>
+            <p
+              className={`rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                run && (run.error || (!run.canWatch && run.sendingOn)) ? 'bg-halal-partialSoft text-ink' : 'bg-black/[0.03] text-ink/80'
+              }`}
+            >
+              {run
+                ? lastRunWords(run)
+                : 'No run has been written down yet. Each weekday run will show here after 9am UTC.'}
+              {run && keyCannotRead(run.note) && (
+                <>
+                  {' '}
+                  <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="font-semibold text-accent-ink underline">
+                    Open Resend
+                  </a>
+                </>
+              )}
+            </p>
             <div className="flex flex-wrap items-end gap-3">
               {settings.paused_reason ? (
                 <form action={clearPause}>
@@ -277,6 +327,30 @@ export default async function AdminOutreachPage({
           </Panel>
         )}
 
+        <Panel title="How it is going">
+          <dl className="grid grid-cols-2 gap-px bg-line sm:grid-cols-4">
+            {[
+              ['On the list', total],
+              ['Emailed', emailed],
+              ['Numbers checked against TPS', tpsChecked],
+              ['Calls made', callsMade],
+              ['Yes links sent after a call', tried.get('sent_link') ?? 0],
+              ['Contact forms sent', tried.get('form_sent') ?? 0],
+              ['Said yes', saidYes],
+              ['Said no or asked to stop', saidNo],
+            ].map(([label, n]) => (
+              <div key={label as string} className="bg-white px-4 py-3">
+                <dt className="text-xs text-muted">{label}</dt>
+                <dd className="mt-0.5 font-display text-xl font-semibold tabular-nums text-ink">{(n as number).toLocaleString('en-GB')}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="border-t border-line px-5 py-3 text-xs text-muted">
+            Calls: {tried.get('no_answer') ?? 0} with no answer, {tried.get('call_back') ?? 0} to ring back. Ring a number only after
+            the TPS check. If they want it, send them their yes link from your phone; they tick it themselves.
+          </p>
+        </Panel>
+
         <Panel title="Yeses" action={<Tag tone={yeses.length ? 'good' : 'neutral'}>{yeses.length}</Tag>}>
           <List empty="No yeses yet.">
             {yeses.map((p) => {
@@ -370,14 +444,14 @@ export default async function AdminOutreachPage({
                       )}
                       {c.sent_at ? ` · emailed ${longDate(c.sent_at)}` : ''}
                       {c.followed_up_at ? ` · followed up ${longDate(c.followed_up_at)}` : ''}
-                      {c.last_event ? ` · last: ${c.last_event}` : ''}
+                      {c.last_event ? ` · last: ${c.last_event}${c.last_event_at ? `, ${longDate(c.last_event_at)}` : ''}` : ''}
                     </p>
                     {open && (
                       <p className="mt-1 break-all text-xs text-ink/70">
                         Yes link: <span className="select-all font-mono">{yesUrl(c.token)}</span>
                       </p>
                     )}
-                    {c.notes && <p className="mt-1 text-xs text-ink/70">{c.notes}</p>}
+                    {c.notes && <p className="mt-1 whitespace-pre-line text-xs text-ink/70">{c.notes}</p>}
                   </div>
                   {open && (
                     <div className="flex shrink-0 flex-wrap gap-1.5">
@@ -386,6 +460,13 @@ export default async function AdminOutreachPage({
                           <button className={SMALL}>Not on TPS</button>
                         </form>
                       )}
+                      {(Object.keys(ATTEMPT) as Attempt[])
+                        .filter((k) => ATTEMPT[k].channel === c.channel && (c.channel !== 'phone' || c.tps_checked_at))
+                        .map((k) => (
+                          <form key={k} action={logAttempt.bind(null, c.id, k)}>
+                            <button className={SMALL}>{ATTEMPT[k].button}</button>
+                          </form>
+                        ))}
                       {c.channel === 'email' && c.status === 'new' && !c.sent_at && (
                         <form action={markReady.bind(null, c.id)}>
                           <button className={SMALL}>Queue email</button>
