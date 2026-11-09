@@ -9,6 +9,7 @@ import { cleanRestaurantName } from '@/lib/restaurantName';
 import { tidyAddress } from '@/lib/address';
 import { jsonLdHtml } from '@/lib/jsonLd';
 import { PageHero } from '@/components/PageHero';
+import { CHARCOAL_GRILL } from '@/lib/media';
 import { Reveal } from '@/components/Reveal';
 import { inlineLink, pageShell, panel, sectionTitle } from '@/components/prose';
 import { SITE_URL } from '@/lib/site';
@@ -54,6 +55,8 @@ function shortAddress(r: CuisineListing) {
   if (!first || /street address not known/i.test(r.address)) return r.postcode ?? null;
   return r.postcode && !first.includes(r.postcode) ? `${first}, ${r.postcode}` : first;
 }
+
+const GRILL_FOOD = /kebab|grill|turkish|persian|afghan|shawarma|middle-eastern|balkan|central-asian|moroccan|kurdish|lebanese|iranian/;
 
 export default async function CuisinePage({ params }: { params: { cuisine: string } }) {
   const found = await getCuisineBySlug(params.cuisine);
@@ -114,6 +117,8 @@ export default async function CuisinePage({ params }: { params: { cuisine: strin
           { label: cuisine.cuisine },
         ]}
         title={`Halal ${name} in London`}
+        // The grill picture only where it is the food: never on desserts or sushi.
+        art={GRILL_FOOD.test(cuisine.slug) ? CHARCOAL_GRILL : undefined}
         lede={
           <>
             {cuisine.listed} {name} places across London with evidence that they serve halal food. Each

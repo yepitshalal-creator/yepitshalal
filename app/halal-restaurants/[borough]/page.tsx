@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { HalalBadge } from '@/components/HalalBadge';
 import { ArrowRightIcon, MapPinIcon } from '@/components/icons';
 import { PageHero, heroPrimary } from '@/components/PageHero';
+import { HIGH_STREET_AUTUMN } from '@/lib/media';
 import { Reveal } from '@/components/Reveal';
 import { inlineLink, pageShell, panel, sectionTitle } from '@/components/prose';
 import { getAreaBySlug, getAreasWithPages, type AreaListing } from '@/lib/areas';
@@ -95,6 +96,7 @@ export default async function AreaPage({ params }: { params: { borough: string }
       <PageHero
         crumbs={[{ label: 'London', href: '/halal-restaurants' }, { label: area.borough }]}
         title={`Halal restaurants in ${area.borough}`}
+        art={HIGH_STREET_AUTUMN}
         lede={
           <>
             {area.listed} places in {area.borough} with evidence that they serve halal food. Each one

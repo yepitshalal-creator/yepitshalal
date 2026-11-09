@@ -23,7 +23,7 @@ const BUCKET_NAME: Record<string, string> = {
   desserts: 'Desserts', cafe: 'Cafe', sandwiches: 'Wraps and sandwiches',
 };
 
-// Generated on 2026-09-23 and 2026-09-24. Listed so nobody has to guess which
+// Generated on 2026-09-23, 2026-09-24, 2026-11-05 and 2026-11-08. Listed so nobody has to guess which
 // pictures are photographs of real places and which are not. Keep "where"
 // current whenever a picture is reused (lib/media.ts is where they are set).
 const MADE_FOR_SITE: [string, string][] = [
@@ -33,6 +33,10 @@ const MADE_FOR_SITE: [string, string][] = [
   ['Hands sharing dishes across a restaurant table, still and short loop', 'Support'],
   ['An empty prayer room', 'Prayer spaces, Discover'],
   ['A plate set down on a kitchen pass, still and short loop', 'For restaurants'],
+  ['A London neighbourhood high street on an autumn afternoon', 'Every borough page'],
+  ['A takeaway with its shutter half down', 'Page not found'],
+  ['Rain on a takeaway window at night, still and short loop', 'Something wrong? Tell us'],
+  ['Skewers over charcoal, still and short loop', 'Halal food by kind, and its grill and kebab pages'],
 ];
 
 export default function ImageCreditsPage() {

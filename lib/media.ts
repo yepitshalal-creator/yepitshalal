@@ -79,3 +79,40 @@ export const TABLE: SceneArt = {
   video: '/media/shared-table.mp4',
   videoLabel: 'Hands reaching across a shared restaurant table, steam rising from the rice',
 };
+
+// Added 2026-11-06 (Nano Banana Pro, 2K). Like the rest: generated, no real
+// place, no face, nothing legible. Each was cut from the scene side of a
+// two-panel render, so the widths stop where the scene does.
+
+/** A neighbourhood high street on an autumn afternoon. The borough pages.
+ *  Still only: its loop drew a bus stop roundel and shop lettering. */
+export const HIGH_STREET_AUTUMN: SceneArt = {
+  still: '/media/high-street-autumn-wide',
+  widths: [960, 1600],
+  alt: 'A London neighbourhood high street on an autumn afternoon, crates of fruit outside a grocer',
+};
+
+/** Rain on a takeaway window, its sticker too blurred to read. Corrections. */
+export const TAKEAWAY_WINDOW: SceneArt = {
+  still: '/media/takeaway-window-wide',
+  widths: [960, 1600],
+  alt: 'Rain on the front window of a takeaway at night, a round green sticker on the glass out of focus',
+  video: '/media/takeaway-window.mp4',
+  videoLabel: 'Rain running down a takeaway window at night, steam rising in the kitchen behind',
+};
+
+/** A takeaway at dusk with its shutter half down. The page that is not found. */
+export const SHUTTER_DOWN: SceneArt = {
+  still: '/media/shutter-down-wide',
+  widths: [960, 1440],
+  alt: 'A takeaway at dusk with its shutter half down and a blank sheet of paper taped to it',
+};
+
+/** Skewers over charcoal. The kinds of food index, and the grill-type pages. */
+export const CHARCOAL_GRILL: SceneArt = {
+  still: '/media/charcoal-grill-wide',
+  widths: [960, 1600],
+  alt: 'Skewers of kofta and chicken over glowing charcoal, flames rising in a restaurant kitchen',
+  video: '/media/charcoal-grill.mp4',
+  videoLabel: 'Flames rising between skewers over glowing charcoal',
+};

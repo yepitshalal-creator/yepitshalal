@@ -3,6 +3,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { CORRECTIONS_EMAIL } from '@/lib/site';
 import { PageHero } from '@/components/PageHero';
+import { TAKEAWAY_WINDOW } from '@/lib/media';
 import { PageBody, PageSection } from '@/components/PageLayout';
 import { Reveal } from '@/components/Reveal';
 import { MailIcon } from '@/components/icons';
@@ -71,6 +72,7 @@ export default function CorrectionsPage() {
     <>
       <PageHero
         title="Something wrong? Tell us"
+        art={TAKEAWAY_WINDOW}
         lede="We publish what we know and say when we have not checked. That only works if it is easy to tell us we have got something wrong, so this is the page for it."
       />
 

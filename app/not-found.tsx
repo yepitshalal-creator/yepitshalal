@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ctaPrimary, ctaSecondary } from '@/components/cta';
 import { ArrowRightIcon } from '@/components/icons';
 import { PageHero } from '@/components/PageHero';
+import { SHUTTER_DOWN } from '@/lib/media';
 import { pageShell } from '@/components/prose';
 
 export const metadata: Metadata = {
@@ -14,7 +15,7 @@ export default function NotFound() {
   return (
     <>
       <PageHero
-        tone="sand"
+        art={SHUTTER_DOWN}
         title="We couldn't find that page"
         lede="The link may be old, or the place may have been merged with another listing. Search for it by name or postcode instead."
       />

@@ -5,6 +5,7 @@ import { getCuisines } from '@/lib/cuisines';
 import { jsonLdHtml } from '@/lib/jsonLd';
 import { SITE_URL } from '@/lib/site';
 import { PageHero } from '@/components/PageHero';
+import { CHARCOAL_GRILL } from '@/lib/media';
 import { Reveal } from '@/components/Reveal';
 import { inlineLink, pageShell } from '@/components/prose';
 
@@ -36,6 +37,7 @@ export default async function CuisineIndexPage() {
       <PageHero
         crumbs={[{ label: 'London', href: '/halal-restaurants' }, { label: 'By kind of food' }]}
         title="Halal food in London, by what you fancy"
+        art={CHARCOAL_GRILL}
         lede={
           <>
             Most people do not decide by postcode. {total.toLocaleString('en-GB')} places with evidence of
